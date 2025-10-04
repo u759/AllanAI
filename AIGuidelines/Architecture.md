@@ -10,6 +10,8 @@
 - Real-time scoring and statistics
 - Performance analytics (shot accuracy, ball speed, serve success rate)
 - Historical match data and trends
+- **Video playback with timestamped events** (play of the game, scoring moments, misses)
+- **Interactive event navigation** - jump to key moments in match video
 
 ### Technology Stack
 - **Frontend**: Android with Jetpack Compose
@@ -33,6 +35,7 @@
 │  │  - Record Video  │         │  - Video Upload  │        │
 │  │  - View Stats    │         │  - Processing    │        │
 │  │  - Match History │         │  - Statistics    │        │
+│  │  - Video Playback│         │  - Event Detect  │        │
 │  └──────────────────┘         └─────────┬────────┘        │
 │                                          │                  │
 │                                          ▼                  │
@@ -43,6 +46,7 @@
 │                              │  - Table Detect  │          │
 │                              │  - Scoring Logic │          │
 │                              │  - Speed Calc    │          │
+│                              │  - Event Detect  │          │
 │                              └─────────┬────────┘          │
 │                                        │                    │
 │                                        ▼                    │
@@ -92,7 +96,7 @@
 - Efficient video encoding/decoding
 - Frame-by-frame processing optimization
 - Caching of processed results
-- Database indexing for queries
+- MongoDB indexing for queries (compound indexes on match status, timestamps)
 
 ### 7. Error Handling
 - Graceful degradation
@@ -209,7 +213,20 @@ Calculate statistics:
     - Ball speed (avg/max)
     - Scoring
     ↓
-Save statistics to database
+Detect and timestamp events:
+    - Score changes (with timestamp)
+    - Rally highlights (long/exciting rallies)
+    - Play of the game (best rally)
+    - Fastest shots
+    - Misses/errors
+    - Serve aces
+    ↓
+Generate highlight reels:
+    - Auto-select top moments
+    - Rank by importance
+    - Create event timeline
+    ↓
+Save statistics, events, and highlights to database
     ↓
 Update processing status
 ```
@@ -231,6 +248,30 @@ Spring returns comprehensive stats
 Display graphs, charts, insights
 ```
 
+### 4. Video Playback with Events Flow
+```
+User selects match to watch
+    ↓
+Android requests match events
+    ↓
+Spring API returns timestamped events:
+    - Play of the game
+    - Scoring moments
+    - Rally highlights
+    - Error/miss events
+    ↓
+Android displays video with event timeline
+    ↓
+User taps event (e.g., "Play of the Game")
+    ↓
+Video player seeks to event timestamp
+    ↓
+Playback starts from that moment
+    ↓
+Optional: Display overlay annotations
+    (ball trajectory, speed, shot type)
+```
+
 ## API Design Patterns
 
 ### RESTful Endpoints
@@ -240,7 +281,10 @@ GET    /api/matches                 # List all matches
 GET    /api/matches/{id}            # Get match details
 GET    /api/matches/{id}/status     # Processing status
 GET    /api/matches/{id}/statistics # Detailed stats
-GET    /api/matches/{id}/video      # Download processed video
+GET    /api/matches/{id}/video      # Download/stream processed video
+GET    /api/matches/{id}/events     # Get timestamped events
+GET    /api/matches/{id}/events/{eventId}  # Get specific event details
+GET    /api/matches/{id}/highlights # Get auto-generated highlights
 DELETE /api/matches/{id}            # Delete match
 ```
 
@@ -278,13 +322,15 @@ DELETE /api/matches/{id}            # Delete match
 - **Networking**: Retrofit + OkHttp
 - **Async**: Kotlin Coroutines + Flow
 - **Video Recording**: CameraX
+- **Video Playback**: ExoPlayer (for video streaming with seek controls)
 - **Charts/Graphs**: Vico or MPAndroidChart
+- **Video Caching**: ExoPlayer cache for offline playback
 
 ### Backend (Spring Boot)
 - **Language**: Java 17+ or Kotlin
 - **Framework**: Spring Boot 3.x
-- **Database**: PostgreSQL (for statistics)
-- **ORM**: Spring Data JPA
+- **Database**: MongoDB (for statistics)
+- **ODM**: Spring Data MongoDB
 - **Async**: Spring Async + CompletableFuture
 - **File Storage**: Local file system (can migrate to S3)
 - **API Documentation**: SpringDoc OpenAPI
@@ -297,41 +343,293 @@ DELETE /api/matches/{id}            # Delete match
 - **Optimization**: Multi-threading for frame processing
 - **Output**: Annotated video + JSON statistics
 
-### Database Schema (Simplified)
-```sql
--- Matches table
-matches (
-  id UUID PRIMARY KEY,
-  created_at TIMESTAMP,
-  video_path VARCHAR,
-  status VARCHAR, -- UPLOADED, PROCESSING, COMPLETE, FAILED
-  duration_seconds INT,
-  processed_at TIMESTAMP
-)
+### Database Schema (MongoDB Collections)
+```javascript
+// Matches collection
+{
+  "_id": ObjectId,
+  "createdAt": ISODate,
+  "videoPath": String,
+  "status": String, // UPLOADED, PROCESSING, COMPLETE, FAILED
+  "durationSeconds": Number,
+  "processedAt": ISODate,
+  "statistics": {
+    "player1Score": Number,
+    "player2Score": Number,
+    "totalRallies": Number,
+    "avgRallyLength": Number,
+    "maxBallSpeed": Number,
+    "avgBallSpeed": Number
+  },
+  "shots": [
+    {
+      "timestampMs": Number,
+      "player": Number, // 1 or 2
+      "shotType": String, // SERVE, FOREHAND, BACKHAND
+      "speed": Number,
+      "accuracy": Number,
+      "result": String // IN, OUT, NET
+    }
+  ],
+  "events": [
+    {
+      "_id": ObjectId,
+      "timestampMs": Number,
+      "type": String, // PLAY_OF_GAME, SCORE, MISS, RALLY_HIGHLIGHT, SERVE_ACE
+      "title": String,
+      "description": String,
+      "player": Number, // 1 or 2, or null for both
+      "importance": Number, // 1-10 rating for highlight priority
+      "metadata": {
+        "shotSpeed": Number,
+        "rallyLength": Number,
+        "shotType": String,
+        "ballTrajectory": [[Number]], // Array of [x, y] coordinates
+        "frameNumber": Number
+      }
+    }
+  ],
+  "highlights": {
+    "playOfTheGame": ObjectId, // Reference to events._id
+    "topRallies": [ObjectId],
+    "fastestShots": [ObjectId],
+    "bestServes": [ObjectId]
+  }
+}
+```
 
--- Match statistics
-match_statistics (
-  id UUID PRIMARY KEY,
-  match_id UUID REFERENCES matches(id),
-  player1_score INT,
-  player2_score INT,
-  total_rallies INT,
-  avg_rally_length FLOAT,
-  max_ball_speed FLOAT,
-  avg_ball_speed FLOAT
-)
+## Video Playback & Event System
 
--- Shot details
-shots (
-  id UUID PRIMARY KEY,
-  match_id UUID REFERENCES matches(id),
-  timestamp_ms BIGINT,
-  player INT, -- 1 or 2
-  shot_type VARCHAR, -- SERVE, FOREHAND, BACKHAND
-  speed FLOAT,
-  accuracy FLOAT,
-  result VARCHAR -- IN, OUT, NET
-)
+### Event Detection Algorithm
+
+The OpenCV processing engine automatically detects and timestamps key events during match analysis:
+
+#### Event Types & Detection Logic
+
+1. **PLAY_OF_THE_GAME**
+   - Longest rally with high shot quality
+   - Multiple direction changes
+   - High ball speeds
+   - Complex shot patterns
+   - Auto-selected as single most impressive moment
+
+2. **SCORE Events**
+   - Detected when ball lands out or hits net
+   - Point awarded to appropriate player
+   - Includes score state before/after
+
+3. **RALLY_HIGHLIGHT**
+   - Rallies with 8+ shots
+   - Fast-paced exchanges (>5 shots/sec avg)
+   - High-speed shots (>30 km/h)
+   - Ranked by importance (1-10)
+
+4. **SERVE_ACE**
+   - Serve that results in immediate point
+   - No return shot detected
+   - High serve speed
+
+5. **MISS/ERROR Events**
+   - Ball lands significantly out of bounds
+   - Ball hits net on non-serve shots
+   - Failed returns
+
+6. **FASTEST_SHOT**
+   - Top 5 fastest shots in match
+   - Includes ball speed and trajectory
+
+### Video Player Implementation
+
+#### Frontend (Android with ExoPlayer)
+
+```kotlin
+// Key features of video player
+- Seek to specific timestamp (millisecond precision)
+- Display event markers on timeline/scrubber
+- Overlay annotations during playback:
+  * Ball trajectory visualization
+  * Shot speed display
+  * Player position tracking
+- Event timeline UI component:
+  * Clickable event chips
+  * Visual importance indicators
+  * Filterable by event type
+- Playback controls:
+  * Play/pause
+  * Speed adjustment (0.5x, 1x, 2x)
+  * Frame-by-frame stepping for analysis
+```
+
+#### Backend Video Streaming
+
+```java
+// Spring Boot video streaming endpoint
+- Range request support (HTTP 206 Partial Content)
+- Chunked transfer for smooth playback
+- HLS or DASH streaming for adaptive bitrate (future)
+- Cache headers for performance
+- Event metadata bundled with video requests
+```
+
+### Event Timeline UI Design
+
+```
+┌─────────────────────────────────────────────────────┐
+│  Match Video Player                                 │
+│  ┌───────────────────────────────────────────────┐  │
+│  │                                               │  │
+│  │         [Video Frame Display]                 │  │
+│  │                                               │  │
+│  │  Overlay: "Fastest Shot - 45 km/h"           │  │
+│  └───────────────────────────────────────────────┘  │
+│                                                     │
+│  ──●────────────●──●────────────●──────────────►   │
+│  0:00  ⚡    1:23 🏆 1:45    3:12 ❌      5:00   │
+│                                                     │
+│  Quick Jump Events:                                │
+│  ┌─────────────┐ ┌─────────────┐ ┌─────────────┐  │
+│  │ 🏆 Play of  │ │ ⚡ Fastest  │ │ 🎯 Best     │  │
+│  │   the Game  │ │   Shot      │ │   Rally     │  │
+│  │   1:23      │ │   0:15      │ │   3:45      │  │
+│  └─────────────┘ └─────────────┘ └─────────────┘  │
+│                                                     │
+│  All Events:                                       │
+│  [🎾 Score] [⚡ Fast Shot] [❌ Miss] [🎯 Rally]   │
+│                                                     │
+└─────────────────────────────────────────────────────┘
+```
+
+### Event Response Format
+
+```json
+{
+  "success": true,
+  "data": {
+    "matchId": "507f1f77bcf86cd799439011",
+    "events": [
+      {
+        "id": "507f1f77bcf86cd799439012",
+        "timestampMs": 83500,
+        "type": "PLAY_OF_THE_GAME",
+        "title": "Play of the Game",
+        "description": "Epic 15-shot rally with incredible speed",
+        "importance": 10,
+        "player": null,
+        "metadata": {
+          "rallyLength": 15,
+          "maxShotSpeed": 45.2,
+          "avgShotSpeed": 32.8,
+          "frameNumber": 2505
+        }
+      },
+      {
+        "id": "507f1f77bcf86cd799439013",
+        "timestampMs": 15200,
+        "type": "FASTEST_SHOT",
+        "title": "Fastest Shot",
+        "description": "Player 1 forehand smash",
+        "importance": 8,
+        "player": 1,
+        "metadata": {
+          "shotSpeed": 52.3,
+          "shotType": "FOREHAND",
+          "ballTrajectory": [[120, 340], [245, 280], [380, 220]],
+          "frameNumber": 456
+        }
+      },
+      {
+        "id": "507f1f77bcf86cd799439014",
+        "timestampMs": 92000,
+        "type": "SCORE",
+        "title": "Point Scored",
+        "description": "Player 2 scores on backhand",
+        "importance": 5,
+        "player": 2,
+        "metadata": {
+          "scoreAfter": {"player1": 8, "player2": 11},
+          "shotType": "BACKHAND",
+          "frameNumber": 2760
+        }
+      }
+    ],
+    "highlights": {
+      "playOfTheGame": "507f1f77bcf86cd799439012",
+      "topRallies": [
+        "507f1f77bcf86cd799439012",
+        "507f1f77bcf86cd799439018"
+      ],
+      "fastestShots": [
+        "507f1f77bcf86cd799439013",
+        "507f1f77bcf86cd799439019"
+      ]
+    }
+  }
+}
+```
+
+### Performance Considerations
+
+#### Video Streaming
+- **Progressive Download**: Start playback before full download
+- **Seek Optimization**: Index keyframes for instant seeking
+- **Bandwidth Adaptation**: Detect connection speed, adjust quality
+- **Local Caching**: Cache processed videos on device for offline viewing
+
+#### Event Loading
+- **Lazy Loading**: Load events as needed during playback
+- **Prefetching**: Preload events near current playback position
+- **Thumbnail Generation**: Create thumbnails at event timestamps
+
+### OpenCV Event Detection Pseudocode
+
+```python
+def detect_events(video_frames, shots_data):
+    events = []
+    
+    # Detect Play of the Game
+    longest_rally = find_longest_rally(shots_data)
+    if longest_rally.length > 10:
+        events.append({
+            'type': 'PLAY_OF_THE_GAME',
+            'timestampMs': longest_rally.start_time,
+            'importance': 10,
+            'metadata': {
+                'rallyLength': longest_rally.length,
+                'avgSpeed': longest_rally.avg_speed
+            }
+        })
+    
+    # Detect Scoring Moments
+    for shot in shots_data:
+        if shot.result == 'OUT' or shot.result == 'NET':
+            events.append({
+                'type': 'SCORE',
+                'timestampMs': shot.timestamp,
+                'player': shot.scoring_player,
+                'importance': 5
+            })
+    
+    # Detect Fastest Shots
+    fastest_shots = sorted(shots_data, key=lambda x: x.speed, reverse=True)[:5]
+    for shot in fastest_shots:
+        events.append({
+            'type': 'FASTEST_SHOT',
+            'timestampMs': shot.timestamp,
+            'importance': 8,
+            'metadata': {'shotSpeed': shot.speed}
+        })
+    
+    # Detect Rally Highlights
+    for rally in find_rallies(shots_data):
+        if rally.length >= 8 or rally.avg_speed > 30:
+            events.append({
+                'type': 'RALLY_HIGHLIGHT',
+                'timestampMs': rally.start_time,
+                'importance': min(rally.length / 2, 10),
+                'metadata': {'rallyLength': rally.length}
+            })
+    
+    return sorted(events, key=lambda x: x['timestampMs'])
 ```
 
 ## Development Workflow
@@ -377,7 +675,7 @@ cd android
 ### Backend Deployment
 - Container: Docker image
 - Platform: Cloud VM, AWS ECS, or Kubernetes
-- Database: Managed PostgreSQL (AWS RDS, Google Cloud SQL)
+- Database: Managed MongoDB (MongoDB Atlas, AWS DocumentDB)
 - File Storage: S3-compatible storage
 
 ### Android Distribution
@@ -441,7 +739,7 @@ cd android
 | Monorepo structure | Easier coordination, shared docs | 2025-10-04 |
 | Async processing | Video processing is CPU-intensive | 2025-10-04 |
 | File system storage | Simpler for MVP, can migrate later | 2025-10-04 |
-| PostgreSQL | Robust, good for time-series data | 2025-10-04 |
+| MongoDB | Flexible schema, good for nested data structures | 2025-10-04 |
 | Jetpack Compose | Modern Android UI, declarative | 2025-10-04 |
 
 ## Getting Started
@@ -450,7 +748,7 @@ cd android
 - Android Studio Hedgehog or later
 - JDK 17+
 - Gradle 8.0+
-- PostgreSQL 14+
+- MongoDB 6.0+ (with MongoDB Compass for local development)
 - OpenCV 4.x installed
 
 ### Quick Start
