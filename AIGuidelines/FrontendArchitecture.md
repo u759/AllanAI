@@ -53,24 +53,26 @@ android/app/src/main/java/com/allanai/
 │
 ├── ui/
 │   ├── screens/
-│   │   ├── home/
-│   │   │   ├── HomeScreen.kt
-│   │   │   └── HomeViewModel.kt
-│   │   ├── record/
-│   │   │   ├── RecordScreen.kt
+│   │   ├── profile/
+│   │   │   ├── ProfileScreen.kt
+│   │   │   ├── SignUpPage.kt
+│   │   │   └── SignInPage.kt
+│   │   ├── upload/
+│   │   │   ├── UploadScreen.kt
 │   │   │   ├── RecordViewModel.kt
+│   │   │   ├── WelcomeUpload.kt
 │   │   │   └── CameraPreview.kt
-│   │   ├── matches/
+│   │   ├── history/
 │   │   │   ├── MatchListScreen.kt
-│   │   │   ├── MatchDetailScreen.kt
-│   │   │   └── MatchesViewModel.kt
-│   │   └── statistics/
-│   │       ├── StatisticsScreen.kt
-│   │       ├── StatisticsViewModel.kt
-│   │       └── components/
-│   │           ├── SpeedChart.kt
-│   │           ├── AccuracyChart.kt
-│   │           └── ScoreDisplay.kt
+│   │   │   ├── MatchesViewModel.kt
+│   │   │   └── MatchDetailScreen.kt
+│   │   |   └── components/
+│   │   |       ├── SpeedChart.kt
+│   │   |       ├── AccuracyChart.kt
+│   │   |       └── ScoreDisplay.kt
+│   │   └── highlights/
+│   │       ├── HighlistListScreen.kt
+│   │       └──StatisticsViewModel.kt
 │   │
 │   ├── components/
 │   │   ├── LoadingIndicator.kt
@@ -146,6 +148,59 @@ android/app/src/main/java/com/allanai/
 - Use `collectAsState()` to observe ViewModel
 - Delegate all actions to ViewModel
 - No business logic in UI
+
+**⚠️ IMPORTANT: Bottom Navigation Icon Standards**
+
+To maintain consistency across the entire app, **ALL screens MUST use the following Material Icons** for bottom navigation:
+
+| Tab Position | Icon | Label | Description |
+|--------------|------|-------|-------------|
+| **Tab 1** | `Icons.Default.Videocam` | "Upload" | Upload/Home screen |
+| **Tab 2** | `Icons.Default.History` | "History" | Match history list |
+| **Tab 3** | `Icons.Default.Star` | "Highlights" | Video highlights |
+| **Tab 4** | `Icons.Default.Person` | "Profile" | User profile |
+
+**DO NOT use alternative icons such as:**
+- ❌ `Icons.Default.Home` (use `Videocam` instead)
+- ❌ `Icons.Default.Upload` (use `Videocam` instead)
+- ❌ `Icons.Default.Movie` (use `Star` instead)
+- ❌ `Icons.Default.VideoLibrary` (use `Star` instead)
+
+**Why this matters:**
+- Consistent user experience across all screens
+- Predictable navigation behavior
+- Professional design standards
+- Easier maintenance and updates
+
+**Implementation Example:**
+```kotlin
+NavigationBar {
+    NavigationBarItem(
+        icon = { Icon(imageVector = Icons.Default.Videocam, contentDescription = "Upload") },
+        label = { Text("Upload") },
+        selected = selectedTab == 0,
+        onClick = onNavigateToUpload
+    )
+    NavigationBarItem(
+        icon = { Icon(imageVector = Icons.Default.History, contentDescription = "History") },
+        label = { Text("History") },
+        selected = selectedTab == 1,
+        onClick = onNavigateToHistory
+    )
+    NavigationBarItem(
+        icon = { Icon(imageVector = Icons.Default.Star, contentDescription = "Highlights") },
+        label = { Text("Highlights") },
+        selected = selectedTab == 2,
+        onClick = onNavigateToHighlights
+    )
+    NavigationBarItem(
+        icon = { Icon(imageVector = Icons.Default.Person, contentDescription = "Profile") },
+        label = { Text("Profile") },
+        selected = selectedTab == 3,
+        onClick = onNavigateToProfile
+    )
+}
+```
 
 **Example - RecordScreen.kt**:
 ```kotlin
