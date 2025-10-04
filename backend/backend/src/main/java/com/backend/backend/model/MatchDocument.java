@@ -307,6 +307,9 @@ public class MatchDocument {
         private List<List<Double>> ballTrajectory;
         private Integer frameNumber;
         private ScoreState scoreAfter;
+        private EventWindow eventWindow;
+        private Double confidence;
+        private String source;
 
         public Double getShotSpeed() {
             return shotSpeed;
@@ -354,6 +357,59 @@ public class MatchDocument {
 
         public void setScoreAfter(ScoreState scoreAfter) {
             this.scoreAfter = scoreAfter;
+        }
+
+        public EventWindow getEventWindow() {
+            return eventWindow;
+        }
+
+        public void setEventWindow(EventWindow eventWindow) {
+            this.eventWindow = eventWindow;
+        }
+
+        public Double getConfidence() {
+            return confidence;
+        }
+
+        public void setConfidence(Double confidence) {
+            this.confidence = confidence;
+        }
+
+        public String getSource() {
+            return source;
+        }
+
+        public void setSource(String source) {
+            this.source = source;
+        }
+    }
+
+    public static class EventWindow {
+        private Integer preMs;
+        private Integer postMs;
+
+        public EventWindow() {
+        }
+
+        public EventWindow(Integer preMs, Integer postMs) {
+            this.preMs = preMs;
+            this.postMs = postMs;
+        }
+
+        public Integer getPreMs() {
+            return preMs;
+        }
+
+        public void setPreMs(Integer preMs) {
+            this.preMs = preMs;
+        }
+
+        public Integer getPostMs() {
+            return postMs;
+        }
+
+        public void setPostMs(Integer postMs) {
+            this.postMs = postMs;
         }
     }
 

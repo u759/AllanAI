@@ -4,6 +4,12 @@
 
 The AllanAI Android application is built using Jetpack Compose with a clean MVVM architecture pattern. It provides an intuitive interface for recording table tennis matches and viewing detailed analytics.
 
+### Match Timeline & Timestamp Handling
+- **Event granularity**: The backend returns event payloads with both `timestampMs` and `metadata.frameNumber`, mirroring the OpenTTGames convention of 120 fps annotations (−4/+12 frame windows). The UI must convert these into `Duration` objects for playback alignment via ExoPlayer.
+- **Timeline widgets**: `VideoPlayer` and `MatchDetailScreen` surface a horizontally scrollable strip of events with labels (score change, rally highlight, fastest shot, serve ace, miss). Tapping an event seeks the player to `timestampMs - preRollMs` to start the clip slightly before the highlight.
+- **Pre/Post buffers**: Use `metadata.eventWindow` to compute highlight preview segments (default pre-roll 133 ms, post-roll 400 ms). If metadata is absent, fall back to safe defaults.
+- **Low-confidence events**: When `metadata.confidence < 0.5`, render the event in a muted style and provide a manual confirmation affordance for the user.
+
 ## Architecture Pattern: MVVM
 
 ```
@@ -70,6 +76,7 @@ android/app/src/main/java/com/allanai/
 │   │   ├── LoadingIndicator.kt
 │   │   ├── ErrorMessage.kt
 │   │   ├── VideoPlayer.kt
+│   │   ├── EventTimeline.kt
 │   │   └── StatCard.kt
 │   │
 │   ├── navigation/
@@ -102,6 +109,8 @@ android/app/src/main/java/com/allanai/
 │   │   ├── Match.kt
 │   │   ├── Statistics.kt
 │   │   ├── Shot.kt
+│   │   ├── Event.kt
+│   │   ├── Highlight.kt
 │   │   ├── ProcessingStatus.kt
 │   │   └── ApiResponse.kt
 │   │
@@ -231,6 +240,48 @@ private fun RecordingControls(
                     Icons.Default.FiberManualRecord,
                 contentDescription = if (isRecording) "Stop" else "Record"
             )
+        }
+    }
+}
+```
+
+**Example - MatchDetailViewModel.kt (event timeline)**:
+```kotlin
+@HiltViewModel
+class MatchDetailViewModel @Inject constructor(
+    private val matchRepository: MatchRepository
+) : ViewModel() {
+
+    private val _state = MutableStateFlow(MatchDetailState())
+    val state: StateFlow<MatchDetailState> = _state.asStateFlow()
+
+    fun loadMatch(matchId: String) {
+        viewModelScope.launch {
+            _state.update { it.copy(isLoading = true, error = null) }
+            runCatching { matchRepository.fetchMatch(matchId) }
+                .onSuccess { match ->
+                    val timeline = match.events.map { event ->
+                        EventTimelineItem(
+                            id = event.id,
+                            label = event.type.toDisplayName(),
+                            timestampMs = event.timestampMs,
+                            frameNumber = event.metadata?.frameNumber,
+                            preRollMs = event.metadata?.eventWindow?.preMs ?: DEFAULT_PRE_ROLL_MS,
+                            postRollMs = event.metadata?.eventWindow?.postMs ?: DEFAULT_POST_ROLL_MS,
+                            confidence = event.metadata?.confidence ?: 1.0
+                        )
+                    }
+                    _state.update {
+                        it.copy(
+                            isLoading = false,
+                            match = match,
+                            timeline = timeline.sortedBy { item -> item.timestampMs }
+                        )
+                    }
+                }
+                .onFailure { throwable ->
+                    _state.update { it.copy(isLoading = false, error = throwable.message) }
+                }
         }
     }
 }

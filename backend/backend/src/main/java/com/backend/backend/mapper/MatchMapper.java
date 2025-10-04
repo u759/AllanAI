@@ -6,6 +6,7 @@ import java.util.Objects;
 
 import com.backend.backend.dto.EventMetadataResponse;
 import com.backend.backend.dto.EventResponse;
+import com.backend.backend.dto.EventWindowResponse;
 import com.backend.backend.dto.HighlightsResponse;
 import com.backend.backend.dto.MatchDetailsResponse;
 import com.backend.backend.dto.MatchStatisticsResponse;
@@ -15,6 +16,7 @@ import com.backend.backend.dto.ShotResponse;
 import com.backend.backend.model.MatchDocument;
 import com.backend.backend.model.MatchDocument.Event;
 import com.backend.backend.model.MatchDocument.EventMetadata;
+import com.backend.backend.model.MatchDocument.EventWindow;
 import com.backend.backend.model.MatchDocument.Highlights;
 import com.backend.backend.model.MatchDocument.MatchStatistics;
 import com.backend.backend.model.MatchDocument.ScoreState;
@@ -92,24 +94,35 @@ public final class MatchMapper {
 
     public static EventMetadataResponse toEventMetadata(EventMetadata metadata) {
         if (metadata == null) {
-            return new EventMetadataResponse(null, null, null, Collections.emptyList(), null, null);
+            return new EventMetadataResponse(null, null, null, Collections.emptyList(), null, null, null, null, null);
         }
         ScoreStateResponse scoreState = metadata.getScoreAfter() == null ? null : toScoreState(metadata.getScoreAfter());
         List<List<Double>> ballTrajectory = metadata.getBallTrajectory();
         if (ballTrajectory == null) {
             ballTrajectory = Collections.emptyList();
         }
+        EventWindowResponse eventWindow = toEventWindow(metadata.getEventWindow());
         return new EventMetadataResponse(
             metadata.getShotSpeed(),
             metadata.getRallyLength(),
             metadata.getShotType(),
             ballTrajectory,
             metadata.getFrameNumber(),
-            scoreState);
+            scoreState,
+            eventWindow,
+            metadata.getConfidence(),
+            metadata.getSource());
     }
 
     public static ScoreStateResponse toScoreState(ScoreState scoreState) {
         return new ScoreStateResponse(scoreState.getPlayer1(), scoreState.getPlayer2());
+    }
+
+    private static EventWindowResponse toEventWindow(EventWindow eventWindow) {
+        if (eventWindow == null) {
+            return null;
+        }
+        return new EventWindowResponse(eventWindow.getPreMs(), eventWindow.getPostMs());
     }
 
     public static HighlightsResponse toHighlights(Highlights highlights) {

@@ -4,6 +4,15 @@
 
 The AllanAI backend is built with Spring Boot and provides RESTful APIs for video upload, processing orchestration, and statistics retrieval. It integrates with OpenCV for computer vision analysis of table tennis gameplay.
 
+### Dataset & Event Annotation Strategy
+- **Benchmark references**: TTNet (CVPR 2020 workshop) demonstrates multi-task inference on the OpenTTGames dataset; AllanAI extends these ideas with modular services and MongoDB persistence.
+- **OpenTTGames alignment**: All matches processed by the backend inherit the dataset convention of 120 fps video, event annotations keyed by frame number, and auxiliary channels for ball coordinates and segmentation masks.
+- **Timestamp guarantees**:
+    - Every detected event stores both `timestampMs` (wall-clock) and `metadata.frameNumber` for precise frame-to-time mapping.
+    - `metadata.eventWindow` preserves the −4/+12 frame slices used during training to provide consistent highlight previews.
+    - MongoDB indexes on `{ "events.timestampMs": 1, "status": 1 }` support Compass-friendly exploration of timestamped data.
+- **Model lifecycle**: Training scripts (external repository) export YOLO/TTNet-like weights; the backend consumes model outputs as JSON event streams or falls back to heuristic detection when model confidence is low.
+
 ## Architecture Pattern: Layered Architecture
 
 ```
@@ -26,94 +35,133 @@ The AllanAI backend is built with Spring Boot and provides RESTful APIs for vide
 ▼                            ▼                    ▼
 ┌──────────────┐   ┌──────────────┐   ┌──────────────┐
 │  Repository  │   │    OpenCV    │   │File Storage  │
-│   (JPA/DB)   │   │  Processing  │   │   Service    │
+│ (MongoDB)    │   │  Processing  │   │   Service    │
 └──────────────┘   └──────────────┘   └──────────────┘
 ```
 
 ## Project Structure
 
-```
-backend/src/main/java/com/allanai/
-├── AllanAIApplication.java
-│
-├── controller/
-│   ├── MatchController.java
-│   ├── StatisticsController.java
-│   └── HealthController.java
-│
-├── service/
-│   ├── MatchService.java
-│   ├── ProcessingService.java
-│   ├── StatisticsService.java
-│   ├── FileStorageService.java
-│   └── NotificationService.java
-│
-├── opencv/
-│   ├── OpenCVProcessor.java
-│   ├── TableDetector.java
-│   ├── BallTracker.java
-│   ├── PlayerDetector.java
-│   ├── ScoreCalculator.java
-│   └── model/
-│       ├── DetectionResult.java
-│       ├── BallPosition.java
-│       ├── TableBoundary.java
-│       └── FrameAnalysis.java
-│
-├── repository/
-│   ├── MatchRepository.java
-│   ├── MatchStatisticsRepository.java
-│   └── ShotRepository.java
-│
-├── model/
-│   ├── entity/
-│   │   ├── Match.java
-│   │   ├── MatchStatistics.java
-│   │   └── Shot.java
-│   │
-│   └── dto/
-│       ├── request/
-│       │   └── UploadRequest.java
-│       │
-│       └── response/
-│           ├── ApiResponse.java
-│           ├── MatchResponse.java
-│           ├── StatisticsResponse.java
-│           └── ProcessingStatusResponse.java
-│
-├── config/
-│   ├── OpenCVConfig.java
-│   ├── AsyncConfig.java
-│   ├── CorsConfig.java
-│   ├── SecurityConfig.java
-│   └── FileStorageProperties.java
-│
-├── exception/
-│   ├── GlobalExceptionHandler.java
-│   ├── MatchNotFoundException.java
-│   ├── ProcessingException.java
-│   └── StorageException.java
-│
-└── util/
-    ├── Constants.java
-    └── VideoUtils.java
+Spring Data MongoDB is used for persistence.
 
-resources/
-├── application.properties
-├── application-dev.properties
-├── application-prod.properties
-└── db/
-    └── migration/
-        ├── V1__create_matches_table.sql
-        ├── V2__create_statistics_table.sql
-        └── V3__create_shots_table.sql
+```java
+@Repository
+public interface MatchRepository extends MongoRepository<MatchDocument, String> {
+
+    List<MatchDocument> findAllByStatusOrderByCreatedAtDesc(MatchStatus status);
+
+    @Aggregation("[{ $match: { _id: ?0 } }, { $project: { events: 1, statistics: 1 } }]")
+    Optional<MatchDocument> projectAnalytics(String matchId);
+}
 ```
 
-## Layer Responsibilities
+- MongoDB's flexible document model allows us to embed statistics, shots, and events under a single `matches` collection document, mirroring the annotation bundles supplied by OpenTTGames.
+- Compound indexes recommended:
+  - `{ "status": 1, "createdAt": -1 }` for dashboards.
+  - `{ "events.timestampMs": 1 }` for efficient event timeline queries and Compass visualisation.
 
-### 1. Controller Layer
+```
+backend/
+The `MatchDocument` aggregate persists everything needed for playback, statistics, and highlight reconstruction.
 
-**Purpose**: Handle HTTP requests and responses
+```java
+@Document("matches")
+public class MatchDocument {
+    @Id private String id;
+    private Instant createdAt;
+    private Instant processedAt;
+    private MatchStatus status;
+    private String originalFilename;
+    private String videoPath;
+    private Integer durationSeconds;
+    private MatchStatistics statistics;
+    private List<Shot> shots = new ArrayList<>();
+    private List<Event> events = new ArrayList<>();
+    private Highlights highlights;
+
+    public static class Event {
+        private String id;
+        private Long timestampMs;
+        private EventType type;
+        private Integer player;
+        private Integer importance;
+        private EventMetadata metadata;
+    }
+
+    public static class EventMetadata {
+        private Double shotSpeed;
+        private Integer rallyLength;
+        private String shotType;
+        private Integer frameNumber;   // 120 fps-aligned source frame
+        private EventWindow eventWindow;
+        private List<List<Double>> ballTrajectory;
+        private ScoreState scoreAfter;
+        private Double confidence;
+    }
+
+    public static class EventWindow {
+        private Integer preMs;   // usually 4 frames ≈ 33 ms each
+        private Integer postMs;  // usually 12 frames
+    }
+}
+```
+
+> **Timestamp rule**: During ingestion, the backend converts the frame index supplied by the detector (`frameNumber`) to millisecond timestamps using the actual video FPS. This preserves alignment even when training data (fixed 120 fps) differs from live recordings.
+
+├── backend/
+│   ├── src/main/java/com/backend/backend/
+Key configuration files align with asynchronous processing and MongoDB storage.
+
+**AsyncConfig.java**
+```java
+@Configuration
+@EnableAsync
+public class AsyncConfig {
+    @Bean(name = "matchProcessingExecutor")
+    public Executor matchProcessingExecutor() {
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+        executor.setCorePoolSize(processingProperties.getThreads().getCore());
+        executor.setMaxPoolSize(processingProperties.getThreads().getMax());
+        executor.setQueueCapacity(processingProperties.getThreads().getQueueCapacity());
+        executor.setThreadNamePrefix("match-processing-");
+        executor.initialize();
+        return executor;
+    }
+}
+```
+
+**application.properties**
+```properties
+spring.application.name=allanai-backend
+server.port=8080
+
+# Mongo configuration (Compass friendly)
+spring.data.mongodb.uri=mongodb://localhost:27017/backend
+spring.data.mongodb.auto-index-creation=true
+
+# File system storage
+storage.video-root=storage/videos
+storage.max-file-size-mb=500
+
+# Async processing defaults
+processing.max-frame-samples=720
+processing.motion-threshold=18.0
+processing.threads.core=2
+processing.threads.max=4
+processing.threads.queue-capacity=100
+
+spring.servlet.multipart.max-file-size=512MB
+spring.servlet.multipart.max-request-size=512MB
+```
+
+**ProcessingProperties.java** binds the `processing.*` namespace and exposes values such as maximum frame samples (used to cap heuristic processing) and default pre-/post-event windows.
+
+│   │   ├── BackendApplication.java
+│   │   ├── config/
+Match-specific exceptions are intentionally lightweight. Controllers raise `IllegalArgumentException` for missing matches, which is mapped to `404 NOT_FOUND` via an `@ExceptionHandler`. Storage errors bubble up as `ResponseStatusException` with helpful messages suitable for frontend display.
+
+- Video streaming errors return `HttpStatus.NOT_FOUND` when the resource is missing and log the path for observability.
+- Async processing failures update the corresponding `MatchDocument` status to `FAILED` with `processedAt` timestamps for traceability in MongoDB Compass.
+
 
 **Guidelines**:
 - Keep controllers thin - delegate to services
@@ -126,117 +174,49 @@ resources/
 ```java
 @RestController
 @RequestMapping("/api/matches")
-@RequiredArgsConstructor
-@Tag(name = "Match Management", description = "APIs for managing table tennis matches")
 public class MatchController {
-    
+
     private final MatchService matchService;
-    private final ProcessingService processingService;
-    
+    private final MatchProcessingService matchProcessingService;
+    private final VideoStorageService videoStorageService;
+
     @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @Operation(summary = "Upload a match video for processing")
-    public ResponseEntity<ApiResponse<UploadResponse>> uploadMatch(
-            @RequestParam("video") MultipartFile video) {
-        
-        if (video.isEmpty()) {
-            return ResponseEntity.badRequest()
-                    .body(ApiResponse.error("INVALID_FILE", "Video file is required"));
-        }
-        
-        // Validate file type
-        String contentType = video.getContentType();
-        if (contentType == null || !contentType.startsWith("video/")) {
-            return ResponseEntity.badRequest()
-                    .body(ApiResponse.error("INVALID_FILE_TYPE", 
-                            "Only video files are allowed"));
-        }
-        
-        // Validate file size (500MB max)
-        if (video.getSize() > 500 * 1024 * 1024) {
-            return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE)
-                    .body(ApiResponse.error("FILE_TOO_LARGE", 
-                            "Video must be smaller than 500MB"));
-        }
-        
-        try {
-            String matchId = matchService.createMatch(video);
-            return ResponseEntity.ok(
-                    ApiResponse.success(new UploadResponse(matchId))
-            );
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponse.error("UPLOAD_FAILED", e.getMessage()));
-        }
+    public ResponseEntity<MatchUploadResponse> uploadMatch(@RequestParam("video") MultipartFile video,
+                                                           UriComponentsBuilder uriBuilder) {
+        String matchId = UUID.randomUUID().toString();
+        String storedPath = videoStorageService.store(video, matchId);
+        MatchDocument match = matchService.createMatch(matchId, video.getOriginalFilename(), storedPath);
+        matchProcessingService.processAsync(match.getId());
+        URI location = uriBuilder.path("/api/matches/{id}").buildAndExpand(match.getId()).toUri();
+        return ResponseEntity.accepted().location(location)
+            .body(new MatchUploadResponse(match.getId(), MatchStatus.PROCESSING));
     }
-    
+
     @GetMapping
-    @Operation(summary = "Get all matches")
-    public ResponseEntity<ApiResponse<List<MatchResponse>>> getAllMatches(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
-        
-        List<MatchResponse> matches = matchService.getAllMatches(page, size);
-        return ResponseEntity.ok(ApiResponse.success(matches));
+    public List<MatchSummaryResponse> listMatches() {
+        return matchService.listMatches().stream().map(MatchMapper::toSummary).toList();
     }
-    
-    @GetMapping("/{id}")
-    @Operation(summary = "Get match details by ID")
-    public ResponseEntity<ApiResponse<MatchResponse>> getMatchById(
-            @PathVariable String id) {
-        
-        try {
-            MatchResponse match = matchService.getMatchById(id);
-            return ResponseEntity.ok(ApiResponse.success(match));
-        } catch (MatchNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(ApiResponse.error("MATCH_NOT_FOUND", e.getMessage()));
-        }
+
+    @GetMapping("/{id}/events")
+    public List<EventResponse> getEvents(@PathVariable String id) {
+        MatchDocument match = matchService.getById(id);
+        return match.getEvents() == null ? List.of() : match.getEvents().stream()
+            .map(MatchMapper::toEvent)
+            .toList();
     }
-    
-    @GetMapping("/{id}/status")
-    @Operation(summary = "Get processing status of a match")
-    public ResponseEntity<ApiResponse<ProcessingStatusResponse>> getProcessingStatus(
-            @PathVariable String id) {
-        
-        try {
-            ProcessingStatusResponse status = processingService.getStatus(id);
-            return ResponseEntity.ok(ApiResponse.success(status));
-        } catch (MatchNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(ApiResponse.error("MATCH_NOT_FOUND", e.getMessage()));
-        }
-    }
-    
+
     @GetMapping("/{id}/video")
-    @Operation(summary = "Download processed video")
-    public ResponseEntity<Resource> downloadVideo(@PathVariable String id) {
-        
-        try {
-            File videoFile = matchService.getProcessedVideo(id);
-            Resource resource = new FileSystemResource(videoFile);
-            
-            return ResponseEntity.ok()
-                    .contentType(MediaType.APPLICATION_OCTET_STREAM)
-                    .header(HttpHeaders.CONTENT_DISPOSITION, 
-                            "attachment; filename=\"" + videoFile.getName() + "\"")
-                    .body(resource);
-        } catch (MatchNotFoundException e) {
-            return ResponseEntity.notFound().build();
-        }
+    public ResponseEntity<Resource> streamVideo(@PathVariable String id) {
+        MatchDocument match = matchService.getById(id);
+        Resource video = videoStorageService.loadAsResource(match.getVideoPath());
+        MediaType mediaType = MediaTypeFactory.getMediaType(video).orElse(MediaType.APPLICATION_OCTET_STREAM);
+        return ResponseEntity.ok()
+            .contentType(mediaType)
+            .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + match.getOriginalFilename() + "\"")
+            .body(video);
     }
-    
-    @DeleteMapping("/{id}")
-    @Operation(summary = "Delete a match and its associated data")
-    public ResponseEntity<ApiResponse<Void>> deleteMatch(@PathVariable String id) {
-        
-        try {
-            matchService.deleteMatch(id);
-            return ResponseEntity.ok(ApiResponse.success(null));
-        } catch (MatchNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(ApiResponse.error("MATCH_NOT_FOUND", e.getMessage()));
-        }
-    }
+
+    // Additional endpoints expose statistics, highlights, status, and deletion
 }
 ```
 
@@ -287,118 +267,93 @@ public class StatisticsController {
 **MatchService.java**:
 ```java
 @Service
-@RequiredArgsConstructor
-@Slf4j
 public class MatchService {
-    
-    private final MatchRepository matchRepository;
-    private final FileStorageService fileStorageService;
-    private final ProcessingService processingService;
-    
-    @Transactional
-    public String createMatch(MultipartFile video) {
-        log.info("Creating new match from uploaded video: {}", video.getOriginalFilename());
-        
-        // Create match entity
-        Match match = new Match();
-        match.setId(UUID.randomUUID().toString());
-        match.setCreatedAt(LocalDateTime.now());
+
+    private final MatchRepository repository;
+
+    public MatchService(MatchRepository repository) {
+        this.repository = repository;
+    }
+
+    public MatchDocument createMatch(String matchId, String originalFilename, String videoPath) {
+        MatchDocument match = new MatchDocument();
+        match.setId(matchId);
+        match.setCreatedAt(Instant.now());
         match.setStatus(MatchStatus.UPLOADED);
-        match.setOriginalFilename(video.getOriginalFilename());
-        match.setFileSize(video.getSize());
-        
-        // Save video file
-        String videoPath = fileStorageService.saveVideo(match.getId(), video);
+        match.setOriginalFilename(originalFilename);
         match.setVideoPath(videoPath);
-        
-        // Save match to database
-        matchRepository.save(match);
-        
-        // Trigger async processing
-        processingService.processMatchAsync(match.getId());
-        
-        log.info("Match created successfully with ID: {}", match.getId());
-        return match.getId();
+        return repository.save(match);
     }
-    
-    public List<MatchResponse> getAllMatches(int page, int size) {
-        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
-        Page<Match> matchPage = matchRepository.findAll(pageable);
-        
-        return matchPage.getContent().stream()
-                .map(this::convertToResponse)
-                .collect(Collectors.toList());
+
+    public MatchDocument getById(String id) {
+        return repository.findById(id)
+            .orElseThrow(() -> new IllegalArgumentException("Match not found: " + id));
     }
-    
-    public MatchResponse getMatchById(String id) {
-        Match match = matchRepository.findById(id)
-                .orElseThrow(() -> new MatchNotFoundException("Match not found: " + id));
-        return convertToResponse(match);
+
+    public List<MatchDocument> listMatches() {
+        return repository.findAll(Sort.by(Sort.Direction.DESC, "createdAt"));
     }
-    
-    public File getProcessedVideo(String matchId) {
-        Match match = matchRepository.findById(matchId)
-                .orElseThrow(() -> new MatchNotFoundException("Match not found: " + matchId));
-        
-        if (match.getStatus() != MatchStatus.COMPLETE) {
-            throw new IllegalStateException("Match processing not complete");
-        }
-        
-        return fileStorageService.getProcessedVideo(matchId);
+
+    public MatchDocument save(MatchDocument match) {
+        return repository.save(match);
     }
-    
-    @Transactional
-    public void deleteMatch(String id) {
-        Match match = matchRepository.findById(id)
-                .orElseThrow(() -> new MatchNotFoundException("Match not found: " + id));
-        
-        // Delete video files
-        fileStorageService.deleteMatchFiles(id);
-        
-        // Delete from database (cascade deletes statistics and shots)
-        matchRepository.delete(match);
-        
-        log.info("Match deleted: {}", id);
-    }
-    
-    private MatchResponse convertToResponse(Match match) {
-        return MatchResponse.builder()
-                .id(match.getId())
-                .createdAt(match.getCreatedAt().toString())
-                .status(match.getStatus().name())
-                .durationSeconds(match.getDurationSeconds())
-                .processedAt(match.getProcessedAt() != null ? 
-                        match.getProcessedAt().toString() : null)
-                .thumbnailUrl(generateThumbnailUrl(match.getId()))
-                .build();
-    }
-    
-    private String generateThumbnailUrl(String matchId) {
-        return "/api/matches/" + matchId + "/thumbnail";
+
+    public void deleteMatch(MatchDocument match) {
+        repository.delete(match);
     }
 }
 ```
 
-**ProcessingService.java**:
+**MatchProcessingService.java** (excerpt):
 ```java
 @Service
-@RequiredArgsConstructor
-@Slf4j
-public class ProcessingService {
-    
-    private final MatchRepository matchRepository;
-    private final MatchStatisticsRepository statisticsRepository;
-    private final ShotRepository shotRepository;
-    private final OpenCVProcessor openCVProcessor;
-    private final FileStorageService fileStorageService;
-    private final Map<String, ProcessingStatusResponse> statusCache = new ConcurrentHashMap<>();
-    
-    @Async("taskExecutor")
-    @Transactional
-    public CompletableFuture<Void> processMatchAsync(String matchId) {
-        log.info("Starting async processing for match: {}", matchId);
-        
+public class MatchProcessingService {
+
+    @Async("matchProcessingExecutor")
+    public void processAsync(String matchId) {
+        MatchDocument match = matchService.getById(matchId);
+        match.setStatus(MatchStatus.PROCESSING);
+        matchService.save(match);
         try {
+            processVideo(match);
+            match.setStatus(MatchStatus.COMPLETE);
+            match.setProcessedAt(Instant.now());
+            matchService.save(match);
+        } catch (Exception ex) {
+            match.setStatus(MatchStatus.FAILED);
+            match.setProcessedAt(Instant.now());
+            matchService.save(match);
+        }
+    }
+
+    private void processVideo(MatchDocument match) {
+        VideoCapture capture = new VideoCapture(videoStorageService.resolvePath(match.getVideoPath()).toString());
+        double fps = Math.max(capture.get(Videoio.CAP_PROP_FPS), 30.0);
+        int durationSeconds = (int) Math.round(capture.get(Videoio.CAP_PROP_FRAME_COUNT) / fps);
+        match.setDurationSeconds(durationSeconds);
+
+        while (capture.read(frame) && processedFrames < maxSamples) {
+            Imgproc.cvtColor(frame, gray, Imgproc.COLOR_BGR2GRAY);
+            if (!prevGray.empty()) {
+                double motionScore = Core.mean(diff).val[0];
+                if (motionScore > 18.0) {
+                    long timestampMs = Math.round((frameIndex / fps) * 1000.0);
+                    Event event = buildEvent(timestampMs, motionScore, shot, runningScore, events.size());
+                    // Event metadata stores frame index, −4/+12 frame window, and confidence values
+                    events.add(event);
+                }
+            }
+            gray.copyTo(prevGray);
+            frameIndex++;
+        }
+
+        match.setStatistics(buildStatistics(events, shots, cumulativeSpeed, maxSpeed));
+        match.setEvents(events);
+        match.setShots(shots);
+        match.setHighlights(buildHighlights(events));
+    }
+}
+```
             // Update status
             updateStatus(matchId, MatchStatus.PROCESSING, 0);
             
@@ -679,310 +634,4 @@ public class FileStorageService {
 }
 ```
 
-### 3. Repository Layer
-
-**MatchRepository.java**:
-```java
-@Repository
-public interface MatchRepository extends JpaRepository<Match, String> {
-    
-    List<Match> findByStatus(MatchStatus status);
-    
-    @Query("SELECT m FROM Match m WHERE m.createdAt >= :startDate AND m.createdAt <= :endDate")
-    List<Match> findByDateRange(
-            @Param("startDate") LocalDateTime startDate,
-            @Param("endDate") LocalDateTime endDate
-    );
-}
-```
-
-**MatchStatisticsRepository.java**:
-```java
-@Repository
-public interface MatchStatisticsRepository extends JpaRepository<MatchStatistics, String> {
-    
-    Optional<MatchStatistics> findByMatchId(String matchId);
-}
-```
-
-**ShotRepository.java**:
-```java
-@Repository
-public interface ShotRepository extends JpaRepository<Shot, String> {
-    
-    List<Shot> findByMatchIdOrderByTimestampMs(String matchId);
-    
-    @Query("SELECT s FROM Shot s WHERE s.match.id = :matchId AND s.player = :player")
-    List<Shot> findByMatchIdAndPlayer(
-            @Param("matchId") String matchId,
-            @Param("player") int player
-    );
-}
-```
-
-### 4. Entity Models
-
-**Match.java**:
-```java
-@Entity
-@Table(name = "matches")
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-public class Match {
-    
-    @Id
-    private String id;
-    
-    @Column(name = "created_at", nullable = false)
-    private LocalDateTime createdAt;
-    
-    @Column(name = "processed_at")
-    private LocalDateTime processedAt;
-    
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private MatchStatus status;
-    
-    @Column(name = "video_path")
-    private String videoPath;
-    
-    @Column(name = "original_filename")
-    private String originalFilename;
-    
-    @Column(name = "file_size")
-    private Long fileSize;
-    
-    @Column(name = "duration_seconds")
-    private Integer durationSeconds;
-    
-    @Column(name = "error_message")
-    private String errorMessage;
-    
-    @OneToOne(mappedBy = "match", cascade = CascadeType.ALL, orphanRemoval = true)
-    private MatchStatistics statistics;
-    
-    @OneToMany(mappedBy = "match", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Shot> shots;
-}
-
-enum MatchStatus {
-    UPLOADED, PROCESSING, COMPLETE, FAILED
-}
-```
-
-**MatchStatistics.java**:
-```java
-@Entity
-@Table(name = "match_statistics")
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-public class MatchStatistics {
-    
-    @Id
-    private String id;
-    
-    @OneToOne
-    @JoinColumn(name = "match_id", nullable = false)
-    private Match match;
-    
-    @Column(name = "player1_score")
-    private Integer player1Score;
-    
-    @Column(name = "player2_score")
-    private Integer player2Score;
-    
-    @Column(name = "total_rallies")
-    private Integer totalRallies;
-    
-    @Column(name = "avg_rally_length")
-    private Float avgRallyLength;
-    
-    @Column(name = "max_rally_length")
-    private Integer maxRallyLength;
-    
-    @Column(name = "avg_ball_speed")
-    private Float avgBallSpeed;
-    
-    @Column(name = "max_ball_speed")
-    private Float maxBallSpeed;
-    
-    @Column(name = "player1_accuracy")
-    private Float player1Accuracy;
-    
-    @Column(name = "player2_accuracy")
-    private Float player2Accuracy;
-    
-    @Column(name = "player1_serve_success")
-    private Float player1ServeSuccess;
-    
-    @Column(name = "player2_serve_success")
-    private Float player2ServeSuccess;
-}
-```
-
-**Shot.java**:
-```java
-@Entity
-@Table(name = "shots")
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
-public class Shot {
-    
-    @Id
-    private String id;
-    
-    @ManyToOne
-    @JoinColumn(name = "match_id", nullable = false)
-    private Match match;
-    
-    @Column(name = "timestamp_ms", nullable = false)
-    private Long timestampMs;
-    
-    @Column(nullable = false)
-    private Integer player; // 1 or 2
-    
-    @Column(name = "shot_type")
-    private String shotType; // SERVE, FOREHAND, BACKHAND
-    
-    @Column
-    private Float speed;
-    
-    @Column
-    private Float accuracy;
-    
-    @Column
-    private String result; // IN, OUT, NET
-}
-```
-
-### 5. Configuration
-
-**AsyncConfig.java**:
-```java
-@Configuration
-@EnableAsync
-public class AsyncConfig {
-    
-    @Bean(name = "taskExecutor")
-    public Executor taskExecutor() {
-        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-        executor.setCorePoolSize(2);
-        executor.setMaxPoolSize(4);
-        executor.setQueueCapacity(100);
-        executor.setThreadNamePrefix("opencv-processing-");
-        executor.initialize();
-        return executor;
-    }
-}
-```
-
-**CorsConfig.java**:
-```java
-@Configuration
-public class CorsConfig implements WebMvcConfigurer {
-    
-    @Override
-    public void addCorsMappings(CorsRegistry registry) {
-        registry.addMapping("/api/**")
-                .allowedOrigins("http://localhost:3000", "http://10.0.2.2:8080")
-                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
-                .allowedHeaders("*")
-                .allowCredentials(true)
-                .maxAge(3600);
-    }
-}
-```
-
-**FileStorageProperties.java**:
-```java
-@Configuration
-@ConfigurationProperties(prefix = "file")
-@Data
-public class FileStorageProperties {
-    
-    private String uploadDir = "/var/allanai/videos";
-}
-```
-
-**application.properties**:
-```properties
-# Server Configuration
-server.port=8080
-spring.application.name=allanai-backend
-
-# Database Configuration
-spring.datasource.url=jdbc:postgresql://localhost:5432/allanai
-spring.datasource.username=allanai
-spring.datasource.password=changeme
-spring.jpa.hibernate.ddl-auto=validate
-spring.jpa.show-sql=false
-spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect
-
-# File Upload Configuration
-spring.servlet.multipart.enabled=true
-spring.servlet.multipart.max-file-size=500MB
-spring.servlet.multipart.max-request-size=500MB
-
-# File Storage
-file.upload-dir=/var/allanai/videos
-
-# Async Configuration
-spring.task.execution.pool.core-size=2
-spring.task.execution.pool.max-size=4
-spring.task.execution.pool.queue-capacity=100
-
-# Logging
-logging.level.root=INFO
-logging.level.com.allanai=DEBUG
-logging.file.name=/var/log/allanai/application.log
-
-# OpenAPI Documentation
-springdoc.api-docs.path=/api-docs
-springdoc.swagger-ui.path=/swagger-ui
-```
-
-### 6. Exception Handling
-
-**GlobalExceptionHandler.java**:
-```java
-@RestControllerAdvice
-@Slf4j
-public class GlobalExceptionHandler {
-    
-    @ExceptionHandler(MatchNotFoundException.class)
-    public ResponseEntity<ApiResponse<Void>> handleMatchNotFound(MatchNotFoundException e) {
-        log.error("Match not found", e);
-        return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(ApiResponse.error("MATCH_NOT_FOUND", e.getMessage()));
-    }
-    
-    @ExceptionHandler(StorageException.class)
-    public ResponseEntity<ApiResponse<Void>> handleStorageException(StorageException e) {
-        log.error("Storage error", e);
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(ApiResponse.error("STORAGE_ERROR", e.getMessage()));
-    }
-    
-    @ExceptionHandler(ProcessingException.class)
-    public ResponseEntity<ApiResponse<Void>> handleProcessingException(ProcessingException e) {
-        log.error("Processing error", e);
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(ApiResponse.error("PROCESSING_ERROR", e.getMessage()));
-    }
-    
-    @ExceptionHandler(MaxUploadSizeExceededException.class)
-    public ResponseEntity<ApiResponse<Void>> handleMaxSizeException(
-            MaxUploadSizeExceededException e) {
-        log.error("File size exceeded", e);
-        return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE)
-                .body(ApiResponse.error("FILE_TOO_LARGE", "File size exceeds maximum limit"));
-    }
-    
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<ApiResponse<Void>> handleGenericException(Exception e) {
-        log# AllanAI Backend Architecture (Spring Boot)
 

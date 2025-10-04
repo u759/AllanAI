@@ -9,12 +9,19 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 @Configuration
 public class AsyncConfig {
 
+    private final ProcessingProperties processingProperties;
+
+    public AsyncConfig(ProcessingProperties processingProperties) {
+        this.processingProperties = processingProperties;
+    }
+
     @Bean(name = "matchProcessingExecutor")
     public Executor matchProcessingExecutor() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-        executor.setCorePoolSize(2);
-        executor.setMaxPoolSize(4);
-        executor.setQueueCapacity(16);
+        ProcessingProperties.Threads threads = processingProperties.getThreads();
+        executor.setCorePoolSize(threads.getCore());
+        executor.setMaxPoolSize(threads.getMax());
+        executor.setQueueCapacity(threads.getQueueCapacity());
         executor.setThreadNamePrefix("MatchProc-");
         executor.initialize();
         return executor;

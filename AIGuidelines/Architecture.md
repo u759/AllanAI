@@ -20,6 +20,15 @@
 - **Storage**: File system for videos, database for match statistics
 - **Repository**: Monorepo structure (single repository)
 
+### Research & Dataset Baseline
+- **Reference paper**: *TTNet: Real-time temporal and spatial video analysis of table tennis* (CVPR 2020 workshop) – baseline for multi-task event spotting, ball tracking, and semantic segmentation.
+- **OpenTTGames dataset** (OSAI Labs):
+  - 12 full-HD training videos (120 fps) + 7 test clips, each distributed with JSON markup for **event frame numbers** and **ball coordinates**.
+  - Event annotations use keys formatted as `frameNumber: eventName` with three primary labels (ball bounce, net hit, empty) and 4 pre-event / 12 post-event frames enriched with ball trajectories.
+  - Segmentation masks are supplied per annotated frame (`{frame}.png`) with channel-wise encoding for players, table, and scoreboard.
+  - Dataset ships alongside zipped metadata that can be browsed locally with MongoDB Compass after import, enabling direct inspection of timestamped events.
+- **Internal dataset curation**: AllanAI mirrors this structure—every detected or inferred match event stores both the absolute video timestamp (`timestampMs`) and the originating frame index so downstream services can reconstruct event windows.
+
 ## System Architecture
 
 ```
@@ -220,6 +229,7 @@ Detect and timestamp events:
     - Fastest shots
     - Misses/errors
     - Serve aces
+  - Persist source frame numbers and 120 fps-aligned event windows (−4/+12 frame slices)
     ↓
 Generate highlight reels:
     - Auto-select top moments
@@ -385,7 +395,13 @@ DELETE /api/matches/{id}            # Delete match
         "rallyLength": Number,
         "shotType": String,
         "ballTrajectory": [[Number]], // Array of [x, y] coordinates
-        "frameNumber": Number
+        "frameNumber": Number,        // Source frame as provided by detectors
+        "eventWindow": {
+          "preMs": Number,           // Typically 4 frames (≈33ms each) before event
+          "postMs": Number           // Typically 12 frames after event
+        },
+        "confidence": Number,         // Model confidence score 0-1
+        "source": String              // MANUAL | MODEL | HYBRID
       }
     }
   ],
