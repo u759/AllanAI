@@ -4,7 +4,8 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import com.example.myapplication.ui.screens.upload.UploadScreen
+import com.example.myapplication.ui.screens.matches.MatchListScreen
+import com.example.myapplication.ui.screens.matches.MatchDetailScreen
 import com.example.myapplication.ui.theme.MyApplicationTheme
 
 class MainActivity : ComponentActivity() {
@@ -13,7 +14,9 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             MyApplicationTheme {
-                UploadScreen()
+                // Change this to UploadScreen() or MatchDetailScreen() to view other screens
+                //MatchListScreen()
+                MatchDetailScreen()
             }
         }
     }
