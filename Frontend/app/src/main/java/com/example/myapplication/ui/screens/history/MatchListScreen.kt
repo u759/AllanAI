@@ -1,4 +1,4 @@
-package com.example.myapplication.ui.screens.matches
+package com.example.myapplication.ui.screens.history
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -256,7 +256,7 @@ private fun BottomNavigationBar(
         NavigationBarItem(
             icon = {
                 Icon(
-                    imageVector = Icons.Default.Upload,
+                    imageVector = Icons.Default.Videocam,
                     contentDescription = "Upload"
                 )
             },
@@ -310,7 +310,7 @@ private fun BottomNavigationBar(
         NavigationBarItem(
             icon = {
                 Icon(
-                    imageVector = Icons.Default.Movie,
+                    imageVector = Icons.Default.Star,
                     contentDescription = "Highlights"
                 )
             },

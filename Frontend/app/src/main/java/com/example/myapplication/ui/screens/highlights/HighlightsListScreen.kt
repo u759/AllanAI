@@ -301,7 +301,7 @@ private fun HighlightsBottomNav(
             horizontalArrangement = Arrangement.SpaceEvenly
         ) {
             BottomNavItem(
-                icon = Icons.Default.Upload,
+                icon = Icons.Default.Videocam,
                 label = "Upload",
                 selected = selectedTab == 0,
                 onClick = onNavigateToUpload
@@ -330,7 +330,7 @@ private fun HighlightsBottomNav(
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
-                        imageVector = Icons.Default.Movie,
+                        imageVector = Icons.Default.Star,
                         contentDescription = "Highlights",
                         tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(24.dp)

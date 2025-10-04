@@ -1,4 +1,4 @@
-package com.example.myapplication.ui.screens.welcome
+package com.example.myapplication.ui.screens.upload
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -21,7 +21,7 @@ import com.example.myapplication.ui.theme.MyApplicationTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun WelcomeScreen(
+fun WelcomeUpload(
     onUploadClick: () -> Unit = {},
     onRecordClick: () -> Unit = {},
     onNavigateToHistory: () -> Unit = {},
@@ -35,7 +35,7 @@ fun WelcomeScreen(
         bottomBar = {
             WelcomeBottomNav(
                 selectedTab = 0,
-                onNavigateToHome = {},
+                onNavigateToUpload = {},
                 onNavigateToHistory = onNavigateToHistory,
                 onNavigateToHighlights = onNavigateToHighlights,
                 onNavigateToProfile = onNavigateToProfile
@@ -208,7 +208,7 @@ private fun WelcomeContent(
 @Composable
 private fun WelcomeBottomNav(
     selectedTab: Int,
-    onNavigateToHome: () -> Unit,
+    onNavigateToUpload: () -> Unit,
     onNavigateToHistory: () -> Unit,
     onNavigateToHighlights: () -> Unit,
     onNavigateToProfile: () -> Unit
@@ -225,13 +225,13 @@ private fun WelcomeBottomNav(
         NavigationBarItem(
             icon = {
                 Icon(
-                    imageVector = Icons.Default.Home,
-                    contentDescription = "Home"
+                    imageVector = Icons.Default.Videocam,
+                    contentDescription = "Upload"
                 )
             },
             label = {
                 Text(
-                    text = "Home",
+                    text = "Upload",
                     style = MaterialTheme.typography.labelSmall.copy(
                         fontWeight = if (selectedTab == 0) FontWeight.Bold else FontWeight.Medium,
                         fontSize = 12.sp
@@ -239,7 +239,7 @@ private fun WelcomeBottomNav(
                 )
             },
             selected = selectedTab == 0,
-            onClick = onNavigateToHome,
+            onClick = onNavigateToUpload,
             colors = NavigationBarItemDefaults.colors(
                 selectedIconColor = MaterialTheme.colorScheme.primary,
                 selectedTextColor = MaterialTheme.colorScheme.primary,
@@ -334,8 +334,8 @@ private fun WelcomeBottomNav(
 
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
-fun WelcomeScreenPreview() {
+fun WelcomeUploadPreview() {
     MyApplicationTheme {
-        WelcomeScreen()
+        WelcomeUpload()
     }
 }

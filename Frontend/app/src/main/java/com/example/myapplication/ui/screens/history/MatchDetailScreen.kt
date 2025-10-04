@@ -1,4 +1,4 @@
-package com.example.myapplication.ui.screens.matches
+package com.example.myapplication.ui.screens.history
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -595,7 +595,7 @@ private fun MatchDetailBottomNav(
             horizontalArrangement = Arrangement.SpaceEvenly
         ) {
             BottomNavItem(
-                icon = Icons.Default.Upload,
+                icon = Icons.Default.Videocam,
                 label = "Upload",
                 selected = selectedTab == 0,
                 onClick = onNavigateToUpload
@@ -639,7 +639,7 @@ private fun MatchDetailBottomNav(
             }
             
             BottomNavItem(
-                icon = Icons.Default.Movie,
+                icon = Icons.Default.Star,
                 label = "Highlights",
                 selected = selectedTab == 2,
                 onClick = onNavigateToHighlights
