@@ -8,6 +8,7 @@ import com.example.myapplication.data.api.dto.MatchStatusResponse
 import com.example.myapplication.data.api.dto.MatchSummaryResponse
 import com.example.myapplication.data.api.dto.MatchUploadResponse
 import okhttp3.MultipartBody
+import okhttp3.RequestBody
 import okhttp3.ResponseBody
 import retrofit2.http.DELETE
 import retrofit2.http.GET
@@ -31,16 +32,22 @@ interface AllanAIApiService {
     
     /**
      * Upload a video file to create a new match.
-     * 
+     *
      * POST /api/matches/upload
-     * 
+     *
      * @param video MultipartBody.Part containing the video file
+     * @param player1Name Player 1's name
+     * @param player2Name Player 2's name
+     * @param matchTitle Title of the match
      * @return MatchUploadResponse with matchId and initial status
      */
     @Multipart
     @POST("api/matches/upload")
     suspend fun uploadMatch(
-        @Part video: MultipartBody.Part
+        @Part video: MultipartBody.Part,
+        @Part("player1Name") player1Name: RequestBody? = null,
+        @Part("player2Name") player2Name: RequestBody? = null,
+        @Part("matchTitle") matchTitle: RequestBody? = null
     ): MatchUploadResponse
     
     /**

@@ -15,8 +15,10 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
+import okhttp3.RequestBody.Companion.toRequestBody
 import java.io.File
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -43,12 +45,18 @@ class ApiMatchRepository @Inject constructor(
     
     /**
      * Upload a video file to create a new match.
-     * 
+     *
      * The video is sent as multipart/form-data to the backend.
      * Backend will process it asynchronously and detect events, shots, etc.
      */
     @RequiresApi(Build.VERSION_CODES.O)
-    override suspend fun uploadMatch(videoFile: File, filename: String): Result<Match> {
+    override suspend fun uploadMatch(
+        videoFile: File,
+        filename: String,
+        player1Name: String?,
+        player2Name: String?,
+        matchTitle: String?
+    ): Result<Match> {
         return try {
             // Create multipart request body
             val requestBody = videoFile.asRequestBody("video/mp4".toMediaType())
@@ -57,22 +65,40 @@ class ApiMatchRepository @Inject constructor(
                 filename,
                 requestBody
             )
-            
+
+            // Create metadata parts
+            val player1Part = player1Name?.takeIf { it.isNotBlank() }
+                ?.toRequestBody("text/plain".toMediaTypeOrNull())
+
+            val player2Part = player2Name?.takeIf { it.isNotBlank() }
+                ?.toRequestBody("text/plain".toMediaTypeOrNull())
+
+            val titlePart = matchTitle?.takeIf { it.isNotBlank() }
+                ?.toRequestBody("text/plain".toMediaTypeOrNull())
+
             // Upload to backend
-            val response = apiService.uploadMatch(multipartBody)
-            
+            val response = apiService.uploadMatch(
+                video = multipartBody,
+                player1Name = player1Part,
+                player2Name = player2Part,
+                matchTitle = titlePart
+            )
+
             // Create Match from response (minimal data, will be updated when processing completes)
             val match = Match(
                 id = response.matchId,
                 createdAt = java.time.Instant.now(),
-                status = MatchStatus.valueOf(response.status)
+                status = MatchStatus.valueOf(response.status),
+                player1Name = player1Name,
+                player2Name = player2Name,
+                matchTitle = matchTitle
             )
-            
+
             // Add to cache
             val currentMatches = matchesCache.value.toMutableList()
             currentMatches.add(0, match) // Add to beginning
             matchesCache.value = currentMatches
-            
+
             Result.success(match)
         } catch (e: Exception) {
             Result.failure(e)

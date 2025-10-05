@@ -1,5 +1,8 @@
 package com.example.myapplication.ui.screens.upload
 
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
@@ -9,18 +12,16 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import coil.compose.AsyncImage
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.myapplication.ui.theme.MyApplicationTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -29,8 +30,23 @@ fun UploadScreen(
     onNavigateBack: () -> Unit = {},
     onNavigateToHistory: () -> Unit = {},
     onNavigateToHighlights: () -> Unit = {},
-    onNavigateToProfile: () -> Unit = {}
+    onNavigateToProfile: () -> Unit = {},
+    onNavigateToRecord: () -> Unit = {},
+    viewModel: UploadViewModel = hiltViewModel()
 ) {
+    val context = LocalContext.current
+    val uiState by viewModel.uiState.collectAsState()
+    val showMetadataDialog by viewModel.showMetadataDialog.collectAsState()
+
+    // File picker launcher
+    val videoPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        uri?.let {
+            viewModel.onVideoSelected(it, context)
+        }
+    }
+
     Scaffold(
         topBar = {
             UploadTopBar(onNavigateBack = onNavigateBack)
@@ -46,11 +62,33 @@ fun UploadScreen(
         },
         containerColor = MaterialTheme.colorScheme.background
     ) { paddingValues ->
-        UploadContent(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-        )
+        ) {
+            UploadContent(
+                uiState = uiState,
+                onUploadClick = {
+                    videoPickerLauncher.launch("video/*")
+                },
+                onRecordClick = onNavigateToRecord,
+                onResetClick = {
+                    viewModel.resetState()
+                },
+                modifier = Modifier.fillMaxSize()
+            )
+
+            // Metadata Dialog
+            if (showMetadataDialog) {
+                MetadataInputDialog(
+                    onDismiss = { viewModel.cancelMetadataDialog() },
+                    onConfirm = { player1, player2, title ->
+                        viewModel.uploadVideo(player1, player2, title, context)
+                    }
+                )
+            }
+        }
     }
 }
 
@@ -97,6 +135,10 @@ private fun UploadTopBar(
 
 @Composable
 private fun UploadContent(
+    uiState: UploadUiState,
+    onUploadClick: () -> Unit,
+    onRecordClick: () -> Unit,
+    onResetClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -107,18 +149,42 @@ private fun UploadContent(
     ) {
         // Title section
         TitleSection()
-        
+
         // Action buttons
-        ActionButtons()
-        
-        // Processing progress
-        ProcessingProgress()
-        
-        // Analysis results
-        AnalysisResults()
-        
-        // Statistics cards
-        StatisticsCards()
+        ActionButtons(
+            onUploadClick = onUploadClick,
+            onRecordClick = onRecordClick,
+            enabled = uiState is UploadUiState.Idle
+        )
+
+        // State-based content
+        when (uiState) {
+            is UploadUiState.Idle -> {
+                // Show instructions
+                InstructionsCard()
+            }
+            is UploadUiState.ProcessingVideo -> {
+                ProcessingCard("Processing video...")
+            }
+            is UploadUiState.WaitingForMetadata -> {
+                ProcessingCard("Waiting for match details...")
+            }
+            is UploadUiState.Uploading -> {
+                UploadingCard(uiState.progress)
+            }
+            is UploadUiState.Success -> {
+                SuccessCard(
+                    matchId = uiState.match.id,
+                    onResetClick = onResetClick
+                )
+            }
+            is UploadUiState.Error -> {
+                ErrorCard(
+                    message = uiState.message,
+                    onResetClick = onResetClick
+                )
+            }
+        }
     }
 }
 
@@ -142,14 +208,19 @@ private fun TitleSection() {
 }
 
 @Composable
-private fun ActionButtons() {
+private fun ActionButtons(
+    onUploadClick: () -> Unit,
+    onRecordClick: () -> Unit,
+    enabled: Boolean
+) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         // Upload button
         Button(
-            onClick = { /* Handle upload */ },
+            onClick = onUploadClick,
+            enabled = enabled,
             modifier = Modifier
                 .weight(1f)
                 .height(48.dp),
@@ -171,10 +242,11 @@ private fun ActionButtons() {
                 )
             )
         }
-        
+
         // Record button
         Button(
-            onClick = { /* Handle record */ },
+            onClick = onRecordClick,
+            enabled = enabled,
             modifier = Modifier
                 .weight(1f)
                 .height(48.dp),
@@ -200,158 +272,292 @@ private fun ActionButtons() {
 }
 
 @Composable
-private fun ProcessingProgress() {
-    Column(
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+private fun InstructionsCard() {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = Color(0x3313A4EC)
+        ),
+        shape = RoundedCornerShape(12.dp)
     ) {
-        // Progress text
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Text(
-                text = "Processing video...",
-                style = MaterialTheme.typography.bodyMedium.copy(
-                    fontWeight = FontWeight.Medium
+                text = "Instructions",
+                style = MaterialTheme.typography.titleMedium.copy(
+                    fontWeight = FontWeight.Bold
                 ),
                 color = Color.White
             )
             Text(
-                text = "50%",
-                style = MaterialTheme.typography.bodyMedium.copy(
-                    fontWeight = FontWeight.Bold
-                ),
-                color = MaterialTheme.colorScheme.primary
-            )
-        }
-        
-        // Progress bar
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(8.dp)
-                .clip(RoundedCornerShape(4.dp))
-                .background(Color(0x4D13A4EC))
-        ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth(0.5f)
-                    .fillMaxHeight()
-                    .clip(RoundedCornerShape(4.dp))
-                    .background(MaterialTheme.colorScheme.primary)
+                text = "1. Select a video file or record a new one\n" +
+                        "2. Enter player names and match title\n" +
+                        "3. Upload and wait for processing\n" +
+                        "4. View your match analysis in History",
+                style = MaterialTheme.typography.bodyMedium,
+                color = Color.White.copy(alpha = 0.8f)
             )
         }
     }
 }
 
 @Composable
-private fun AnalysisResults() {
-    Column(
-        verticalArrangement = Arrangement.spacedBy(24.dp)
+private fun ProcessingCard(message: String) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = Color(0x3313A4EC)
+        ),
+        shape = RoundedCornerShape(12.dp)
     ) {
-        Text(
-            text = "Analysis Results",
-            style = MaterialTheme.typography.headlineMedium.copy(
-                fontWeight = FontWeight.Bold,
-                fontSize = 24.sp
-            ),
-            color = Color.White
-        )
-        
-        // Video card
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(12.dp))
-                .background(Color(0x3313A4EC)) // 20% opacity primary
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
+            modifier = Modifier.padding(16.dp),
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            // Thumbnail
-            AsyncImage(
-                model = "https://lh3.googleusercontent.com/aida-public/AB6AXuATN1fVnS0hAlZzlKZgrvbedc4aUX6KC5TXlkQooXeyy0H8HbhREgYwq4YcqQUwGSReZp7WtLfonH28YD7Ybha3uv9Tbv3wGkek3MWllmWC259cbttWqPlniWpL_dbclDjSN1QY03MAhCQvYdjOdXNG9Mx6op980WWI8HC0AhRNptyHy0kB6DGpmfbOIarnGPGxrzSc26cV3MouDVFsb385Odb8g0ZdESluIxypkdb40t-zYcLer4yXr7ewISvMsyfadlqX_NQQgroO",
-                contentDescription = "Video thumbnail",
-                modifier = Modifier
-                    .size(96.dp)
-                    .clip(RoundedCornerShape(8.dp)),
-                contentScale = ContentScale.Crop
+            CircularProgressIndicator(
+                modifier = Modifier.size(24.dp),
+                color = MaterialTheme.colorScheme.primary
             )
-            
-            // Video info
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
+            Text(
+                text = message,
+                style = MaterialTheme.typography.bodyMedium,
+                color = Color.White
+            )
+        }
+    }
+}
+
+@Composable
+private fun UploadingCard(progress: Float) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = Color(0x3313A4EC)
+        ),
+        shape = RoundedCornerShape(12.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Video Title",
-                    style = MaterialTheme.typography.titleMedium.copy(
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 18.sp
+                    text = "Uploading video...",
+                    style = MaterialTheme.typography.bodyMedium.copy(
+                        fontWeight = FontWeight.Medium
                     ),
                     color = Color.White
                 )
                 Text(
-                    text = "Uploaded 2 days ago",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = Color.White.copy(alpha = 0.6f)
+                    text = "${(progress * 100).toInt()}%",
+                    style = MaterialTheme.typography.bodyMedium.copy(
+                        fontWeight = FontWeight.Bold
+                    ),
+                    color = MaterialTheme.colorScheme.primary
                 )
+            }
+            LinearProgressIndicator(
+                progress = progress,
+                modifier = Modifier.fillMaxWidth(),
+                color = MaterialTheme.colorScheme.primary,
+                trackColor = Color(0x4D13A4EC)
+            )
+        }
+    }
+}
+
+@Composable
+private fun SuccessCard(
+    matchId: String,
+    onResetClick: () -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = Color(0x3313A4EC)
+        ),
+        shape = RoundedCornerShape(12.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.CheckCircle,
+                    contentDescription = null,
+                    tint = Color(0xFF4CAF50),
+                    modifier = Modifier.size(24.dp)
+                )
+                Text(
+                    text = "Upload successful!",
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontWeight = FontWeight.Bold
+                    ),
+                    color = Color.White
+                )
+            }
+            Text(
+                text = "Your video is being processed. You can view it in the History tab.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = Color.White.copy(alpha = 0.8f)
+            )
+            Text(
+                text = "Match ID: $matchId",
+                style = MaterialTheme.typography.bodySmall,
+                color = Color.White.copy(alpha = 0.6f)
+            )
+            Button(
+                onClick = onResetClick,
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary
+                ),
+                shape = RoundedCornerShape(8.dp)
+            ) {
+                Text("Upload Another Video")
             }
         }
     }
 }
 
 @Composable
-private fun StatisticsCards() {
-    Row(
+private fun ErrorCard(
+    message: String,
+    onResetClick: () -> Unit
+) {
+    Card(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(16.dp)
+        colors = CardDefaults.cardColors(
+            containerColor = Color(0x33F44336)
+        ),
+        shape = RoundedCornerShape(12.dp)
     ) {
-        StatCard(
-            title = "Score",
-            value = "85",
-            modifier = Modifier.weight(1f)
-        )
-        StatCard(
-            title = "Performance Score",
-            value = "92",
-            modifier = Modifier.weight(1f)
-        )
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Error,
+                    contentDescription = null,
+                    tint = Color(0xFFF44336),
+                    modifier = Modifier.size(24.dp)
+                )
+                Text(
+                    text = "Upload failed",
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontWeight = FontWeight.Bold
+                    ),
+                    color = Color.White
+                )
+            }
+            Text(
+                text = message,
+                style = MaterialTheme.typography.bodyMedium,
+                color = Color.White.copy(alpha = 0.8f)
+            )
+            Button(
+                onClick = onResetClick,
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary
+                ),
+                shape = RoundedCornerShape(8.dp)
+            ) {
+                Text("Try Again")
+            }
+        }
     }
 }
 
 @Composable
-private fun StatCard(
-    title: String,
-    value: String,
-    modifier: Modifier = Modifier
+private fun MetadataInputDialog(
+    onDismiss: () -> Unit,
+    onConfirm: (String, String, String) -> Unit
 ) {
-    Column(
-        modifier = modifier
-            .border(
-                width = 1.dp,
-                color = Color(0x4D13A4EC),
-                shape = RoundedCornerShape(12.dp)
+    var player1Name by remember { mutableStateOf("") }
+    var player2Name by remember { mutableStateOf("") }
+    var matchTitle by remember { mutableStateOf("") }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(
+                text = "Match Details",
+                style = MaterialTheme.typography.titleLarge.copy(
+                    fontWeight = FontWeight.Bold
+                )
             )
-            .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        Text(
-            text = title,
-            style = MaterialTheme.typography.bodySmall.copy(
-                fontWeight = FontWeight.Medium
-            ),
-            color = Color.White.copy(alpha = 0.6f)
-        )
-        Text(
-            text = value,
-            style = MaterialTheme.typography.displayLarge.copy(
-                fontWeight = FontWeight.Bold,
-                fontSize = 36.sp
-            ),
-            color = Color.White
-        )
-    }
+        },
+        text = {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                Text(
+                    text = "Enter the match details below:",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color.White.copy(alpha = 0.7f)
+                )
+
+                OutlinedTextField(
+                    value = player1Name,
+                    onValueChange = { player1Name = it },
+                    label = { Text("Player 1 Name") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true
+                )
+
+                OutlinedTextField(
+                    value = player2Name,
+                    onValueChange = { player2Name = it },
+                    label = { Text("Player 2 Name") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true
+                )
+
+                OutlinedTextField(
+                    value = matchTitle,
+                    onValueChange = { matchTitle = it },
+                    label = { Text("Match Title") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true
+                )
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    onConfirm(player1Name, player2Name, matchTitle)
+                },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary
+                )
+            ) {
+                Text("Upload")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        },
+        containerColor = MaterialTheme.colorScheme.surface,
+        shape = RoundedCornerShape(16.dp)
+    )
 }
 
 @Composable
@@ -397,7 +603,7 @@ private fun BottomNavigationBar(
                 indicatorColor = Color.Transparent
             )
         )
-        
+
         NavigationBarItem(
             icon = {
                 Icon(
@@ -424,7 +630,7 @@ private fun BottomNavigationBar(
                 indicatorColor = Color.Transparent
             )
         )
-        
+
         NavigationBarItem(
             icon = {
                 Icon(
@@ -451,7 +657,7 @@ private fun BottomNavigationBar(
                 indicatorColor = Color.Transparent
             )
         )
-        
+
         NavigationBarItem(
             icon = {
                 Icon(
@@ -480,12 +686,3 @@ private fun BottomNavigationBar(
         )
     }
 }
-
-@Preview(showBackground = true, showSystemUi = true)
-@Composable
-fun UploadScreenPreview() {
-    MyApplicationTheme {
-        UploadScreen()
-    }
-}
-

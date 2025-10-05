@@ -25,6 +25,7 @@ import com.example.myapplication.ui.screens.profile.ProfileViewModel
 import com.example.myapplication.ui.screens.profile.SignInScreen
 import com.example.myapplication.ui.screens.profile.SignUpScreen
 import com.example.myapplication.ui.screens.upload.UploadScreen
+import com.example.myapplication.ui.screens.upload.VideoRecordScreen
 import com.example.myapplication.ui.screens.upload.WelcomeUpload
 
 /**
@@ -42,11 +43,12 @@ fun NavGraph(
     val authRepository = authViewModel.authRepository
     
     // Determine start destination based on auth state
-    val startDestination = if (authRepository.isLoggedIn()) {
-        Screen.Welcome.route
-    } else {
-        Screen.SignIn.route
-    }
+    val startDestination = Screen.Welcome.route
+//    val startDestination = if (authRepository.isLoggedIn()) {
+//        Screen.Welcome.route
+//    } else {
+//        Screen.SignIn.route
+//    }
     
     NavHost(
         navController = navController,
@@ -143,6 +145,18 @@ fun NavGraph(
                 },
                 onNavigateToProfile = {
                     navController.navigate(Screen.Profile.route)
+                },
+                onNavigateToRecord = {
+                    navController.navigate(Screen.Record.route)
+                }
+            )
+        }
+
+        // Record Screen
+        composable(route = Screen.Record.route) {
+            VideoRecordScreen(
+                onNavigateBack = {
+                    navController.navigateUp()
                 }
             )
         }

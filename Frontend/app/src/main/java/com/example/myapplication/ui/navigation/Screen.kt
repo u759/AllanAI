@@ -10,6 +10,7 @@ sealed class Screen(val route: String) {
     object SignUp : Screen("sign_up")
     object Welcome : Screen("welcome")
     object Upload : Screen("upload")
+    object Record : Screen("record")
     object History : Screen("history")
     object MatchDetail : Screen("match_detail/{matchId}") {
         fun createRoute(matchId: String) = "match_detail/$matchId"

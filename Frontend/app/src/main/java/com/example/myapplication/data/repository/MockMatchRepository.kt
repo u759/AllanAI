@@ -60,7 +60,13 @@ class MockMatchRepository @Inject constructor(
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    override suspend fun uploadMatch(videoFile: File, filename: String): Result<Match> {
+    override suspend fun uploadMatch(
+        videoFile: File,
+        filename: String,
+        player1Name: String?,
+        player2Name: String?,
+        matchTitle: String?
+    ): Result<Match> {
         delay(networkDelayMs)
 
         val match = Match(
@@ -68,7 +74,10 @@ class MockMatchRepository @Inject constructor(
             createdAt = Instant.now(),
             status = MatchStatus.UPLOADED,
             originalFilename = filename,
-            videoPath = "/videos/${UUID.randomUUID()}.mp4"
+            videoPath = "/videos/${UUID.randomUUID()}.mp4",
+            player1Name = player1Name,
+            player2Name = player2Name,
+            matchTitle = matchTitle
         )
 
         matches[match.id] = match
