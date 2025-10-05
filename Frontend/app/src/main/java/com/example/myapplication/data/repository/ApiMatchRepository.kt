@@ -119,7 +119,7 @@ class ApiMatchRepository @Inject constructor(
      * Manually refresh all matches from the API.
      * Call this from the ViewModel when you need to update the match list.
      */
-    suspend fun refreshAllMatches(): Result<Unit> {
+    override suspend fun refreshAllMatches(): Result<Unit> {
         return try {
             val response = apiService.getMatches()
             val matches = response.map { it.toMatch() }

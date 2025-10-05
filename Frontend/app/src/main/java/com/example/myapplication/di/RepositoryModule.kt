@@ -37,6 +37,6 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun bindMatchRepository(
-        impl: MockMatchRepository
+        impl: ApiMatchRepository
     ): MatchRepository
 }

@@ -58,6 +58,9 @@ dependencies {
     // Material Icons Extended
     implementation("androidx.compose.material:material-icons-extended:1.6.0")
 
+    // Material for pull-to-refresh
+    implementation("androidx.compose.material:material:1.6.0")
+
     // Navigation Compose
     implementation("androidx.navigation:navigation-compose:2.7.6")
 

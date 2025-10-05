@@ -7,12 +7,20 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.pullrefresh.PullRefreshIndicator
+import androidx.compose.material.pullrefresh.pullRefresh
+import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -24,7 +32,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import com.example.myapplication.data.model.MatchStatus
 import com.example.myapplication.ui.theme.MyApplicationTheme
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -66,6 +76,7 @@ fun MatchListScreen(
                     MatchListContent(
                         matches = (uiState as MatchListUiState.Success).matches,
                         onMatchClick = onMatchClick,
+                        onRefresh = { viewModel.refreshMatches() },
                         modifier = Modifier.fillMaxSize()
                     )
                 }
@@ -125,25 +136,54 @@ private fun HistoryTopBar(
     )
 }
 
+@OptIn(ExperimentalMaterialApi::class)
 @Composable
 private fun MatchListContent(
     matches: List<MatchItem>,
     onMatchClick: (String) -> Unit,
+    onRefresh: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    LazyColumn(
-        modifier = modifier
-    ) {
-        items(matches) { match ->
-            MatchListItem(
-                match = match,
-                onMatchClick = { onMatchClick(match.id) }
-            )
-            HorizontalDivider(
-                color = Color(0x4D13A4EC),
-                thickness = 1.dp
-            )
+    var isRefreshing by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
+
+    val pullRefreshState = rememberPullRefreshState(
+        refreshing = isRefreshing,
+        onRefresh = {
+            scope.launch {
+                isRefreshing = true
+                onRefresh()
+                kotlinx.coroutines.delay(1000) // Small delay to show indicator
+                isRefreshing = false
+            }
         }
+    )
+
+    Box(
+        modifier = modifier.pullRefresh(pullRefreshState)
+    ) {
+        LazyColumn(
+            modifier = Modifier.fillMaxSize()
+        ) {
+            items(matches) { match ->
+                MatchListItem(
+                    match = match,
+                    onMatchClick = { onMatchClick(match.id) }
+                )
+                HorizontalDivider(
+                    color = Color(0x4D13A4EC),
+                    thickness = 1.dp
+                )
+            }
+        }
+
+        PullRefreshIndicator(
+            refreshing = isRefreshing,
+            state = pullRefreshState,
+            modifier = Modifier.align(Alignment.TopCenter),
+            backgroundColor = MaterialTheme.colorScheme.surface,
+            contentColor = MaterialTheme.colorScheme.primary
+        )
     }
 }
 
@@ -169,26 +209,34 @@ private fun MatchListItem(
                 .clip(RoundedCornerShape(8.dp)),
             contentScale = ContentScale.Crop
         )
-        
+
         // Match info
         Column(
             modifier = Modifier.weight(1f),
             verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
-            Text(
-                text = "${match.player1} vs ${match.player2}",
-                style = MaterialTheme.typography.bodyLarge.copy(
-                    fontWeight = FontWeight.Bold
-                ),
-                color = Color.White
-            )
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "${match.player1} vs ${match.player2}",
+                    style = MaterialTheme.typography.bodyLarge.copy(
+                        fontWeight = FontWeight.Bold
+                    ),
+                    color = Color.White,
+                    modifier = Modifier.weight(1f, fill = false)
+                )
+                // Status badge
+                StatusBadge(status = match.status)
+            }
             Text(
                 text = "Score: ${match.score1} - ${match.score2}",
                 style = MaterialTheme.typography.bodySmall,
                 color = Color.White.copy(alpha = 0.6f)
             )
         }
-        
+
         // View button
         Button(
             onClick = onMatchClick,
@@ -208,6 +256,72 @@ private fun MatchListItem(
         }
     }
 }
+
+@Composable
+private fun StatusBadge(status: MatchStatus) {
+    val (backgroundColor, textColor, label, showAnimation) = when (status) {
+        MatchStatus.UPLOADED -> Quadruple(
+            Color(0xFF3B82F6), // Blue
+            Color.White,
+            "UPLOADED",
+            false
+        )
+        MatchStatus.PROCESSING -> Quadruple(
+            Color(0xFFF59E0B), // Orange
+            Color.White,
+            "PROCESSING",
+            true
+        )
+        MatchStatus.COMPLETE -> Quadruple(
+            Color(0xFF10B981), // Green
+            Color.White,
+            "COMPLETE",
+            false
+        )
+        MatchStatus.FAILED -> Quadruple(
+            Color(0xFFEF4444), // Red
+            Color.White,
+            "FAILED",
+            false
+        )
+    }
+
+    Surface(
+        color = backgroundColor,
+        shape = RoundedCornerShape(4.dp),
+        modifier = Modifier
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            if (showAnimation) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(12.dp),
+                    color = textColor,
+                    strokeWidth = 2.dp
+                )
+            }
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelSmall.copy(
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 10.sp
+                ),
+                color = textColor
+            )
+        }
+    }
+}
+
+// Helper data class for status badge properties
+private data class Quadruple<A, B, C, D>(
+    val first: A,
+    val second: B,
+    val third: C,
+    val fourth: D
+)
 
 @Composable
 private fun BottomNavigationBar(
