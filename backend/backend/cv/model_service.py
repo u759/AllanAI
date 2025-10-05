@@ -11,8 +11,7 @@ Usage:
 Requirements:
     - ultralytics (pip install ultralytics)
     - opencv-python (pip install opencv-python)
-    - torch with CUDA support (for NVIDIA GPUs)
-    - intel-extension-for-pytorch (pip install intel-extension-for-pytorch -f https://developer.intel.com/ipex-whl-stable-xpu) (for Intel Arc GPUs)
+    - torch with CUDA support (optional, for GPU acceleration)
 
 Model:
     - Place trained 'best.pt' model weights in the same directory as this script
@@ -35,7 +34,7 @@ import os
 from typing import Dict, List, Tuple, Optional, Set, Iterable
 from dataclasses import dataclass
 from collections import deque
-import torch
+
 
 @dataclass
 class BallPosition:
@@ -59,48 +58,23 @@ DEFAULT_BALL_LABELS: Set[str] = {
 }
 
 
-def _get_device() -> str:
-    """Automatically select the best available device (GPU or CPU)."""
-    # Check for NVIDIA GPU
-    if torch.cuda.is_available():
-        device = 'cuda:0'
-        print(f"Using NVIDIA GPU: {torch.cuda.get_device_name(0)}")
-        return device
-
-    # Check for Intel Arc GPU
-    try:
-        # This block will only succeed if intel-extension-for-pytorch is installed
-        import intel_extension_for_pytorch as ipex
-        if torch.xpu.is_available():
-            device = 'xpu'
-            print("Using Intel Arc GPU.")
-            return device
-    except (ImportError, AttributeError):
-        pass # Intel extension not available, proceed to CPU
-
-    # Fallback to CPU
-    device = 'cpu'
-    print("No compatible GPU found. Falling back to CPU.")
-    return device
-
-
-def _load_yolo_model(device: str) -> Tuple[YOLO, str]:
+def _load_yolo_model() -> Tuple[YOLO, str]:
     """Load YOLO weights, falling back to a general model when custom weights are missing."""
     override_path = os.environ.get("YOLO_MODEL_WEIGHTS")
     candidates: List[Optional[str]] = []
     if override_path:
         candidates.append(override_path)
 
-    script_dir = os.path.dirname(__file__) if __file__ else '.'
+    script_dir = os.path.dirname(__file__)
     candidates.append(os.path.join(script_dir, "best.pt"))
 
     for candidate in candidates:
         if candidate and os.path.exists(candidate):
-            print(f"Loading model from {candidate} onto device '{device}'...")
+            print(f"Loading model from {candidate}...")
             return YOLO(candidate), candidate
 
     fallback = os.environ.get("YOLO_FALLBACK_MODEL", "yolov8n.pt")
-    print(f"Primary model weights not found. Falling back to {fallback} onto device '{device}'...")
+    print(f"Primary model weights not found. Falling back to {fallback}...")
     return YOLO(fallback), fallback
 
 
@@ -418,8 +392,7 @@ def analyze_video(video_path: str, output_json_path: str, confidence_threshold: 
     Returns:
         Dictionary containing analysis results
     """
-    device = _get_device()
-    model, _ = _load_yolo_model(device)
+    model, _ = _load_yolo_model()
     allowed_labels = _build_allowed_labels(model)
     allowed_ids = _parse_allowed_ids()
     
@@ -465,8 +438,8 @@ def analyze_video(video_path: str, output_json_path: str, confidence_threshold: 
         if not ret:
             break
         
-        # Run inference on the selected device
-        predictions = model.predict(source=frame, conf=confidence_threshold, device=device, verbose=False)
+        # Run inference
+        predictions = model.predict(source=frame, conf=confidence_threshold, verbose=False)
 
         primary_ball = _select_primary_ball(
             predictions,
