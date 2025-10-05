@@ -354,7 +354,7 @@ private fun PerformanceMetricsSection(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         Text(
-            text = "Performance Metrics",
+            text = "Live Performance Metrics",
             style = MaterialTheme.typography.titleLarge.copy(
                 fontWeight = FontWeight.Bold,
                 fontSize = 20.sp
@@ -362,42 +362,21 @@ private fun PerformanceMetricsSection(
             color = Color.White
         )
         
-        // Show statistics status if null
-        if (stats == null) {
-            StatsCard(
-                title = "Statistics",
-                value = "Processing...",
-                subtitle = "Match statistics will appear here once processing is complete"
-            )
-            StatsCard(
-                title = "Match Info",
-                value = "${match.shots.size} shots detected",
-                subtitle = "${match.events.size} events • ${(match.highlights?.topRallies?.size ?: 0) + (match.highlights?.fastestShots?.size ?: 0) + (match.highlights?.bestServes?.size ?: 0)} highlights"
-            )
-        } else {
-            // Basic Match Stats (Always show)
-            StatsCard(
-                title = "Match Score",
-                value = "${stats.player1Score} - ${stats.player2Score}",
-                subtitle = "Final Score"
-            )
-        }
-        
-        // Live Score (if playing)
+        // Live Score
         currentScore?.let { score ->
             StatsCard(
                 title = "Current Score",
                 value = "${score.player1} - ${score.player2}",
-                subtitle = "At ${formatTimestamp(currentPositionMs)}"
+                subtitle = "Player 1 vs Player 2"
             )
         }
         
         // Current Shot Details (Real-time)
-        currentShot?.let { shot ->
+        if (currentShot != null) {
             StatsCard(
                 title = "Current Shot",
-                value = "${String.format("%.1f", shot.speed)} km/h",
-                subtitle = "${shot.shotType.name} • ${String.format("%.0f", shot.accuracy)}% accuracy • ${shot.result.name}"
+                value = "${String.format("%.1f", currentShot?.speed ?: 0.0)} km/h",
+                subtitle = "${currentShot?.shotType?.name ?: "Unknown"} • ${String.format("%.0f", currentShot?.accuracy ?: 0.0)}% accuracy • ${currentShot?.result?.name ?: "Unknown"}"
             )
         }
         

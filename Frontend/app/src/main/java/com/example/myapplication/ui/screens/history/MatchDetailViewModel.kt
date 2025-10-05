@@ -58,8 +58,6 @@ class MatchDetailViewModel @Inject constructor(
                 matchRepository.getMatchById(matchId).collect { match ->
                     if (match != null) {
                         _uiState.value = MatchDetailUiState.Success(match)
-                        // Initialize stats at video start (position 0)
-                        updateRealTimeStats(match, 0L)
                     } else {
                         _uiState.value = MatchDetailUiState.Error("Match not found")
                     }
