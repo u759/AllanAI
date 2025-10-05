@@ -24,11 +24,7 @@ import com.example.myapplication.ui.theme.MyApplicationTheme
 fun SignUpScreen(
     state: SignUpState,
     onSignUpClick: (String, String, String, String) -> Unit = { _, _, _, _ -> },
-    onSignInClick: () -> Unit = {},
-    onNavigateToUpload: () -> Unit = {},
-    onNavigateToHistory: () -> Unit = {},
-    onNavigateToHighlights: () -> Unit = {},
-    onNavigateToProfile: () -> Unit = {}
+    onSignInClick: () -> Unit = {}
 ) {
     // Local state for form fields only
     var username by remember { mutableStateOf("") }
@@ -39,15 +35,6 @@ fun SignUpScreen(
     Scaffold(
         topBar = {
             SignUpTopBar()
-        },
-        bottomBar = {
-            AuthBottomNavBar(
-                selectedTab = 3, // Profile tab selected
-                onNavigateToUpload = onNavigateToUpload,
-                onNavigateToHistory = onNavigateToHistory,
-                onNavigateToHighlights = onNavigateToHighlights,
-                onNavigateToProfile = onNavigateToProfile
-            )
         },
         containerColor = MaterialTheme.colorScheme.background
     ) { paddingValues ->
@@ -291,6 +278,7 @@ private fun SignUpContent(
         // Sign In link
         Row(
             horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.fillMaxWidth()
         ) {
             Text(
@@ -299,8 +287,7 @@ private fun SignUpContent(
                 color = Color(0xFF64748B)
             )
             TextButton(
-                onClick = onSignInClick,
-                contentPadding = PaddingValues(0.dp)
+                onClick = onSignInClick
             ) {
                 Text(
                     text = "Sign In",
@@ -311,92 +298,6 @@ private fun SignUpContent(
                 )
             }
         }
-    }
-}
-
-@Composable
-private fun AuthBottomNavBar(
-    selectedTab: Int,
-    onNavigateToUpload: () -> Unit,
-    onNavigateToHistory: () -> Unit,
-    onNavigateToHighlights: () -> Unit,
-    onNavigateToProfile: () -> Unit
-) {
-    NavigationBar(
-        containerColor = Color(0xFF1A2831)
-    ) {
-        NavigationBarItem(
-            icon = {
-                Icon(
-                    imageVector = Icons.Default.Videocam,
-                    contentDescription = "Upload"
-                )
-            },
-            label = { Text("Upload") },
-            selected = selectedTab == 0,
-            onClick = onNavigateToUpload,
-            colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = MaterialTheme.colorScheme.primary,
-                selectedTextColor = MaterialTheme.colorScheme.primary,
-                unselectedIconColor = Color(0xFF64748B),
-                unselectedTextColor = Color(0xFF64748B),
-                indicatorColor = Color.Transparent
-            )
-        )
-        NavigationBarItem(
-            icon = {
-                Icon(
-                    imageVector = Icons.Default.History,
-                    contentDescription = "History"
-                )
-            },
-            label = { Text("History") },
-            selected = selectedTab == 1,
-            onClick = onNavigateToHistory,
-            colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = MaterialTheme.colorScheme.primary,
-                selectedTextColor = MaterialTheme.colorScheme.primary,
-                unselectedIconColor = Color(0xFF64748B),
-                unselectedTextColor = Color(0xFF64748B),
-                indicatorColor = Color.Transparent
-            )
-        )
-        NavigationBarItem(
-            icon = {
-                Icon(
-                    imageVector = Icons.Default.Star,
-                    contentDescription = "Highlights"
-                )
-            },
-            label = { Text("Highlights") },
-            selected = selectedTab == 2,
-            onClick = onNavigateToHighlights,
-            colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = MaterialTheme.colorScheme.primary,
-                selectedTextColor = MaterialTheme.colorScheme.primary,
-                unselectedIconColor = Color(0xFF64748B),
-                unselectedTextColor = Color(0xFF64748B),
-                indicatorColor = Color.Transparent
-            )
-        )
-        NavigationBarItem(
-            icon = {
-                Icon(
-                    imageVector = Icons.Default.Person,
-                    contentDescription = "Profile"
-                )
-            },
-            label = { Text("Profile") },
-            selected = selectedTab == 3,
-            onClick = onNavigateToProfile,
-            colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = MaterialTheme.colorScheme.primary,
-                selectedTextColor = MaterialTheme.colorScheme.primary,
-                unselectedIconColor = Color(0xFF64748B),
-                unselectedTextColor = Color(0xFF64748B),
-                indicatorColor = Color.Transparent
-            )
-        )
     }
 }
 
