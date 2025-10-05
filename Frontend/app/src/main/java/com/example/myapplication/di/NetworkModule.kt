@@ -1,8 +1,8 @@
 package com.example.myapplication.di
 
 import com.example.myapplication.data.api.AllanAIApiService
-import com.google.gson.Gson
-import com.google.gson.GsonBuilder
+import com.squareup.moshi.Moshi
+import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -10,7 +10,7 @@ import dagger.hilt.components.SingletonComponent
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
-import retrofit2.converter.gson.GsonConverterFactory
+import retrofit2.converter.moshi.MoshiConverterFactory
 import java.util.concurrent.TimeUnit
 import javax.inject.Singleton
 
@@ -39,19 +39,19 @@ object NetworkModule {
     private const val BASE_URL = "http://10.0.2.2:8080/"
     
     /**
-     * Provides Gson instance for JSON serialization/deserialization.
+     * Provides Moshi instance for JSON serialization/deserialization.
      */
     @Provides
     @Singleton
-    fun provideGson(): Gson {
-        return GsonBuilder()
-            .setLenient()
-            .create()
+    fun provideMoshi(): Moshi {
+        return Moshi.Builder()
+            .add(KotlinJsonAdapterFactory())
+            .build()
     }
     
     /**
      * Provides HTTP logging interceptor for debugging network requests.
-     * 
+     *
      * This logs all HTTP requests and responses, which is helpful for
      * debugging API communication issues.
      */
@@ -62,20 +62,34 @@ object NetworkModule {
             level = HttpLoggingInterceptor.Level.BODY
         }
     }
+
+    /**
+     * Provides AuthInterceptor for adding authentication headers to requests.
+     */
+    @Provides
+    @Singleton
+    fun provideAuthInterceptor(
+        localDataSource: com.example.myapplication.data.local.AuthLocalDataSource
+    ): com.example.myapplication.data.remote.auth.AuthInterceptor {
+        return com.example.myapplication.data.remote.auth.AuthInterceptor(localDataSource)
+    }
     
     /**
      * Provides configured OkHttpClient.
-     * 
+     *
      * Configuration:
      * - 60 second timeouts for video uploads
      * - HTTP request/response logging
+     * - Authentication header injection
      */
     @Provides
     @Singleton
     fun provideOkHttpClient(
-        loggingInterceptor: HttpLoggingInterceptor
+        loggingInterceptor: HttpLoggingInterceptor,
+        authInterceptor: com.example.myapplication.data.remote.auth.AuthInterceptor
     ): OkHttpClient {
         return OkHttpClient.Builder()
+            .addInterceptor(authInterceptor)
             .addInterceptor(loggingInterceptor)
             .connectTimeout(60, TimeUnit.SECONDS)
             .readTimeout(60, TimeUnit.SECONDS)
@@ -85,7 +99,7 @@ object NetworkModule {
     
     /**
      * Provides Retrofit instance.
-     * 
+     *
      * Retrofit is the HTTP client that handles API communication.
      * It uses OkHttp under the hood and converts JSON to Kotlin objects.
      */
@@ -93,12 +107,12 @@ object NetworkModule {
     @Singleton
     fun provideRetrofit(
         okHttpClient: OkHttpClient,
-        gson: Gson
+        moshi: Moshi
     ): Retrofit {
         return Retrofit.Builder()
             .baseUrl(BASE_URL)
             .client(okHttpClient)
-            .addConverterFactory(GsonConverterFactory.create(gson))
+            .addConverterFactory(MoshiConverterFactory.create(moshi))
             .build()
     }
     
