@@ -6,11 +6,15 @@ package com.example.myapplication.data.api.dto
  */
 data class MatchDetailsResponse(
     val id: String,
+    val userId: String?,
     val createdAt: String,
     val processedAt: String?,
     val status: String,
     val durationSeconds: Int?,
     val originalFilename: String?,
+    val player1Name: String?,
+    val player2Name: String?,
+    val matchTitle: String?,
     val statistics: MatchStatisticsResponse?,
     val shots: List<ShotResponse>,
     val events: List<EventResponse>,
