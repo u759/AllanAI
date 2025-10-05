@@ -16,6 +16,9 @@ sealed class Screen(val route: String) {
         fun createRoute(matchId: String) = "match_detail/$matchId"
     }
     object Highlights : Screen("highlights")
+    object HighlightDetail : Screen("highlight_detail/{matchId}") {
+        fun createRoute(matchId: String) = "highlight_detail/$matchId"
+    }
     object Profile : Screen("profile")
     object EditProfile : Screen("edit_profile")
     object ChangePassword : Screen("change_password")

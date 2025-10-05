@@ -25,8 +25,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.platform.LocalContext
 import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.example.myapplication.ui.theme.MyApplicationTheme
+import java.io.File
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -171,7 +174,7 @@ private fun HighlightGroupSection(
             group.highlights.forEach { highlight ->
                 HighlightCard(
                     highlight = highlight,
-                    onClick = { onHighlightClick(highlight.id) },
+                    onClick = { onHighlightClick(highlight.matchId) },
                     modifier = Modifier.weight(1f)
                 )
             }
@@ -185,15 +188,28 @@ private fun HighlightCard(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current
+    
     Box(
         modifier = modifier
             .height(160.dp)
             .clip(RoundedCornerShape(8.dp))
             .clickable(onClick = onClick)
     ) {
-        // Thumbnail image
+        // Thumbnail image - supports both file paths and URLs
+        val imageModel = if (highlight.thumbnailUrl.startsWith("http")) {
+            // URL from internet (placeholder)
+            highlight.thumbnailUrl
+        } else {
+            // Local file path from thumbnail generator
+            File(highlight.thumbnailUrl)
+        }
+        
         AsyncImage(
-            model = highlight.thumbnailUrl,
+            model = ImageRequest.Builder(context)
+                .data(imageModel)
+                .crossfade(true)
+                .build(),
             contentDescription = highlight.title,
             modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.Crop

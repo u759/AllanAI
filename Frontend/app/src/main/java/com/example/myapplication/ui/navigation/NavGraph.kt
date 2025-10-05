@@ -10,6 +10,8 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import com.example.myapplication.ui.screens.highlights.HighlightDetailScreen
+import com.example.myapplication.ui.screens.highlights.HighlightDetailViewModel
 import com.example.myapplication.ui.screens.highlights.HighlightsListScreen
 import com.example.myapplication.ui.screens.highlights.HighlightsViewModel
 import com.example.myapplication.ui.screens.history.MatchDetailScreen
@@ -25,7 +27,7 @@ import com.example.myapplication.ui.screens.profile.ProfileViewModel
 import com.example.myapplication.ui.screens.profile.SignInScreen
 import com.example.myapplication.ui.screens.profile.SignUpScreen
 import com.example.myapplication.ui.screens.upload.UploadScreen
-import com.example.myapplication.ui.screens.upload.VideoRecordScreen
+//import com.example.myapplication.ui.screens.upload.VideoRecordScreen
 import com.example.myapplication.ui.screens.upload.WelcomeUpload
 
 /**
@@ -154,11 +156,11 @@ fun NavGraph(
 
         // Record Screen
         composable(route = Screen.Record.route) {
-            VideoRecordScreen(
-                onNavigateBack = {
-                    navController.navigateUp()
-                }
-            )
+//            VideoRecordScreen(
+//                onNavigateBack = {
+//                    navController.navigateUp()
+//                }
+//            )
         }
         
         // History Screen (Match List)
@@ -239,9 +241,33 @@ fun NavGraph(
                 onNavigateToProfile = {
                     navController.navigate(Screen.Profile.route)
                 },
-                onHighlightClick = { highlightId ->
-                    // TODO: Navigate to highlight detail screen when implemented
-                    // For now, you could navigate to match detail or a video player
+                onHighlightClick = { matchId ->
+                    navController.navigate(Screen.HighlightDetail.createRoute(matchId))
+                }
+            )
+        }
+        
+        // Highlight Detail Screen
+        composable(
+            route = Screen.HighlightDetail.route,
+            arguments = listOf(
+                navArgument("matchId") {
+                    type = NavType.StringType
+                }
+            )
+        ) { backStackEntry ->
+            val matchId = backStackEntry.arguments?.getString("matchId") ?: ""
+            val viewModel: HighlightDetailViewModel = hiltViewModel()
+            
+            // Load highlights when screen is opened
+            LaunchedEffect(matchId) {
+                viewModel.loadHighlights(matchId)
+            }
+            
+            HighlightDetailScreen(
+                viewModel = viewModel,
+                onNavigateBack = {
+                    navController.navigateUp()
                 }
             )
         }
