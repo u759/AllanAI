@@ -1,14 +1,17 @@
 package com.example.myapplication.data.api.mapper
 
+import com.example.myapplication.data.api.dto.DetectionResponse
 import com.example.myapplication.data.api.dto.EventMetadataResponse
 import com.example.myapplication.data.api.dto.EventResponse
 import com.example.myapplication.data.api.dto.EventWindowResponse
+import com.example.myapplication.data.api.dto.HighlightReference
 import com.example.myapplication.data.api.dto.HighlightsResponse
 import com.example.myapplication.data.api.dto.MatchDetailsResponse
 import com.example.myapplication.data.api.dto.MatchStatisticsResponse
 import com.example.myapplication.data.api.dto.MatchSummaryResponse
 import com.example.myapplication.data.api.dto.ScoreStateResponse
 import com.example.myapplication.data.api.dto.ShotResponse
+import com.example.myapplication.data.model.Detection
 import com.example.myapplication.data.model.Event
 import com.example.myapplication.data.model.EventMetadata
 import com.example.myapplication.data.model.EventType
@@ -87,7 +90,8 @@ fun ShotResponse.toShot(): Shot {
         shotType = parseShotType(this.shotType),
         speed = this.speed,
         accuracy = this.accuracy,
-        result = parseShotResult(this.result)
+        result = parseShotResult(this.result),
+        detections = this.detections.mapNotNull { it.toDetection() }
     )
 }
 
@@ -120,7 +124,8 @@ fun EventMetadataResponse.toEventMetadata(): EventMetadata {
         scoreAfter = this.scoreAfter?.toScoreState(),
         eventWindow = this.eventWindow?.toEventWindow(),
         confidence = this.confidence,
-        source = this.source
+        source = this.source,
+        detections = this.detections?.mapNotNull { it.toDetection() } ?: emptyList()
     )
 }
 
@@ -145,14 +150,34 @@ fun ScoreStateResponse.toScoreState(): ScoreState {
 }
 
 /**
+ * Convert DetectionResponse to Detection domain model
+ * Returns null if bounding box coordinates are missing
+ */
+fun DetectionResponse.toDetection(): Detection? {
+    val x = this.x ?: return null
+    val y = this.y ?: return null
+    val width = this.width ?: return null
+    val height = this.height ?: return null
+
+    return Detection(
+        frameNumber = this.frameNumber,
+        x = x,
+        y = y,
+        width = width,
+        height = height,
+        confidence = this.confidence
+    )
+}
+
+/**
  * Convert HighlightsResponse to Highlights domain model
  */
 fun HighlightsResponse.toHighlights(): Highlights {
     return Highlights(
-        playOfTheGame = this.playOfTheGame,
-        topRallies = this.topRallies,
-        fastestShots = this.fastestShots,
-        bestServes = this.bestServes
+        playOfTheGame = this.playOfTheGame?.eventId,
+        topRallies = this.topRallies.map { it.eventId },
+        fastestShots = this.fastestShots.map { it.eventId },
+        bestServes = this.bestServes.map { it.eventId }
     )
 }
 

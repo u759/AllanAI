@@ -61,7 +61,8 @@ data class EventMetadataResponse(
     val ballTrajectory: List<List<Double>>?,
     val scoreAfter: ScoreStateResponse?,
     val confidence: Double?,
-    val source: String?
+    val source: String?,
+    val detections: List<DetectionResponse>?
 )
 
 data class EventWindowResponse(
@@ -76,18 +77,24 @@ data class ScoreStateResponse(
 
 data class DetectionResponse(
     val frameNumber: Int,
-    val x: Double,
-    val y: Double,
-    val width: Double,
-    val height: Double,
+    val x: Double?,
+    val y: Double?,
+    val width: Double?,
+    val height: Double?,
     val confidence: Double
 )
 
+data class HighlightReference(
+    val eventId: String,
+    val timestampMs: Long,
+    val timestampSeries: List<Long>
+)
+
 data class HighlightsResponse(
-    val playOfTheGame: String?,
-    val topRallies: List<String>,
-    val fastestShots: List<String>,
-    val bestServes: List<String>
+    val playOfTheGame: HighlightReference?,
+    val topRallies: List<HighlightReference>,
+    val fastestShots: List<HighlightReference>,
+    val bestServes: List<HighlightReference>
 )
 
 data class ProcessingSummaryResponse(

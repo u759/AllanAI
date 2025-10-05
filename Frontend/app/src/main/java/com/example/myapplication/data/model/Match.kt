@@ -53,7 +53,8 @@ data class Shot(
     val shotType: ShotType,
     val speed: Double,
     val accuracy: Double,
-    val result: ShotResult
+    val result: ShotResult,
+    val detections: List<Detection> = emptyList()
 )
 
 /**
@@ -112,7 +113,8 @@ data class EventMetadata(
     val scoreAfter: ScoreState? = null,
     val eventWindow: EventWindow? = null,
     val confidence: Double? = null,
-    val source: String? = null
+    val source: String? = null,
+    val detections: List<Detection> = emptyList()
 )
 
 /**
@@ -129,6 +131,18 @@ data class EventWindow(
 data class ScoreState(
     val player1: Int,
     val player2: Int
+)
+
+/**
+ * Detection bounding box for visual overlays on video.
+ */
+data class Detection(
+    val frameNumber: Int,
+    val x: Double,
+    val y: Double,
+    val width: Double,
+    val height: Double,
+    val confidence: Double
 )
 
 /**

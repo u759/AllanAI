@@ -1,5 +1,7 @@
 package com.example.myapplication.data.repository
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import com.example.myapplication.data.api.AllanAIApiService
 import com.example.myapplication.data.api.mapper.toEvent
 import com.example.myapplication.data.api.mapper.toHighlights
@@ -45,6 +47,7 @@ class ApiMatchRepository @Inject constructor(
      * The video is sent as multipart/form-data to the backend.
      * Backend will process it asynchronously and detect events, shots, etc.
      */
+    @RequiresApi(Build.VERSION_CODES.O)
     override suspend fun uploadMatch(videoFile: File, filename: String): Result<Match> {
         return try {
             // Create multipart request body
