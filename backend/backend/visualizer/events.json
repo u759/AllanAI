@@ -1,0 +1,1836 @@
+[
+    {
+        "id": "ddbd030c-9fd6-4fda-b98b-351c3a7f4a08",
+        "timestampMs": 533,
+        "timestampSeries": [
+            500,
+            533,
+            633
+        ],
+        "frameSeries": [
+            64
+        ],
+        "type": "PLAY_OF_THE_GAME",
+        "title": "Play of the Game",
+        "description": "Serve",
+        "player": 1,
+        "importance": 5,
+        "metadata": {
+            "shotSpeed": 6.8,
+            "rallyLength": null,
+            "shotType": "FOREHAND",
+            "ballTrajectory": [],
+            "frameNumber": 64,
+            "frameSeries": [
+                64
+            ],
+            "scoreAfter": null,
+            "eventWindow": {
+                "preMs": 33,
+                "postMs": 100
+            },
+            "confidence": 0.4154196083545685,
+            "source": "MODEL",
+            "detections": [
+                {
+                    "frameNumber": 64,
+                    "x": null,
+                    "y": null,
+                    "width": null,
+                    "height": null,
+                    "confidence": 0.4154196083545685
+                }
+            ]
+        }
+    },
+    {
+        "id": "2422eb1e-3680-4d74-887c-95ee391b04b9",
+        "timestampMs": 933,
+        "timestampSeries": [
+            900,
+            933,
+            1033
+        ],
+        "frameSeries": [
+            112
+        ],
+        "type": "SCORE",
+        "title": "Point Scored",
+        "description": "Ball Bounce",
+        "player": 2,
+        "importance": 5,
+        "metadata": {
+            "shotSpeed": 4.8,
+            "rallyLength": null,
+            "shotType": "FOREHAND",
+            "ballTrajectory": [],
+            "frameNumber": 112,
+            "frameSeries": [
+                112
+            ],
+            "scoreAfter": {
+                "player1": 0,
+                "player2": 1
+            },
+            "eventWindow": {
+                "preMs": 33,
+                "postMs": 100
+            },
+            "confidence": 0.8821219801902771,
+            "source": "MODEL",
+            "detections": [
+                {
+                    "frameNumber": 112,
+                    "x": null,
+                    "y": null,
+                    "width": null,
+                    "height": null,
+                    "confidence": 0.8821219801902771
+                }
+            ]
+        }
+    },
+    {
+        "id": "79836efc-913b-4733-a4cf-e476c088ec30",
+        "timestampMs": 1492,
+        "timestampSeries": [
+            1459,
+            1492,
+            1592
+        ],
+        "frameSeries": [
+            179
+        ],
+        "type": "SCORE",
+        "title": "Point Scored",
+        "description": "Ball Bounce",
+        "player": 1,
+        "importance": 5,
+        "metadata": {
+            "shotSpeed": 7.9,
+            "rallyLength": null,
+            "shotType": "FOREHAND",
+            "ballTrajectory": [],
+            "frameNumber": 179,
+            "frameSeries": [
+                179
+            ],
+            "scoreAfter": {
+                "player1": 1,
+                "player2": 1
+            },
+            "eventWindow": {
+                "preMs": 33,
+                "postMs": 100
+            },
+            "confidence": 0.8570801019668579,
+            "source": "MODEL",
+            "detections": [
+                {
+                    "frameNumber": 179,
+                    "x": null,
+                    "y": null,
+                    "width": null,
+                    "height": null,
+                    "confidence": 0.8570801019668579
+                }
+            ]
+        }
+    },
+    {
+        "id": "79d89a96-1931-49f6-af18-8f042fe014f5",
+        "timestampMs": 1983,
+        "timestampSeries": [
+            1950,
+            1983,
+            2083
+        ],
+        "frameSeries": [
+            238
+        ],
+        "type": "SCORE",
+        "title": "Point Scored",
+        "description": "Ball Bounce",
+        "player": 2,
+        "importance": 5,
+        "metadata": {
+            "shotSpeed": 9.5,
+            "rallyLength": null,
+            "shotType": "FOREHAND",
+            "ballTrajectory": [],
+            "frameNumber": 238,
+            "frameSeries": [
+                238
+            ],
+            "scoreAfter": {
+                "player1": 1,
+                "player2": 2
+            },
+            "eventWindow": {
+                "preMs": 33,
+                "postMs": 100
+            },
+            "confidence": 0.6663852334022522,
+            "source": "MODEL",
+            "detections": [
+                {
+                    "frameNumber": 238,
+                    "x": null,
+                    "y": null,
+                    "width": null,
+                    "height": null,
+                    "confidence": 0.6663852334022522
+                }
+            ]
+        }
+    },
+    {
+        "id": "46a5c110-d3f3-421e-b10b-e28d7d9dff62",
+        "timestampMs": 2450,
+        "timestampSeries": [
+            2417,
+            2450,
+            2550
+        ],
+        "frameSeries": [
+            294
+        ],
+        "type": "SCORE",
+        "title": "Point Scored",
+        "description": "Ball Bounce",
+        "player": 1,
+        "importance": 5,
+        "metadata": {
+            "shotSpeed": 8.2,
+            "rallyLength": null,
+            "shotType": "FOREHAND",
+            "ballTrajectory": [],
+            "frameNumber": 294,
+            "frameSeries": [
+                294
+            ],
+            "scoreAfter": {
+                "player1": 2,
+                "player2": 2
+            },
+            "eventWindow": {
+                "preMs": 33,
+                "postMs": 100
+            },
+            "confidence": 0.8881409168243408,
+            "source": "MODEL",
+            "detections": [
+                {
+                    "frameNumber": 294,
+                    "x": null,
+                    "y": null,
+                    "width": null,
+                    "height": null,
+                    "confidence": 0.8881409168243408
+                }
+            ]
+        }
+    },
+    {
+        "id": "0b411e9c-6820-4700-9130-b825dc7ae2e1",
+        "timestampMs": 2983,
+        "timestampSeries": [
+            2950,
+            2983,
+            3083
+        ],
+        "frameSeries": [
+            358
+        ],
+        "type": "SCORE",
+        "title": "Point Scored",
+        "description": "Ball Bounce",
+        "player": 2,
+        "importance": 5,
+        "metadata": {
+            "shotSpeed": 9.2,
+            "rallyLength": null,
+            "shotType": "FOREHAND",
+            "ballTrajectory": [],
+            "frameNumber": 358,
+            "frameSeries": [
+                358
+            ],
+            "scoreAfter": {
+                "player1": 2,
+                "player2": 3
+            },
+            "eventWindow": {
+                "preMs": 33,
+                "postMs": 100
+            },
+            "confidence": 0.7958464026451111,
+            "source": "MODEL",
+            "detections": [
+                {
+                    "frameNumber": 358,
+                    "x": null,
+                    "y": null,
+                    "width": null,
+                    "height": null,
+                    "confidence": 0.7958464026451111
+                }
+            ]
+        }
+    },
+    {
+        "id": "27777c44-60be-4e7a-9913-3758a3296b57",
+        "timestampMs": 3342,
+        "timestampSeries": [
+            3309,
+            3342,
+            3442
+        ],
+        "frameSeries": [
+            401
+        ],
+        "type": "SCORE",
+        "title": "Point Scored",
+        "description": "Ball Bounce",
+        "player": 1,
+        "importance": 5,
+        "metadata": {
+            "shotSpeed": 8.9,
+            "rallyLength": null,
+            "shotType": "FOREHAND",
+            "ballTrajectory": [],
+            "frameNumber": 401,
+            "frameSeries": [
+                401
+            ],
+            "scoreAfter": {
+                "player1": 3,
+                "player2": 3
+            },
+            "eventWindow": {
+                "preMs": 33,
+                "postMs": 100
+            },
+            "confidence": 0.8788110017776489,
+            "source": "MODEL",
+            "detections": [
+                {
+                    "frameNumber": 401,
+                    "x": null,
+                    "y": null,
+                    "width": null,
+                    "height": null,
+                    "confidence": 0.8788110017776489
+                }
+            ]
+        }
+    },
+    {
+        "id": "f1db06ae-fb67-4830-bf6a-7374162eb213",
+        "timestampMs": 3900,
+        "timestampSeries": [
+            3867,
+            3900,
+            4000
+        ],
+        "frameSeries": [
+            468
+        ],
+        "type": "SCORE",
+        "title": "Point Scored",
+        "description": "Ball Bounce",
+        "player": 2,
+        "importance": 5,
+        "metadata": {
+            "shotSpeed": 8.7,
+            "rallyLength": null,
+            "shotType": "FOREHAND",
+            "ballTrajectory": [],
+            "frameNumber": 468,
+            "frameSeries": [
+                468
+            ],
+            "scoreAfter": {
+                "player1": 3,
+                "player2": 4
+            },
+            "eventWindow": {
+                "preMs": 33,
+                "postMs": 100
+            },
+            "confidence": 0.7724183797836304,
+            "source": "MODEL",
+            "detections": [
+                {
+                    "frameNumber": 468,
+                    "x": null,
+                    "y": null,
+                    "width": null,
+                    "height": null,
+                    "confidence": 0.7724183797836304
+                }
+            ]
+        }
+    },
+    {
+        "id": "3c0436ee-8ef2-45c3-afeb-76c77223681a",
+        "timestampMs": 4267,
+        "timestampSeries": [
+            4234,
+            4267,
+            4367
+        ],
+        "frameSeries": [
+            512
+        ],
+        "type": "SCORE",
+        "title": "Point Scored",
+        "description": "Ball Bounce",
+        "player": 1,
+        "importance": 5,
+        "metadata": {
+            "shotSpeed": 9.0,
+            "rallyLength": null,
+            "shotType": "FOREHAND",
+            "ballTrajectory": [],
+            "frameNumber": 512,
+            "frameSeries": [
+                512
+            ],
+            "scoreAfter": {
+                "player1": 4,
+                "player2": 4
+            },
+            "eventWindow": {
+                "preMs": 33,
+                "postMs": 100
+            },
+            "confidence": 0.38604453206062317,
+            "source": "MODEL",
+            "detections": [
+                {
+                    "frameNumber": 512,
+                    "x": null,
+                    "y": null,
+                    "width": null,
+                    "height": null,
+                    "confidence": 0.38604453206062317
+                }
+            ]
+        }
+    },
+    {
+        "id": "0c12f875-aa24-4100-9adf-9325a3880408",
+        "timestampMs": 4642,
+        "timestampSeries": [
+            4609,
+            4642,
+            4742
+        ],
+        "frameSeries": [
+            557
+        ],
+        "type": "SCORE",
+        "title": "Point Scored",
+        "description": "Double Bounce",
+        "player": 1,
+        "importance": 5,
+        "metadata": {
+            "shotSpeed": 7.1,
+            "rallyLength": null,
+            "shotType": "FOREHAND",
+            "ballTrajectory": [],
+            "frameNumber": 557,
+            "frameSeries": [
+                557
+            ],
+            "scoreAfter": {
+                "player1": 5,
+                "player2": 4
+            },
+            "eventWindow": {
+                "preMs": 33,
+                "postMs": 100
+            },
+            "confidence": 0.8066575527191162,
+            "source": "MODEL",
+            "detections": [
+                {
+                    "frameNumber": 557,
+                    "x": null,
+                    "y": null,
+                    "width": null,
+                    "height": null,
+                    "confidence": 0.8066575527191162
+                }
+            ]
+        }
+    },
+    {
+        "id": "b9ff2650-589c-4701-af07-edeb365e2981",
+        "timestampMs": 4858,
+        "timestampSeries": [
+            4825,
+            4858,
+            4958
+        ],
+        "frameSeries": [
+            583
+        ],
+        "type": "SCORE",
+        "title": "Point Scored",
+        "description": "Service Fault",
+        "player": 2,
+        "importance": 5,
+        "metadata": {
+            "shotSpeed": 8.9,
+            "rallyLength": null,
+            "shotType": "FOREHAND",
+            "ballTrajectory": [],
+            "frameNumber": 583,
+            "frameSeries": [
+                583
+            ],
+            "scoreAfter": {
+                "player1": 5,
+                "player2": 5
+            },
+            "eventWindow": {
+                "preMs": 33,
+                "postMs": 100
+            },
+            "confidence": 0.8683333992958069,
+            "source": "MODEL",
+            "detections": [
+                {
+                    "frameNumber": 583,
+                    "x": null,
+                    "y": null,
+                    "width": null,
+                    "height": null,
+                    "confidence": 0.8683333992958069
+                }
+            ]
+        }
+    },
+    {
+        "id": "7d0b8f68-897e-42cd-9e16-b7877cd0a748",
+        "timestampMs": 5300,
+        "timestampSeries": [
+            5267,
+            5300,
+            5400
+        ],
+        "frameSeries": [
+            636
+        ],
+        "type": "SCORE",
+        "title": "Point Scored",
+        "description": "Service Fault",
+        "player": 1,
+        "importance": 5,
+        "metadata": {
+            "shotSpeed": 9.2,
+            "rallyLength": null,
+            "shotType": "FOREHAND",
+            "ballTrajectory": [],
+            "frameNumber": 636,
+            "frameSeries": [
+                636
+            ],
+            "scoreAfter": {
+                "player1": 6,
+                "player2": 5
+            },
+            "eventWindow": {
+                "preMs": 33,
+                "postMs": 100
+            },
+            "confidence": 0.8705390095710754,
+            "source": "MODEL",
+            "detections": [
+                {
+                    "frameNumber": 636,
+                    "x": null,
+                    "y": null,
+                    "width": null,
+                    "height": null,
+                    "confidence": 0.8705390095710754
+                }
+            ]
+        }
+    },
+    {
+        "id": "6c6e026d-2f13-4517-8d4d-07cfb9af6faf",
+        "timestampMs": 5792,
+        "timestampSeries": [
+            5759,
+            5792,
+            5892
+        ],
+        "frameSeries": [
+            695
+        ],
+        "type": "PLAY_OF_THE_GAME",
+        "title": "Play of the Game",
+        "description": "Serve",
+        "player": 2,
+        "importance": 5,
+        "metadata": {
+            "shotSpeed": 10.0,
+            "rallyLength": null,
+            "shotType": "FOREHAND",
+            "ballTrajectory": [],
+            "frameNumber": 695,
+            "frameSeries": [
+                695
+            ],
+            "scoreAfter": null,
+            "eventWindow": {
+                "preMs": 33,
+                "postMs": 100
+            },
+            "confidence": 0.6689602732658386,
+            "source": "MODEL",
+            "detections": [
+                {
+                    "frameNumber": 695,
+                    "x": null,
+                    "y": null,
+                    "width": null,
+                    "height": null,
+                    "confidence": 0.6689602732658386
+                }
+            ]
+        }
+    },
+    {
+        "id": "12bb92ad-3569-4306-8112-ea89631b036b",
+        "timestampMs": 6175,
+        "timestampSeries": [
+            6142,
+            6175,
+            6275
+        ],
+        "frameSeries": [
+            741
+        ],
+        "type": "SCORE",
+        "title": "Point Scored",
+        "description": "Ball Bounce",
+        "player": 1,
+        "importance": 5,
+        "metadata": {
+            "shotSpeed": 9.1,
+            "rallyLength": null,
+            "shotType": "FOREHAND",
+            "ballTrajectory": [],
+            "frameNumber": 741,
+            "frameSeries": [
+                741
+            ],
+            "scoreAfter": {
+                "player1": 7,
+                "player2": 5
+            },
+            "eventWindow": {
+                "preMs": 33,
+                "postMs": 100
+            },
+            "confidence": 0.891746461391449,
+            "source": "MODEL",
+            "detections": [
+                {
+                    "frameNumber": 741,
+                    "x": null,
+                    "y": null,
+                    "width": null,
+                    "height": null,
+                    "confidence": 0.891746461391449
+                }
+            ]
+        }
+    },
+    {
+        "id": "537bfc95-92f1-4101-a1b0-3a15f20f606e",
+        "timestampMs": 6692,
+        "timestampSeries": [
+            6659,
+            6692,
+            6792
+        ],
+        "frameSeries": [
+            803
+        ],
+        "type": "SCORE",
+        "title": "Point Scored",
+        "description": "Ball Bounce",
+        "player": 2,
+        "importance": 5,
+        "metadata": {
+            "shotSpeed": 10.0,
+            "rallyLength": null,
+            "shotType": "FOREHAND",
+            "ballTrajectory": [],
+            "frameNumber": 803,
+            "frameSeries": [
+                803
+            ],
+            "scoreAfter": {
+                "player1": 7,
+                "player2": 6
+            },
+            "eventWindow": {
+                "preMs": 33,
+                "postMs": 100
+            },
+            "confidence": 0.8190606832504272,
+            "source": "MODEL",
+            "detections": [
+                {
+                    "frameNumber": 803,
+                    "x": null,
+                    "y": null,
+                    "width": null,
+                    "height": null,
+                    "confidence": 0.8190606832504272
+                }
+            ]
+        }
+    },
+    {
+        "id": "1951d17c-5ae2-4f10-abb5-707e0b1a2aeb",
+        "timestampMs": 7142,
+        "timestampSeries": [
+            7109,
+            7142,
+            7242
+        ],
+        "frameSeries": [
+            857
+        ],
+        "type": "SCORE",
+        "title": "Point Scored",
+        "description": "Ball Bounce",
+        "player": 1,
+        "importance": 5,
+        "metadata": {
+            "shotSpeed": 9.2,
+            "rallyLength": null,
+            "shotType": "FOREHAND",
+            "ballTrajectory": [],
+            "frameNumber": 857,
+            "frameSeries": [
+                857
+            ],
+            "scoreAfter": {
+                "player1": 8,
+                "player2": 6
+            },
+            "eventWindow": {
+                "preMs": 33,
+                "postMs": 100
+            },
+            "confidence": 0.8799224495887756,
+            "source": "MODEL",
+            "detections": [
+                {
+                    "frameNumber": 857,
+                    "x": null,
+                    "y": null,
+                    "width": null,
+                    "height": null,
+                    "confidence": 0.8799224495887756
+                }
+            ]
+        }
+    },
+    {
+        "id": "3ce98bba-bdab-435a-8a38-8468b9049ced",
+        "timestampMs": 7642,
+        "timestampSeries": [
+            7609,
+            7642,
+            7742
+        ],
+        "frameSeries": [
+            917
+        ],
+        "type": "SCORE",
+        "title": "Point Scored",
+        "description": "Ball Bounce",
+        "player": 2,
+        "importance": 5,
+        "metadata": {
+            "shotSpeed": 8.9,
+            "rallyLength": null,
+            "shotType": "FOREHAND",
+            "ballTrajectory": [],
+            "frameNumber": 917,
+            "frameSeries": [
+                917
+            ],
+            "scoreAfter": {
+                "player1": 8,
+                "player2": 7
+            },
+            "eventWindow": {
+                "preMs": 33,
+                "postMs": 100
+            },
+            "confidence": 0.7741464972496033,
+            "source": "MODEL",
+            "detections": [
+                {
+                    "frameNumber": 917,
+                    "x": null,
+                    "y": null,
+                    "width": null,
+                    "height": null,
+                    "confidence": 0.7741464972496033
+                }
+            ]
+        }
+    },
+    {
+        "id": "01da7f40-f28a-4f6d-acfb-611f72b5bb8d",
+        "timestampMs": 8075,
+        "timestampSeries": [
+            8042,
+            8075,
+            8175
+        ],
+        "frameSeries": [
+            969
+        ],
+        "type": "SCORE",
+        "title": "Point Scored",
+        "description": "Ball Bounce",
+        "player": 1,
+        "importance": 5,
+        "metadata": {
+            "shotSpeed": 9.4,
+            "rallyLength": null,
+            "shotType": "FOREHAND",
+            "ballTrajectory": [],
+            "frameNumber": 969,
+            "frameSeries": [
+                969
+            ],
+            "scoreAfter": {
+                "player1": 9,
+                "player2": 7
+            },
+            "eventWindow": {
+                "preMs": 33,
+                "postMs": 100
+            },
+            "confidence": 0.8767096996307373,
+            "source": "MODEL",
+            "detections": [
+                {
+                    "frameNumber": 969,
+                    "x": null,
+                    "y": null,
+                    "width": null,
+                    "height": null,
+                    "confidence": 0.8767096996307373
+                }
+            ]
+        }
+    },
+    {
+        "id": "d30f4dfa-4a49-4e7f-a77b-1d4ec89799dd",
+        "timestampMs": 8600,
+        "timestampSeries": [
+            8567,
+            8600,
+            8700
+        ],
+        "frameSeries": [
+            1032
+        ],
+        "type": "SCORE",
+        "title": "Point Scored",
+        "description": "Ball Bounce",
+        "player": 2,
+        "importance": 5,
+        "metadata": {
+            "shotSpeed": 9.8,
+            "rallyLength": null,
+            "shotType": "FOREHAND",
+            "ballTrajectory": [],
+            "frameNumber": 1032,
+            "frameSeries": [
+                1032
+            ],
+            "scoreAfter": {
+                "player1": 9,
+                "player2": 8
+            },
+            "eventWindow": {
+                "preMs": 33,
+                "postMs": 100
+            },
+            "confidence": 0.7896996736526489,
+            "source": "MODEL",
+            "detections": [
+                {
+                    "frameNumber": 1032,
+                    "x": null,
+                    "y": null,
+                    "width": null,
+                    "height": null,
+                    "confidence": 0.7896996736526489
+                }
+            ]
+        }
+    },
+    {
+        "id": "c38e82d6-6a8f-4154-883c-51d5ae6a151f",
+        "timestampMs": 8983,
+        "timestampSeries": [
+            8950,
+            8983,
+            9083
+        ],
+        "frameSeries": [
+            1078
+        ],
+        "type": "SCORE",
+        "title": "Point Scored",
+        "description": "Ball Bounce",
+        "player": 1,
+        "importance": 5,
+        "metadata": {
+            "shotSpeed": 10.9,
+            "rallyLength": null,
+            "shotType": "FOREHAND",
+            "ballTrajectory": [],
+            "frameNumber": 1078,
+            "frameSeries": [
+                1078
+            ],
+            "scoreAfter": {
+                "player1": 10,
+                "player2": 8
+            },
+            "eventWindow": {
+                "preMs": 33,
+                "postMs": 100
+            },
+            "confidence": 0.7428409457206726,
+            "source": "MODEL",
+            "detections": [
+                {
+                    "frameNumber": 1078,
+                    "x": null,
+                    "y": null,
+                    "width": null,
+                    "height": null,
+                    "confidence": 0.7428409457206726
+                }
+            ]
+        }
+    },
+    {
+        "id": "a89f709c-8328-48d1-b8d2-3724feca9d95",
+        "timestampMs": 0,
+        "timestampSeries": [
+            0,
+            100
+        ],
+        "frameSeries": [],
+        "type": "SCORE",
+        "title": "Point Scored",
+        "description": "Rally End",
+        "player": null,
+        "importance": 5,
+        "metadata": {
+            "shotSpeed": null,
+            "rallyLength": null,
+            "shotType": "FOREHAND",
+            "ballTrajectory": [],
+            "frameNumber": 0,
+            "frameSeries": [],
+            "scoreAfter": {
+                "player1": 10,
+                "player2": 8
+            },
+            "eventWindow": {
+                "preMs": 33,
+                "postMs": 100
+            },
+            "confidence": 0.35,
+            "source": "MODEL",
+            "detections": []
+        }
+    },
+    {
+        "id": "15507579-1962-45b4-8810-f2205e4e42cc",
+        "timestampMs": 18450,
+        "timestampSeries": [
+            18417,
+            18450,
+            18550
+        ],
+        "frameSeries": [
+            2214
+        ],
+        "type": "SCORE",
+        "title": "Point Scored",
+        "description": "Service Fault",
+        "player": 2,
+        "importance": 5,
+        "metadata": {
+            "shotSpeed": 6.5,
+            "rallyLength": null,
+            "shotType": "FOREHAND",
+            "ballTrajectory": [],
+            "frameNumber": 2214,
+            "frameSeries": [
+                2214
+            ],
+            "scoreAfter": {
+                "player1": 10,
+                "player2": 9
+            },
+            "eventWindow": {
+                "preMs": 33,
+                "postMs": 100
+            },
+            "confidence": 0.8959452509880066,
+            "source": "MODEL",
+            "detections": [
+                {
+                    "frameNumber": 2214,
+                    "x": null,
+                    "y": null,
+                    "width": null,
+                    "height": null,
+                    "confidence": 0.8959452509880066
+                }
+            ]
+        }
+    },
+    {
+        "id": "a594908e-5f56-4cf5-a71e-cdcac515163a",
+        "timestampMs": 18850,
+        "timestampSeries": [
+            18817,
+            18850,
+            18950
+        ],
+        "frameSeries": [
+            2262
+        ],
+        "type": "PLAY_OF_THE_GAME",
+        "title": "Play of the Game",
+        "description": "Serve",
+        "player": 1,
+        "importance": 5,
+        "metadata": {
+            "shotSpeed": 4.9,
+            "rallyLength": null,
+            "shotType": "FOREHAND",
+            "ballTrajectory": [],
+            "frameNumber": 2262,
+            "frameSeries": [
+                2262
+            ],
+            "scoreAfter": null,
+            "eventWindow": {
+                "preMs": 33,
+                "postMs": 100
+            },
+            "confidence": 0.869254469871521,
+            "source": "MODEL",
+            "detections": [
+                {
+                    "frameNumber": 2262,
+                    "x": null,
+                    "y": null,
+                    "width": null,
+                    "height": null,
+                    "confidence": 0.869254469871521
+                }
+            ]
+        }
+    },
+    {
+        "id": "e6c5968b-03c9-4067-81f8-6146f244f97d",
+        "timestampMs": 19267,
+        "timestampSeries": [
+            19234,
+            19267,
+            19367
+        ],
+        "frameSeries": [
+            2312
+        ],
+        "type": "SCORE",
+        "title": "Point Scored",
+        "description": "Ball Bounce",
+        "player": 2,
+        "importance": 5,
+        "metadata": {
+            "shotSpeed": 6.7,
+            "rallyLength": null,
+            "shotType": "FOREHAND",
+            "ballTrajectory": [],
+            "frameNumber": 2312,
+            "frameSeries": [
+                2312
+            ],
+            "scoreAfter": {
+                "player1": 10,
+                "player2": 10
+            },
+            "eventWindow": {
+                "preMs": 33,
+                "postMs": 100
+            },
+            "confidence": 0.6781479716300964,
+            "source": "MODEL",
+            "detections": [
+                {
+                    "frameNumber": 2312,
+                    "x": null,
+                    "y": null,
+                    "width": null,
+                    "height": null,
+                    "confidence": 0.6781479716300964
+                }
+            ]
+        }
+    },
+    {
+        "id": "5b7a75f9-90e2-4ea4-800a-1ed91f02ebee",
+        "timestampMs": 19767,
+        "timestampSeries": [
+            19734,
+            19767,
+            19867
+        ],
+        "frameSeries": [
+            2372
+        ],
+        "type": "SCORE",
+        "title": "Point Scored",
+        "description": "Ball Bounce",
+        "player": 1,
+        "importance": 5,
+        "metadata": {
+            "shotSpeed": 10.5,
+            "rallyLength": null,
+            "shotType": "FOREHAND",
+            "ballTrajectory": [],
+            "frameNumber": 2372,
+            "frameSeries": [
+                2372
+            ],
+            "scoreAfter": {
+                "player1": 11,
+                "player2": 10
+            },
+            "eventWindow": {
+                "preMs": 33,
+                "postMs": 100
+            },
+            "confidence": 0.8559847474098206,
+            "source": "MODEL",
+            "detections": [
+                {
+                    "frameNumber": 2372,
+                    "x": null,
+                    "y": null,
+                    "width": null,
+                    "height": null,
+                    "confidence": 0.8559847474098206
+                }
+            ]
+        }
+    },
+    {
+        "id": "5f7a3dac-164b-4598-abbe-43d83c008c96",
+        "timestampMs": 20150,
+        "timestampSeries": [
+            20117,
+            20150,
+            20250
+        ],
+        "frameSeries": [
+            2418
+        ],
+        "type": "SCORE",
+        "title": "Point Scored",
+        "description": "Ball Bounce",
+        "player": 2,
+        "importance": 5,
+        "metadata": {
+            "shotSpeed": 7.2,
+            "rallyLength": null,
+            "shotType": "FOREHAND",
+            "ballTrajectory": [],
+            "frameNumber": 2418,
+            "frameSeries": [
+                2418
+            ],
+            "scoreAfter": {
+                "player1": 11,
+                "player2": 11
+            },
+            "eventWindow": {
+                "preMs": 33,
+                "postMs": 100
+            },
+            "confidence": 0.8629545569419861,
+            "source": "MODEL",
+            "detections": [
+                {
+                    "frameNumber": 2418,
+                    "x": null,
+                    "y": null,
+                    "width": null,
+                    "height": null,
+                    "confidence": 0.8629545569419861
+                }
+            ]
+        }
+    },
+    {
+        "id": "18ccdaf5-0e0d-4e6e-9742-b939f11288c0",
+        "timestampMs": 20600,
+        "timestampSeries": [
+            20567,
+            20600,
+            20700
+        ],
+        "frameSeries": [
+            2472
+        ],
+        "type": "SCORE",
+        "title": "Point Scored",
+        "description": "Ball Bounce",
+        "player": 1,
+        "importance": 5,
+        "metadata": {
+            "shotSpeed": 11.0,
+            "rallyLength": null,
+            "shotType": "FOREHAND",
+            "ballTrajectory": [],
+            "frameNumber": 2472,
+            "frameSeries": [
+                2472
+            ],
+            "scoreAfter": {
+                "player1": 12,
+                "player2": 11
+            },
+            "eventWindow": {
+                "preMs": 33,
+                "postMs": 100
+            },
+            "confidence": 0.8397555351257324,
+            "source": "MODEL",
+            "detections": [
+                {
+                    "frameNumber": 2472,
+                    "x": null,
+                    "y": null,
+                    "width": null,
+                    "height": null,
+                    "confidence": 0.8397555351257324
+                }
+            ]
+        }
+    },
+    {
+        "id": "c63d13bb-b447-40d4-8f35-7e405f39067b",
+        "timestampMs": 21450,
+        "timestampSeries": [
+            21417,
+            21450,
+            21550
+        ],
+        "frameSeries": [
+            2574
+        ],
+        "type": "SCORE",
+        "title": "Point Scored",
+        "description": "Double Bounce",
+        "player": 1,
+        "importance": 5,
+        "metadata": {
+            "shotSpeed": 11.3,
+            "rallyLength": null,
+            "shotType": "FOREHAND",
+            "ballTrajectory": [],
+            "frameNumber": 2574,
+            "frameSeries": [
+                2574
+            ],
+            "scoreAfter": {
+                "player1": 13,
+                "player2": 11
+            },
+            "eventWindow": {
+                "preMs": 33,
+                "postMs": 100
+            },
+            "confidence": 0.8548595905303955,
+            "source": "MODEL",
+            "detections": [
+                {
+                    "frameNumber": 2574,
+                    "x": null,
+                    "y": null,
+                    "width": null,
+                    "height": null,
+                    "confidence": 0.8548595905303955
+                }
+            ]
+        }
+    },
+    {
+        "id": "9b7d8b74-71b6-48c8-bd1a-bf3e6a16f3bb",
+        "timestampMs": 21825,
+        "timestampSeries": [
+            21792,
+            21825,
+            21925
+        ],
+        "frameSeries": [
+            2619
+        ],
+        "type": "PLAY_OF_THE_GAME",
+        "title": "Play of the Game",
+        "description": "Serve",
+        "player": 2,
+        "importance": 5,
+        "metadata": {
+            "shotSpeed": 7.3,
+            "rallyLength": null,
+            "shotType": "FOREHAND",
+            "ballTrajectory": [],
+            "frameNumber": 2619,
+            "frameSeries": [
+                2619
+            ],
+            "scoreAfter": null,
+            "eventWindow": {
+                "preMs": 33,
+                "postMs": 100
+            },
+            "confidence": 0.8381443619728088,
+            "source": "MODEL",
+            "detections": [
+                {
+                    "frameNumber": 2619,
+                    "x": null,
+                    "y": null,
+                    "width": null,
+                    "height": null,
+                    "confidence": 0.8381443619728088
+                }
+            ]
+        }
+    },
+    {
+        "id": "02e1b224-b817-410f-acca-4fba9a9a0797",
+        "timestampMs": 22275,
+        "timestampSeries": [
+            22242,
+            22275,
+            22375
+        ],
+        "frameSeries": [
+            2673
+        ],
+        "type": "SCORE",
+        "title": "Point Scored",
+        "description": "Ball Bounce",
+        "player": 1,
+        "importance": 5,
+        "metadata": {
+            "shotSpeed": 10.7,
+            "rallyLength": null,
+            "shotType": "FOREHAND",
+            "ballTrajectory": [],
+            "frameNumber": 2673,
+            "frameSeries": [
+                2673
+            ],
+            "scoreAfter": {
+                "player1": 14,
+                "player2": 11
+            },
+            "eventWindow": {
+                "preMs": 33,
+                "postMs": 100
+            },
+            "confidence": 0.4250059723854065,
+            "source": "MODEL",
+            "detections": [
+                {
+                    "frameNumber": 2673,
+                    "x": null,
+                    "y": null,
+                    "width": null,
+                    "height": null,
+                    "confidence": 0.4250059723854065
+                }
+            ]
+        }
+    },
+    {
+        "id": "182a4cfb-8be3-413e-9656-18047bd0cd18",
+        "timestampMs": 22692,
+        "timestampSeries": [
+            22659,
+            22692,
+            22792
+        ],
+        "frameSeries": [
+            2723
+        ],
+        "type": "SCORE",
+        "title": "Point Scored",
+        "description": "Ball Bounce",
+        "player": 2,
+        "importance": 5,
+        "metadata": {
+            "shotSpeed": 6.8,
+            "rallyLength": null,
+            "shotType": "FOREHAND",
+            "ballTrajectory": [],
+            "frameNumber": 2723,
+            "frameSeries": [
+                2723
+            ],
+            "scoreAfter": {
+                "player1": 14,
+                "player2": 12
+            },
+            "eventWindow": {
+                "preMs": 33,
+                "postMs": 100
+            },
+            "confidence": 0.7139534950256348,
+            "source": "MODEL",
+            "detections": [
+                {
+                    "frameNumber": 2723,
+                    "x": null,
+                    "y": null,
+                    "width": null,
+                    "height": null,
+                    "confidence": 0.7139534950256348
+                }
+            ]
+        }
+    },
+    {
+        "id": "43e64eaa-e386-41d0-bb7d-42c701f8aa18",
+        "timestampMs": 23233,
+        "timestampSeries": [
+            23200,
+            23233,
+            23333
+        ],
+        "frameSeries": [
+            2788
+        ],
+        "type": "SCORE",
+        "title": "Point Scored",
+        "description": "Ball Bounce",
+        "player": 1,
+        "importance": 5,
+        "metadata": {
+            "shotSpeed": 12.1,
+            "rallyLength": null,
+            "shotType": "FOREHAND",
+            "ballTrajectory": [],
+            "frameNumber": 2788,
+            "frameSeries": [
+                2788
+            ],
+            "scoreAfter": {
+                "player1": 15,
+                "player2": 12
+            },
+            "eventWindow": {
+                "preMs": 33,
+                "postMs": 100
+            },
+            "confidence": 0.7810665369033813,
+            "source": "MODEL",
+            "detections": [
+                {
+                    "frameNumber": 2788,
+                    "x": null,
+                    "y": null,
+                    "width": null,
+                    "height": null,
+                    "confidence": 0.7810665369033813
+                }
+            ]
+        }
+    },
+    {
+        "id": "564ae8d1-8fac-4d0f-8a00-48aea1c7d118",
+        "timestampMs": 23967,
+        "timestampSeries": [
+            23934,
+            23967,
+            24067
+        ],
+        "frameSeries": [
+            2876
+        ],
+        "type": "SCORE",
+        "title": "Point Scored",
+        "description": "Ball Bounce",
+        "player": 2,
+        "importance": 5,
+        "metadata": {
+            "shotSpeed": 3.7,
+            "rallyLength": null,
+            "shotType": "FOREHAND",
+            "ballTrajectory": [],
+            "frameNumber": 2876,
+            "frameSeries": [
+                2876
+            ],
+            "scoreAfter": {
+                "player1": 15,
+                "player2": 13
+            },
+            "eventWindow": {
+                "preMs": 33,
+                "postMs": 100
+            },
+            "confidence": 0.4752523601055145,
+            "source": "MODEL",
+            "detections": [
+                {
+                    "frameNumber": 2876,
+                    "x": null,
+                    "y": null,
+                    "width": null,
+                    "height": null,
+                    "confidence": 0.4752523601055145
+                }
+            ]
+        }
+    },
+    {
+        "id": "a83b673f-4293-4fc2-a261-463de0f970fd",
+        "timestampMs": 0,
+        "timestampSeries": [
+            0,
+            100
+        ],
+        "frameSeries": [],
+        "type": "SCORE",
+        "title": "Point Scored",
+        "description": "Rally End",
+        "player": null,
+        "importance": 5,
+        "metadata": {
+            "shotSpeed": null,
+            "rallyLength": null,
+            "shotType": "FOREHAND",
+            "ballTrajectory": [],
+            "frameNumber": 0,
+            "frameSeries": [],
+            "scoreAfter": {
+                "player1": 15,
+                "player2": 13
+            },
+            "eventWindow": {
+                "preMs": 33,
+                "postMs": 100
+            },
+            "confidence": 0.35,
+            "source": "MODEL",
+            "detections": []
+        }
+    },
+    {
+        "id": "b34feb5d-0512-47e8-8224-87c1e6b245ad",
+        "timestampMs": 26492,
+        "timestampSeries": [
+            26459,
+            26492,
+            26592
+        ],
+        "frameSeries": [
+            3179
+        ],
+        "type": "PLAY_OF_THE_GAME",
+        "title": "Play of the Game",
+        "description": "Serve",
+        "player": 2,
+        "importance": 5,
+        "metadata": {
+            "shotSpeed": 6.4,
+            "rallyLength": null,
+            "shotType": "FOREHAND",
+            "ballTrajectory": [],
+            "frameNumber": 3179,
+            "frameSeries": [
+                3179
+            ],
+            "scoreAfter": null,
+            "eventWindow": {
+                "preMs": 33,
+                "postMs": 100
+            },
+            "confidence": 0.9016472101211548,
+            "source": "MODEL",
+            "detections": [
+                {
+                    "frameNumber": 3179,
+                    "x": null,
+                    "y": null,
+                    "width": null,
+                    "height": null,
+                    "confidence": 0.9016472101211548
+                }
+            ]
+        }
+    },
+    {
+        "id": "60b431dc-ba41-4822-a375-cc781cf79336",
+        "timestampMs": 26892,
+        "timestampSeries": [
+            26859,
+            26892,
+            26992
+        ],
+        "frameSeries": [
+            3227
+        ],
+        "type": "SCORE",
+        "title": "Point Scored",
+        "description": "Ball Bounce",
+        "player": 1,
+        "importance": 5,
+        "metadata": {
+            "shotSpeed": 5.2,
+            "rallyLength": null,
+            "shotType": "FOREHAND",
+            "ballTrajectory": [],
+            "frameNumber": 3227,
+            "frameSeries": [
+                3227
+            ],
+            "scoreAfter": {
+                "player1": 16,
+                "player2": 13
+            },
+            "eventWindow": {
+                "preMs": 33,
+                "postMs": 100
+            },
+            "confidence": 0.8121432662010193,
+            "source": "MODEL",
+            "detections": [
+                {
+                    "frameNumber": 3227,
+                    "x": null,
+                    "y": null,
+                    "width": null,
+                    "height": null,
+                    "confidence": 0.8121432662010193
+                }
+            ]
+        }
+    },
+    {
+        "id": "7ffbbfa2-f5de-41ce-9e5f-10f5d7a9a39e",
+        "timestampMs": 27817,
+        "timestampSeries": [
+            27784,
+            27817,
+            27917
+        ],
+        "frameSeries": [
+            3338
+        ],
+        "type": "SCORE",
+        "title": "Point Scored",
+        "description": "Double Bounce",
+        "player": 1,
+        "importance": 5,
+        "metadata": {
+            "shotSpeed": 10.4,
+            "rallyLength": null,
+            "shotType": "FOREHAND",
+            "ballTrajectory": [],
+            "frameNumber": 3338,
+            "frameSeries": [
+                3338
+            ],
+            "scoreAfter": {
+                "player1": 17,
+                "player2": 13
+            },
+            "eventWindow": {
+                "preMs": 33,
+                "postMs": 100
+            },
+            "confidence": 0.8655712008476257,
+            "source": "MODEL",
+            "detections": [
+                {
+                    "frameNumber": 3338,
+                    "x": null,
+                    "y": null,
+                    "width": null,
+                    "height": null,
+                    "confidence": 0.8655712008476257
+                }
+            ]
+        }
+    },
+    {
+        "id": "e0435155-b5aa-4eac-9f7c-6d0f97696917",
+        "timestampMs": 28242,
+        "timestampSeries": [
+            28209,
+            28242,
+            28342
+        ],
+        "frameSeries": [
+            3389
+        ],
+        "type": "SCORE",
+        "title": "Point Scored",
+        "description": "Service Fault",
+        "player": 2,
+        "importance": 5,
+        "metadata": {
+            "shotSpeed": 6.5,
+            "rallyLength": null,
+            "shotType": "FOREHAND",
+            "ballTrajectory": [],
+            "frameNumber": 3389,
+            "frameSeries": [
+                3389
+            ],
+            "scoreAfter": {
+                "player1": 17,
+                "player2": 14
+            },
+            "eventWindow": {
+                "preMs": 33,
+                "postMs": 100
+            },
+            "confidence": 0.4901999831199646,
+            "source": "MODEL",
+            "detections": [
+                {
+                    "frameNumber": 3389,
+                    "x": null,
+                    "y": null,
+                    "width": null,
+                    "height": null,
+                    "confidence": 0.4901999831199646
+                }
+            ]
+        }
+    },
+    {
+        "id": "28782c80-9570-4ca7-b331-7c34af05e523",
+        "timestampMs": 28700,
+        "timestampSeries": [
+            28667,
+            28700,
+            28800
+        ],
+        "frameSeries": [
+            3444
+        ],
+        "type": "PLAY_OF_THE_GAME",
+        "title": "Play of the Game",
+        "description": "Serve",
+        "player": 1,
+        "importance": 5,
+        "metadata": {
+            "shotSpeed": 10.7,
+            "rallyLength": null,
+            "shotType": "FOREHAND",
+            "ballTrajectory": [],
+            "frameNumber": 3444,
+            "frameSeries": [
+                3444
+            ],
+            "scoreAfter": null,
+            "eventWindow": {
+                "preMs": 33,
+                "postMs": 100
+            },
+            "confidence": 0.8134903311729431,
+            "source": "MODEL",
+            "detections": [
+                {
+                    "frameNumber": 3444,
+                    "x": null,
+                    "y": null,
+                    "width": null,
+                    "height": null,
+                    "confidence": 0.8134903311729431
+                }
+            ]
+        }
+    },
+    {
+        "id": "324cf8d2-8e55-4fa9-8dc1-e2ccd3b1619e",
+        "timestampMs": 29533,
+        "timestampSeries": [
+            29500,
+            29533,
+            29633
+        ],
+        "frameSeries": [
+            3544
+        ],
+        "type": "SCORE",
+        "title": "Point Scored",
+        "description": "Service Error",
+        "player": 1,
+        "importance": 5,
+        "metadata": {
+            "shotSpeed": 10.3,
+            "rallyLength": null,
+            "shotType": "FOREHAND",
+            "ballTrajectory": [],
+            "frameNumber": 3544,
+            "frameSeries": [
+                3544
+            ],
+            "scoreAfter": {
+                "player1": 18,
+                "player2": 14
+            },
+            "eventWindow": {
+                "preMs": 33,
+                "postMs": 100
+            },
+            "confidence": 0.8383609652519226,
+            "source": "MODEL",
+            "detections": [
+                {
+                    "frameNumber": 3544,
+                    "x": null,
+                    "y": null,
+                    "width": null,
+                    "height": null,
+                    "confidence": 0.8383609652519226
+                }
+            ]
+        }
+    }
+]

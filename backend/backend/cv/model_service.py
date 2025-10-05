@@ -497,6 +497,10 @@ class EnhancedEventDetector:
             up1 < -velocity_threshold * 0.5):
             
             speed_kmh = self.current_speed_kmh()
+            samples = list(self.history)[-6:]
+            incoming_speed = self._segment_speed_kmh(samples[:3])
+            outgoing_speed = self._segment_speed_kmh(samples[3:])
+            effective_speed = incoming_speed or speed_kmh
             shot_type = self.classify_shot_type()
             
             return {
@@ -505,7 +509,9 @@ class EnhancedEventDetector:
                 "type": "bounce",  # Will be updated by game state
                 "label": "Ball Bounce",
                 "player": self._infer_player(current.x),
-                "shotSpeed": speed_kmh,
+                "shotSpeed": effective_speed,
+                "incomingShotSpeed": incoming_speed,
+                "outgoingShotSpeed": outgoing_speed,
                 "shotType": shot_type,
                 "frameNumber": current.frame,
                 "confidence": current.confidence
@@ -672,6 +678,27 @@ class EnhancedEventDetector:
             side = self.table_bounds.get_side(x)
             return 1 if side == Side.LEFT else 2
         return 1 if x < self.frame_width / 2 else 2
+
+    def _segment_speed_kmh(self, points: List[BallPosition]) -> Optional[float]:
+        """Calculate raw speed over provided sample segment."""
+        if len(points) < 2 or self.fps <= 0 or self.pixels_per_meter <= 0:
+            return None
+
+        first = points[0]
+        last = points[-1]
+        dt = (last.frame - first.frame) / self.fps
+        if dt <= 0:
+            return None
+
+        dx = last.x - first.x
+        dy = last.y - first.y
+        dist_pixels = (dx * dx + dy * dy) ** 0.5
+
+        m_per_pixel = 1.0 / self.pixels_per_meter
+        speed_mps = (dist_pixels * m_per_pixel) / dt
+        speed_kmh = speed_mps * 3.6
+
+        return round(speed_kmh, 1)
     
     def finish_rally(self, final_frame: int) -> Optional[Dict]:
         """Finish current rally and return summary event"""
@@ -881,10 +908,10 @@ def analyze_video(video_path: str, output_json_path: str,
             shot_payload = {
                 "frame": frame_idx,
                 "player": detector._infer_player(primary_ball.x),
-                "speedKmh": est_speed,
-                "accuracyPct": accuracy,
+                "speed": est_speed,
+                "accuracy": accuracy,
                 "shotType": shot_type,
-                "result": result,
+                "result": result.upper(),
                 "confidence": float(primary_ball.confidence),
                 "detections": detection_payload,
                 "frameSeries": [frame_idx],

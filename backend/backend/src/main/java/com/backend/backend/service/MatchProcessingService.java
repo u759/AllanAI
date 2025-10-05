@@ -133,6 +133,8 @@ public class MatchProcessingService {
 
             EventMetadata metadata = new EventMetadata();
             metadata.setShotSpeed(modelEvent.getShotSpeed());
+            metadata.setIncomingShotSpeed(modelEvent.getIncomingShotSpeed());
+            metadata.setOutgoingShotSpeed(modelEvent.getOutgoingShotSpeed());
             metadata.setRallyLength(modelEvent.getRallyLength());
             metadata.setShotType(resolveShotType(modelEvent.getShotType()).name());
             metadata.setBallTrajectory(modelEvent.getBallTrajectory() == null ? List.of() : modelEvent.getBallTrajectory());

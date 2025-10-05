@@ -1,0 +1,600 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: #333;
+    min-height: 100vh;
+}
+
+.container {
+    max-width: 1800px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+/* Header */
+header {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+header h1 {
+    text-align: center;
+    color: #667eea;
+    margin-bottom: 15px;
+    font-size: 2em;
+}
+
+.match-score {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 30px;
+}
+
+.player-score {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+}
+
+.player-label {
+    font-size: 0.9em;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.score {
+    font-size: 3em;
+    font-weight: bold;
+    color: #667eea;
+}
+
+.score-separator {
+    font-size: 2em;
+    color: #999;
+}
+
+/* Main Content */
+.main-content {
+    display: grid;
+    grid-template-columns: 1fr 350px;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+/* Video Section */
+.video-section {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.video-container {
+    position: relative;
+    width: 100%;
+    background: #000;
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 15px;
+}
+
+#video-player {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
+#overlay-canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+.event-notification {
+    position: absolute;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(102, 126, 234, 0.95);
+    color: white;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-size: 1.1em;
+    font-weight: bold;
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
+    z-index: 10;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+
+.event-notification.show {
+    opacity: 1;
+}
+
+/* Video Controls */
+.video-controls {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 10px;
+    background: #f5f5f5;
+    border-radius: 8px;
+}
+
+.control-btn {
+    background: #667eea;
+    color: white;
+    border: none;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 1.2em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.3s;
+}
+
+.control-btn:hover {
+    background: #5568d3;
+}
+
+.seek-bar {
+    flex: 1;
+    height: 6px;
+    border-radius: 3px;
+    background: #ddd;
+    outline: none;
+    -webkit-appearance: none;
+}
+
+.seek-bar::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #667eea;
+    cursor: pointer;
+}
+
+.seek-bar::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #667eea;
+    cursor: pointer;
+    border: none;
+}
+
+#current-time, #duration {
+    font-size: 0.9em;
+    color: #666;
+    min-width: 40px;
+}
+
+.speed-selector {
+    padding: 5px 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background: white;
+    cursor: pointer;
+}
+
+/* Player Speed Charts */
+.speed-charts-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.player-speed-chart {
+    background: #f8f9ff;
+    border-radius: 8px;
+    padding: 15px;
+    border: 2px solid #e8ebff;
+}
+
+.chart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.chart-header h3 {
+    color: #667eea;
+    font-size: 1.1em;
+    margin: 0;
+}
+
+.current-speed-display {
+    display: flex;
+    align-items: baseline;
+    gap: 5px;
+}
+
+.speed-value {
+    font-size: 2em;
+    font-weight: bold;
+    color: #667eea;
+}
+
+.speed-unit {
+    font-size: 0.9em;
+    color: #666;
+}
+
+.speed-chart-canvas {
+    width: 100%;
+    height: 150px;
+    background: white;
+    border-radius: 6px;
+    border: 1px solid #e0e0e0;
+}
+
+.chart-stats {
+    display: flex;
+    justify-content: space-around;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid #e0e0e0;
+}
+
+.chart-stat {
+    display: flex;
+    gap: 5px;
+    font-size: 0.9em;
+}
+
+.chart-stat .stat-label {
+    color: #666;
+}
+
+.chart-stat .stat-value {
+    font-weight: bold;
+    color: #333;
+}
+
+/* Stats Sidebar */
+.stats-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.stats-card {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.stats-card h3 {
+    color: #667eea;
+    margin-bottom: 15px;
+    font-size: 1.2em;
+    border-bottom: 2px solid #f0f0f0;
+    padding-bottom: 10px;
+}
+
+.stat-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid #f5f5f5;
+}
+
+.stat-item:last-child {
+    border-bottom: none;
+}
+
+.stat-label {
+    color: #666;
+    font-size: 0.9em;
+}
+
+.stat-value {
+    font-weight: bold;
+    color: #333;
+}
+
+.highlights-list {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.highlight-item {
+    padding: 10px;
+    background: #f8f9ff;
+    border-radius: 6px;
+    margin-bottom: 8px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.highlight-item:hover {
+    background: #e8ebff;
+}
+
+.highlight-title {
+    font-weight: bold;
+    color: #667eea;
+    margin-bottom: 4px;
+}
+
+.highlight-time {
+    font-size: 0.85em;
+    color: #666;
+}
+
+/* Timeline Section */
+.timeline-section {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.timeline-section h3 {
+    color: #667eea;
+    margin-bottom: 15px;
+}
+
+.timeline-container {
+    position: relative;
+    height: 60px;
+    background: #f5f5f5;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    overflow: hidden;
+}
+
+.timeline {
+    position: relative;
+    height: 100%;
+    width: 100%;
+}
+
+.timeline-marker {
+    position: absolute;
+    width: 4px;
+    height: 100%;
+    cursor: pointer;
+    transition: width 0.2s;
+}
+
+.timeline-marker:hover {
+    width: 6px;
+}
+
+.timeline-marker.SCORE {
+    background: #4caf50;
+}
+
+.timeline-marker.MISS {
+    background: #f44336;
+}
+
+.timeline-marker.RALLY_HIGHLIGHT {
+    background: #ff9800;
+}
+
+.timeline-marker.FASTEST_SHOT {
+    background: #e91e63;
+}
+
+.timeline-marker.SERVE_ACE {
+    background: #9c27b0;
+}
+
+.timeline-marker.PLAY_OF_THE_GAME {
+    background: #ffd700;
+}
+
+.timeline-current {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 2px;
+    height: 100%;
+    background: #667eea;
+    z-index: 5;
+}
+
+.events-list {
+    max-height: 200px;
+    overflow-y: auto;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 10px;
+}
+
+.event-item {
+    padding: 12px;
+    background: #f8f9ff;
+    border-radius: 6px;
+    border-left: 4px solid #667eea;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.event-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.event-item.active {
+    background: #e8ebff;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.event-title {
+    font-weight: bold;
+    color: #667eea;
+    margin-bottom: 4px;
+}
+
+.event-description {
+    font-size: 0.9em;
+    color: #666;
+    margin-bottom: 4px;
+}
+
+.event-time {
+    font-size: 0.85em;
+    color: #999;
+}
+
+.no-data {
+    color: #999;
+    text-align: center;
+    padding: 20px;
+}
+
+/* Upload Section */
+.upload-section {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.upload-section.hidden {
+    display: none;
+}
+
+.upload-card {
+    background: white;
+    border-radius: 12px;
+    padding: 40px;
+    max-width: 500px;
+    width: 90%;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+}
+
+.upload-card h2 {
+    color: #667eea;
+    margin-bottom: 25px;
+    text-align: center;
+}
+
+.upload-group {
+    margin-bottom: 20px;
+}
+
+.upload-group label {
+    display: block;
+    margin-bottom: 8px;
+    color: #666;
+    font-weight: 500;
+}
+
+.upload-group input[type="file"] {
+    width: 100%;
+    padding: 10px;
+    border: 2px dashed #ddd;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.upload-group input[type="file"]:hover {
+    border-color: #667eea;
+}
+
+.load-btn {
+    width: 100%;
+    padding: 15px;
+    background: #667eea;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 1.1em;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.3s;
+    margin-top: 10px;
+}
+
+.load-btn:hover:not(:disabled) {
+    background: #5568d3;
+}
+
+.load-btn:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #667eea;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #5568d3;
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+    .main-content {
+        grid-template-columns: 1fr;
+    }
+    
+    .stats-sidebar {
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        flex-direction: row;
+    }
+}
+
+@media (max-width: 768px) {
+    .match-score {
+        gap: 15px;
+    }
+    
+    .score {
+        font-size: 2em;
+    }
+    
+    .upload-card {
+        padding: 20px;
+    }
+    
+    .speed-charts-container {
+        grid-template-columns: 1fr;
+    }
+}

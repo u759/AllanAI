@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ping Pong Match Visualizer</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header>
+            <h1>🏓 Ping Pong Match Analysis</h1>
+            <div class="match-score">
+                <div class="player-score">
+                    <span class="player-label">Player 1</span>
+                    <span class="score" id="player1-score">0</span>
+                </div>
+                <div class="score-separator">-</div>
+                <div class="player-score">
+                    <span class="player-label">Player 2</span>
+                    <span class="score" id="player2-score">0</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Video Section -->
+            <div class="video-section">
+                <div class="video-container" id="video-container">
+                    <video id="video-player" controls>
+                        <source id="video-source" src="" type="video/mp4">
+                        Your browser does not support the video tag.
+                    </video>
+                    <canvas id="overlay-canvas"></canvas>
+                    
+                    <!-- Event Notification Overlay -->
+                    <div class="event-notification" id="event-notification"></div>
+                </div>
+
+                <!-- Video Controls -->
+                <div class="video-controls">
+                    <button id="play-pause-btn" class="control-btn">
+                        <span id="play-icon">▶</span>
+                    </button>
+                    <input type="range" id="seek-bar" class="seek-bar" min="0" max="100" value="0" step="0.1">
+                    <span id="current-time">0:00</span> / <span id="duration">0:00</span>
+                    <select id="playback-speed" class="speed-selector">
+                        <option value="0.25">0.25x</option>
+                        <option value="0.5">0.5x</option>
+                        <option value="1" selected>1x</option>
+                        <option value="1.5">1.5x</option>
+                        <option value="2">2x</option>
+                    </select>
+                </div>
+
+                <!-- Player Speed Charts -->
+                <div class="speed-charts-container">
+                    <div class="player-speed-chart">
+                        <div class="chart-header">
+                            <h3>Player 1 Speed</h3>
+                            <div class="current-speed-display">
+                                <span class="speed-value" id="player1-current-speed">--</span>
+                                <span class="speed-unit">km/h</span>
+                            </div>
+                        </div>
+                        <canvas id="player1-speed-chart" class="speed-chart-canvas"></canvas>
+                        <div class="chart-stats">
+                            <div class="chart-stat">
+                                <span class="stat-label">Max:</span>
+                                <span class="stat-value" id="player1-max-speed">--</span>
+                            </div>
+                            <div class="chart-stat">
+                                <span class="stat-label">Avg:</span>
+                                <span class="stat-value" id="player1-avg-speed">--</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="player-speed-chart">
+                        <div class="chart-header">
+                            <h3>Player 2 Speed</h3>
+                            <div class="current-speed-display">
+                                <span class="speed-value" id="player2-current-speed">--</span>
+                                <span class="speed-unit">km/h</span>
+                            </div>
+                        </div>
+                        <canvas id="player2-speed-chart" class="speed-chart-canvas"></canvas>
+                        <div class="chart-stats">
+                            <div class="chart-stat">
+                                <span class="stat-label">Max:</span>
+                                <span class="stat-value" id="player2-max-speed">--</span>
+                            </div>
+                            <div class="chart-stat">
+                                <span class="stat-label">Avg:</span>
+                                <span class="stat-value" id="player2-avg-speed">--</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stats Sidebar -->
+            <aside class="stats-sidebar">
+                <!-- Match Statistics -->
+                <div class="stats-card">
+                    <h3>Match Statistics</h3>
+                    <div class="stat-item">
+                        <span class="stat-label">Total Rallies</span>
+                        <span class="stat-value" id="total-rallies">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Avg Rally Length</span>
+                        <span class="stat-value" id="avg-rally">0.0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Max Ball Speed</span>
+                        <span class="stat-value" id="max-speed">0 km/h</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Avg Ball Speed</span>
+                        <span class="stat-value" id="avg-speed">0 km/h</span>
+                    </div>
+                </div>
+
+                <!-- Current Shot Info -->
+                <div class="stats-card">
+                    <h3>Current Shot</h3>
+                    <div class="stat-item">
+                        <span class="stat-label">Speed</span>
+                        <span class="stat-value" id="current-shot-speed">-- km/h</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Type</span>
+                        <span class="stat-value" id="current-shot-type">--</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Accuracy</span>
+                        <span class="stat-value" id="current-shot-accuracy">--%</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Result</span>
+                        <span class="stat-value" id="current-shot-result">--</span>
+                    </div>
+                </div>
+
+                <!-- Highlights -->
+                <div class="stats-card">
+                    <h3>🌟 Highlights</h3>
+                    <div class="highlights-list" id="highlights-list">
+                        <p class="no-data">No highlights yet</p>
+                    </div>
+                </div>
+            </aside>
+        </div>
+
+        <!-- Events Timeline -->
+        <div class="timeline-section">
+            <h3>Events Timeline</h3>
+            <div class="timeline-container">
+                <div class="timeline" id="timeline"></div>
+            </div>
+            <div class="events-list" id="events-list">
+                <p class="no-data">No events yet</p>
+            </div>
+        </div>
+
+        <!-- File Upload Section -->
+        <div class="upload-section" id="upload-section">
+            <div class="upload-card">
+                <h2>Load Match Data</h2>
+                <div class="upload-group">
+                    <label for="video-upload">Video File (.mp4):</label>
+                    <input type="file" id="video-upload" accept="video/mp4">
+                </div>
+                <div class="upload-group">
+                    <label for="log-upload">Log File (log.json):</label>
+                    <input type="file" id="log-upload" accept=".json">
+                </div>
+                <div class="upload-group">
+                    <label for="events-upload">Events File (events.json):</label>
+                    <input type="file" id="events-upload" accept=".json">
+                </div>
+                <div class="upload-group">
+                    <label for="highlights-upload">Highlights File (highlights.json):</label>
+                    <input type="file" id="highlights-upload" accept=".json">
+                </div>
+                <button id="load-btn" class="load-btn" disabled>Load Visualizer</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="visualizer.js"></script>
+</body>
+</html>

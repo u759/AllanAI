@@ -74,6 +74,8 @@ public class ModelInferenceResult {
         private Integer importance;
         private Integer rallyLength;
         private Double shotSpeed;
+    private Double incomingShotSpeed;
+    private Double outgoingShotSpeed;
         private String shotType;
         private String result;
         private Integer preEventFrames;
@@ -89,7 +91,7 @@ public class ModelInferenceResult {
         public Boolean getIsScoring() {
             return isScoring;
         }
-        
+
         public void setIsScoring(Boolean isScoring) {
             this.isScoring = isScoring;
         }
@@ -196,6 +198,22 @@ public class ModelInferenceResult {
 
         public void setShotSpeed(Double shotSpeed) {
             this.shotSpeed = shotSpeed;
+        }
+
+        public Double getIncomingShotSpeed() {
+            return incomingShotSpeed;
+        }
+
+        public void setIncomingShotSpeed(Double incomingShotSpeed) {
+            this.incomingShotSpeed = incomingShotSpeed;
+        }
+
+        public Double getOutgoingShotSpeed() {
+            return outgoingShotSpeed;
+        }
+
+        public void setOutgoingShotSpeed(Double outgoingShotSpeed) {
+            this.outgoingShotSpeed = outgoingShotSpeed;
         }
 
         public String getShotType() {

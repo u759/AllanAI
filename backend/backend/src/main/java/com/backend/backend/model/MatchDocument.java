@@ -356,6 +356,8 @@ public class MatchDocument {
 
     public static class EventMetadata {
         private Double shotSpeed;
+    private Double incomingShotSpeed;
+    private Double outgoingShotSpeed;
         private Integer rallyLength;
         private String shotType;
         private List<List<Double>> ballTrajectory;
@@ -373,6 +375,22 @@ public class MatchDocument {
 
         public void setShotSpeed(Double shotSpeed) {
             this.shotSpeed = shotSpeed;
+        }
+
+        public Double getIncomingShotSpeed() {
+            return incomingShotSpeed;
+        }
+
+        public void setIncomingShotSpeed(Double incomingShotSpeed) {
+            this.incomingShotSpeed = incomingShotSpeed;
+        }
+
+        public Double getOutgoingShotSpeed() {
+            return outgoingShotSpeed;
+        }
+
+        public void setOutgoingShotSpeed(Double outgoingShotSpeed) {
+            this.outgoingShotSpeed = outgoingShotSpeed;
         }
 
         public Integer getRallyLength() {
