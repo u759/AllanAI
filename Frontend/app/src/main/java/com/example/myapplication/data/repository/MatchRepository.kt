@@ -149,4 +149,14 @@ interface MatchRepository {
      * @return the current processing status
      */
     suspend fun getMatchStatus(matchId: String): Result<MatchStatus>
+
+    /**
+     * Refresh all matches from the server and update cache.
+     *
+     * Fetches the latest match list from the backend API and updates
+     * the in-memory cache. Call this to ensure UI has latest data.
+     *
+     * @return success or failure result
+     */
+    suspend fun refreshAllMatches(): Result<Unit>
 }

@@ -6,6 +6,8 @@ import com.example.myapplication.data.model.Match
 import com.example.myapplication.data.model.MatchStatus
 import com.example.myapplication.data.repository.MatchRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -33,6 +35,9 @@ class MatchesViewModel @Inject constructor(
     private val _uiState = MutableStateFlow<MatchListUiState>(MatchListUiState.Loading)
     val uiState: StateFlow<MatchListUiState> = _uiState.asStateFlow()
 
+    // Polling job for processing matches
+    private var pollingJob: Job? = null
+
     init {
         loadMatches()
     }
@@ -43,30 +48,37 @@ class MatchesViewModel @Inject constructor(
     private fun loadMatches() {
         viewModelScope.launch {
             _uiState.value = MatchListUiState.Loading
+
+            // Initial fetch from backend
+            matchRepository.refreshAllMatches()
+
             try {
                 matchRepository.getAllMatches().collect { matches ->
-                    // Filter only completed matches for the history screen
-                    val completedMatches = matches.filter { it.status == MatchStatus.COMPLETE }
-                    
+                    // Show ALL matches (not just COMPLETE)
+
                     // Transform Match models to UI MatchItems
-                    val matchItems = completedMatches.map { match ->
+                    val matchItems = matches.map { match ->
                         MatchItem(
                             id = match.id,
-                            player1 = "Player 1",
-                            player2 = "Player 2",
+                            player1 = match.player1Name ?: "Player 1",
+                            player2 = match.player2Name ?: "Player 2",
                             score1 = match.statistics?.player1Score ?: 0,
                             score2 = match.statistics?.player2Score ?: 0,
                             thumbnailUrl = getThumbnailUrl(match),
                             date = match.createdAt.toString(),
-                            duration = formatDuration(match.durationSeconds)
+                            duration = formatDuration(match.durationSeconds),
+                            status = match.status
                         )
                     }
-                    
+
                     _uiState.value = if (matchItems.isEmpty()) {
                         MatchListUiState.Empty
                     } else {
                         MatchListUiState.Success(matchItems)
                     }
+
+                    // Start or stop polling based on match statuses
+                    managePolling(matches)
                 }
             } catch (e: Exception) {
                 _uiState.value = MatchListUiState.Error(
@@ -80,7 +92,37 @@ class MatchesViewModel @Inject constructor(
      * Refresh the match list.
      */
     fun refreshMatches() {
-        loadMatches()
+        viewModelScope.launch {
+            matchRepository.refreshAllMatches()
+        }
+    }
+
+    /**
+     * Manage polling for matches that are UPLOADED or PROCESSING.
+     */
+    private fun managePolling(matches: List<Match>) {
+        val hasProcessingMatches = matches.any {
+            it.status == MatchStatus.UPLOADED || it.status == MatchStatus.PROCESSING
+        }
+
+        if (hasProcessingMatches && pollingJob == null) {
+            // Start polling
+            pollingJob = viewModelScope.launch {
+                while (true) {
+                    delay(15000) // Poll every 15 seconds
+                    matchRepository.refreshAllMatches()
+                }
+            }
+        } else if (!hasProcessingMatches && pollingJob != null) {
+            // Stop polling
+            pollingJob?.cancel()
+            pollingJob = null
+        }
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        pollingJob?.cancel()
     }
 
     /**
@@ -132,5 +174,6 @@ data class MatchItem(
     val score2: Int,
     val thumbnailUrl: String,
     val date: String = "",
-    val duration: String = ""
+    val duration: String = "",
+    val status: MatchStatus = MatchStatus.COMPLETE
 )

@@ -36,7 +36,7 @@ object NetworkModule {
      * - For Android Emulator: Use 10.0.2.2 (special alias for host machine's localhost)
      * - For Physical Device: Replace with actual IP address (e.g., "http://192.168.1.100:8080/")
      */
-    private const val BASE_URL = "http://10.0.2.2:8080/"
+    private const val BASE_URL = "http://192.168.147:8080/"
     
     /**
      * Provides Moshi instance for JSON serialization/deserialization.

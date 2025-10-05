@@ -184,6 +184,10 @@ class MockMatchRepository @Inject constructor(
         return Result.success(match.status)
     }
 
+    override suspend fun refreshAllMatches(): Result<Unit> {
+        return Result.success(Unit)
+    }
+
     // Utility methods for testing
     fun clearAllMatches() {
         matches.clear()
