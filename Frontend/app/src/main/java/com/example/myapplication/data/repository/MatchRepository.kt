@@ -159,4 +159,19 @@ interface MatchRepository {
      * @return success or failure result
      */
     suspend fun refreshAllMatches(): Result<Unit>
+
+    /**
+     * Download video file to local storage.
+     *
+     * Downloads the video from backend and saves to app cache directory.
+     * Returns the local file URI that can be used with ExoPlayer.
+     *
+     * @param matchId the unique match identifier
+     * @param onProgress callback for download progress (0.0 to 1.0)
+     * @return local file URI or failure
+     */
+    suspend fun downloadVideo(
+        matchId: String,
+        onProgress: (Float) -> Unit = {}
+    ): Result<String>
 }

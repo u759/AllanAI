@@ -36,11 +36,14 @@ fun MatchDetailScreen(
     onNavigateToHistory: () -> Unit = {},
     onNavigateToHighlights: () -> Unit = {},
     onNavigateToProfile: () -> Unit = {},
-    viewModel: MatchDetailViewModel = hiltViewModel()
+    viewModel: MatchDetailViewModel = hiltViewModel(),
+    authViewModel: com.example.myapplication.ui.screens.profile.AuthViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val currentPositionMs by viewModel.currentPositionMs.collectAsState()
     val isPlaying by viewModel.isPlaying.collectAsState()
+    val videoUrl by viewModel.videoUrl.collectAsState()
+    val authToken = authViewModel.authRepository.getToken()
 
     // Load match when screen opens
     LaunchedEffect(matchId) {
@@ -90,6 +93,8 @@ fun MatchDetailScreen(
             is MatchDetailUiState.Success -> {
                 MatchDetailContent(
                     match = state.match,
+                    videoUrl = videoUrl,
+                    authToken = authToken,
                     currentPositionMs = currentPositionMs,
                     isPlaying = isPlaying,
                     onPositionChange = { viewModel.updatePosition(it) },
@@ -149,6 +154,8 @@ private fun MatchDetailTopBar(
 @Composable
 private fun MatchDetailContent(
     match: Match,
+    videoUrl: String?,
+    authToken: String?,
     currentPositionMs: Long,
     isPlaying: Boolean,
     onPositionChange: (Long) -> Unit,
@@ -163,16 +170,50 @@ private fun MatchDetailContent(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(24.dp)
     ) {
-        // Video Player with Overlay
-        VideoPlayerWithOverlay(
-            match = match,
-            currentPositionMs = currentPositionMs,
-            isPlaying = isPlaying,
-            onPositionChange = onPositionChange,
-            onPlaybackStateChange = onPlaybackStateChange,
-            detections = getDetections(),
-            trajectory = getTrajectory()
-        )
+        // Video Player with Overlay or Loading State
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .aspectRatio(16f / 9f)
+                .clip(RoundedCornerShape(8.dp))
+                .background(Color(0xFF111827))
+        ) {
+            VideoPlayerWithOverlay(
+                match = match,
+                videoUrl = videoUrl,
+                authToken = authToken,
+                currentPositionMs = currentPositionMs,
+                isPlaying = isPlaying,
+                onPositionChange = onPositionChange,
+                onPlaybackStateChange = onPlaybackStateChange,
+                detections = getDetections(),
+                trajectory = getTrajectory()
+            )
+
+            // Show loading indicator if video URL is not loaded yet
+            if (videoUrl == null) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color.Black.copy(alpha = 0.7f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        CircularProgressIndicator(
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Text(
+                            text = "Loading video...",
+                            color = Color.White,
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
+                }
+            }
+        }
 
         // Match Summary
         MatchSummarySection(match = match)

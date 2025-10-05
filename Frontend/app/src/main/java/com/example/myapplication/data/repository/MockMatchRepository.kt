@@ -188,6 +188,13 @@ class MockMatchRepository @Inject constructor(
         return Result.success(Unit)
     }
 
+    override suspend fun downloadVideo(
+        matchId: String,
+        onProgress: (Float) -> Unit
+    ): Result<String> {
+        return Result.success("test")
+    }
+
     // Utility methods for testing
     fun clearAllMatches() {
         matches.clear()

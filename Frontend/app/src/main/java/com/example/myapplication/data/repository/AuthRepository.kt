@@ -37,6 +37,11 @@ class AuthRepository @Inject constructor(
     fun getCurrentUserEmail(): String? = localDataSource.getCurrentUserEmail()
 
     /**
+     * Get authentication token
+     */
+    fun getToken(): String? = localDataSource.getToken()
+
+    /**
      * Sign in user with username and password
      */
     suspend fun signIn(username: String, password: String): Result<Unit> {
