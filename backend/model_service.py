@@ -31,8 +31,8 @@ import json
 import sys
 import cv2
 import os
-from typing import Dict, List, Tuple, Optional
-from dataclasses import dataclass, asdict
+from typing import Dict, List, Tuple, Optional, Set, Iterable
+from dataclasses import dataclass
 from collections import deque
 
 
@@ -43,6 +43,193 @@ class BallPosition:
     y: float
     confidence: float
     frame: int
+    bbox: Optional[Tuple[float, float, float, float]] = None
+
+
+DEFAULT_BALL_LABELS: Set[str] = {
+    "sports ball",
+    "ball",
+    "ping pong ball",
+    "ping-pong-ball",
+    "ping_pong_ball",
+    "table tennis ball",
+    "table-tennis-ball",
+    "table_tennis_ball"
+}
+
+
+def _load_yolo_model() -> Tuple[YOLO, str]:
+    """Load YOLO weights, falling back to a general model when custom weights are missing."""
+    override_path = os.environ.get("YOLO_MODEL_WEIGHTS")
+    candidates: List[Optional[str]] = []
+    if override_path:
+        candidates.append(override_path)
+
+    script_dir = os.path.dirname(__file__)
+    candidates.append(os.path.join(script_dir, "best.pt"))
+
+    for candidate in candidates:
+        if candidate and os.path.exists(candidate):
+            print(f"Loading model from {candidate}...")
+            return YOLO(candidate), candidate
+
+    fallback = os.environ.get("YOLO_FALLBACK_MODEL", "yolov8n.pt")
+    print(f"Primary model weights not found. Falling back to {fallback}...")
+    return YOLO(fallback), fallback
+
+
+def _build_allowed_labels(model: YOLO) -> Set[str]:
+    labels = {label.lower() for label in DEFAULT_BALL_LABELS}
+    names = getattr(model, "names", None)
+    name_iterable: Iterable[str] = ()
+    if isinstance(names, dict):
+        name_iterable = names.values()
+    elif isinstance(names, (list, tuple)):
+        name_iterable = names
+
+    for name in name_iterable:
+        if isinstance(name, str) and name:
+            labels.add(name.lower())
+
+    env_labels = os.environ.get("BALL_LABELS")
+    if env_labels:
+        labels.update(label.strip().lower() for label in env_labels.split(',') if label.strip())
+    return labels
+
+
+def _parse_allowed_ids() -> Set[int]:
+    env_ids = os.environ.get("BALL_CLASS_IDS")
+    if not env_ids:
+        return set()
+    ids: Set[int] = set()
+    for raw in env_ids.split(','):
+        raw = raw.strip()
+        if not raw:
+            continue
+        try:
+            ids.add(int(raw))
+        except ValueError:
+            continue
+    return ids
+
+
+def _resolve_names_map(model: YOLO, prediction) -> Dict[int, str]:
+    for source in (getattr(prediction, "names", None), getattr(model, "names", None)):
+        if not source:
+            continue
+        if isinstance(source, dict):
+            return {int(k): str(v) for k, v in source.items()}
+        if isinstance(source, (list, tuple)):
+            return {idx: str(name) for idx, name in enumerate(source)}
+    return {}
+
+
+def _extract_xyxy(box) -> Optional[Tuple[float, float, float, float]]:
+    coords = getattr(box, "xyxy", None)
+    if coords is None:
+        return None
+    try:
+        first = coords[0]
+    except (TypeError, IndexError):
+        first = coords
+
+    if hasattr(first, "tolist"):
+        values = first.tolist()
+    elif isinstance(first, (list, tuple)):
+        values = list(first)
+    else:
+        values = [float(first)] if first is not None else []
+
+    if len(values) < 4:
+        return None
+    return float(values[0]), float(values[1]), float(values[2]), float(values[3])
+
+
+def _extract_confidence(box) -> Optional[float]:
+    if hasattr(box, "conf"):
+        conf = box.conf
+    elif hasattr(box, "confidence"):
+        conf = getattr(box, "confidence")
+    else:
+        return None
+
+    if isinstance(conf, (list, tuple)):
+        conf = conf[0]
+    if hasattr(conf, "item"):
+        conf = conf.item()
+    try:
+        return float(conf)
+    except (TypeError, ValueError):
+        return None
+
+
+def _extract_class(box, names_map: Dict[int, str]) -> Tuple[Optional[int], Optional[str]]:
+    cls_id = None
+    if hasattr(box, "cls"):
+        cls = box.cls
+        if isinstance(cls, (list, tuple)):
+            cls = cls[0]
+        if hasattr(cls, "item"):
+            cls = cls.item()
+        try:
+            cls_id = int(cls)
+        except (TypeError, ValueError):
+            cls_id = None
+    elif hasattr(box, "class_id"):
+        try:
+            cls_id = int(getattr(box, "class_id"))
+        except (TypeError, ValueError):
+            cls_id = None
+
+    cls_name = None
+    if cls_id is not None:
+        cls_name = names_map.get(cls_id)
+    return cls_id, cls_name
+
+
+def _is_ball_detection(cls_id: Optional[int], cls_name: Optional[str],
+                       allowed_labels: Set[str], allowed_ids: Set[int], total_classes: int) -> bool:
+    if cls_id is not None and cls_id in allowed_ids:
+        return True
+    if cls_name and cls_name.lower() in allowed_labels:
+        return True
+    if not allowed_labels and not allowed_ids:
+        return True
+    if total_classes == 1 and cls_id is not None:
+        return True
+    return False
+
+
+def _select_primary_ball(predictions, model: YOLO, frame_idx: int, confidence_threshold: float,
+                         allowed_labels: Set[str], allowed_ids: Set[int]) -> Optional[BallPosition]:
+    primary: Optional[BallPosition] = None
+    for prediction in predictions:
+        boxes = getattr(prediction, "boxes", None)
+        if boxes is None:
+            continue
+        names_map = _resolve_names_map(model, prediction)
+        total_classes = len(names_map)
+        for box in boxes:
+            coords = _extract_xyxy(box)
+            if coords is None:
+                continue
+            confidence = _extract_confidence(box)
+            if confidence is None or confidence < confidence_threshold:
+                continue
+            cls_id, cls_name = _extract_class(box, names_map)
+            if not _is_ball_detection(cls_id, cls_name, allowed_labels, allowed_ids, total_classes):
+                continue
+            x_min, y_min, x_max, y_max = coords
+            candidate = BallPosition(
+                x=(x_min + x_max) / 2.0,
+                y=(y_min + y_max) / 2.0,
+                confidence=confidence,
+                frame=frame_idx,
+                bbox=(x_min, y_min, x_max, y_max)
+            )
+            if primary is None or candidate.confidence > primary.confidence:
+                primary = candidate
+    return primary
 
 
 class EventDetector:
@@ -205,13 +392,9 @@ def analyze_video(video_path: str, output_json_path: str, confidence_threshold: 
     Returns:
         Dictionary containing analysis results
     """
-    # Check if model exists
-    model_path = os.path.join(os.path.dirname(__file__), "best.pt")
-    if not os.path.exists(model_path):
-        raise FileNotFoundError(f"Model file not found: {model_path}. Please train the model or download pre-trained weights.")
-    
-    print(f"Loading model from {model_path}...")
-    model = YOLO(model_path)
+    model, _ = _load_yolo_model()
+    allowed_labels = _build_allowed_labels(model)
+    allowed_ids = _parse_allowed_ids()
     
     print(f"Opening video: {video_path}")
     cap = cv2.VideoCapture(video_path)
@@ -257,38 +440,59 @@ def analyze_video(video_path: str, output_json_path: str, confidence_threshold: 
         
         # Run inference
         predictions = model.predict(source=frame, conf=confidence_threshold, verbose=False)
-        
-        ball_detected = False
-        for prediction in predictions:
-            for box in prediction.boxes:
-                # Extract ball position
-                x_min, y_min, x_max, y_max = map(float, box.xyxy[0])
-                x_center = (x_min + x_max) / 2.0
-                y_center = (y_min + y_max) / 2.0
-                confidence = float(box.conf[0])
-                
-                ball_pos = BallPosition(x_center, y_center, confidence, frame_idx)
-                
-                # Detect events
-                events = detector.add_position(ball_pos)
-                for event in events:
-                    results["events"].append(event)
-                    if event.get("shotSpeed"):
-                        speeds.append(event["shotSpeed"])
-                
-                results["statistics"]["ballDetections"] += 1
-                ball_detected = True
-                
-                # Record shot (simplified - one per detection)
-                results["shots"].append({
-                    "frame": frame_idx,
-                    "player": detector._infer_player(x_center),
-                    "speed": speeds[-1] if speeds else 30.0,
-                    "accuracy": 85.0,  # Default, could be refined
-                    "shotType": "forehand",
-                    "result": "in",
-                    "confidence": confidence
+
+        primary_ball = _select_primary_ball(
+            predictions,
+            model,
+            frame_idx,
+            confidence_threshold,
+            allowed_labels,
+            allowed_ids
+        )
+
+        ball_detected = primary_ball is not None
+
+        if primary_ball:
+            events = detector.add_position(primary_ball)
+            for event in events:
+                results["events"].append(event)
+                if event.get("shotSpeed"):
+                    speeds.append(event["shotSpeed"])
+
+            results["statistics"]["ballDetections"] += 1
+
+            detection_payload = []
+            if primary_ball.bbox:
+                x_min, y_min, x_max, y_max = primary_ball.bbox
+                detection_payload.append({
+                    "frameNumber": frame_idx,
+                    "x": float(x_min),
+                    "y": float(y_min),
+                    "width": float(max(x_max - x_min, 0.0)),
+                    "height": float(max(y_max - y_min, 0.0)),
+                    "confidence": float(primary_ball.confidence)
                 })
+            else:
+                detection_payload.append({
+                    "frameNumber": frame_idx,
+                    "confidence": float(primary_ball.confidence)
+                })
+
+            timestamp_ms = (frame_idx / fps) * 1000.0 if fps else None
+            shot_payload = {
+                "frame": frame_idx,
+                "player": detector._infer_player(primary_ball.x),
+                "speed": speeds[-1] if speeds else 30.0,
+                "accuracy": 85.0,
+                "shotType": "forehand",
+                "result": "in",
+                "confidence": float(primary_ball.confidence),
+                "detections": detection_payload,
+                "frameSeries": [frame_idx]
+            }
+            if timestamp_ms is not None:
+                shot_payload["timestampSeries"] = [timestamp_ms]
+            results["shots"].append(shot_payload)
         
         if not ball_detected:
             no_ball_frames += 1
