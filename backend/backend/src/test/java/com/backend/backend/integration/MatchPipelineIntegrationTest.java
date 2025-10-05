@@ -8,7 +8,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
-import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -107,10 +106,14 @@ class MatchPipelineIntegrationTest {
         assertThat(statistics.player1Score()).isGreaterThanOrEqualTo(1);
         assertThat(statistics.totalRallies()).isGreaterThanOrEqualTo(1);
 
-        List<EventResponse> events = details.events();
-        assertThat(events).isNotNull();
-        assertThat(events).isNotEmpty();
-        EventResponse firstEvent = events.get(0);
+        ResponseEntity<EventResponse[]> eventsResponse = restTemplate.getForEntity(
+            "/api/matches/{id}/events",
+            EventResponse[].class,
+            matchId);
+        assertThat(eventsResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
+    EventResponse[] eventsBody = Objects.requireNonNull(eventsResponse.getBody(), "events body");
+    assertThat(eventsBody).isNotEmpty();
+    EventResponse firstEvent = eventsBody[0];
         assertThat(firstEvent.type()).isNotNull();
         assertThat(firstEvent.metadata()).isNotNull();
         assertThat(firstEvent.metadata().detections()).isNotEmpty();

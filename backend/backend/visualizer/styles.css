@@ -398,6 +398,128 @@ header h1 {
     background: #ff9800;
 }
 
+.score-toast {
+    animation: float-up 1.2s ease-out forwards;
+    font-size: 0.85em;
+}
+
+@keyframes float-up {
+    0% {
+        opacity: 0;
+        transform: translate(-50%, 10px);
+    }
+    20% {
+        opacity: 1;
+        transform: translate(-50%, 0);
+    }
+    80% {
+        opacity: 1;
+        transform: translate(-50%, -6px);
+    }
+    100% {
+        opacity: 0;
+        transform: translate(-50%, -12px);
+    }
+}
+
+.event-meta {
+    display: flex;
+    gap: 8px;
+    font-size: 0.8em;
+    margin: 6px 0;
+    flex-wrap: wrap;
+}
+
+.event-type,
+.event-player,
+.event-speed {
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: #f0f3ff;
+    color: #4a5abf;
+    font-weight: 600;
+}
+
+.event-player {
+    background: #ffecef;
+    color: #c2185b;
+}
+
+.event-speed {
+    background: #e0f7fa;
+    color: #007c91;
+}
+
+.breakdown-label {
+    font-weight: 600;
+    color: #333;
+}
+
+.breakdown-value {
+    text-align: right;
+    color: #555;
+    font-variant-numeric: tabular-nums;
+}
+
+.breakdown-row {
+    display: grid;
+    grid-template-columns: 1fr 60px 110px 110px;
+    gap: 8px;
+    padding: 6px 0;
+    border-bottom: 1px solid #f0f0f0;
+    font-size: 0.9em;
+}
+
+.breakdown-row:last-child {
+    border-bottom: none;
+}
+
+.player-breakdown-card {
+    background: #f8f9ff;
+    border: 1px solid #e8ebff;
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 10px;
+}
+
+.player-breakdown-card h4 {
+    color: #667eea;
+    margin-bottom: 8px;
+}
+
+.player-breakdown-card p {
+    font-size: 0.9em;
+    color: #555;
+    margin: 4px 0;
+}
+
+.momentum-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 0;
+    border-bottom: 1px solid #f0f0f0;
+    font-size: 0.9em;
+}
+
+.momentum-item:last-child {
+    border-bottom: none;
+}
+
+.momentum-time {
+    color: #666;
+    min-width: 60px;
+}
+
+.momentum-scorer {
+    font-weight: 600;
+    color: #333;
+}
+
+.momentum-score {
+    font-weight: 700;
+    color: #4caf50;
+}
+
 .timeline-marker.FASTEST_SHOT {
     background: #e91e63;
 }

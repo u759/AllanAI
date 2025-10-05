@@ -62,7 +62,7 @@
                             <h3>Player 1 Speed</h3>
                             <div class="current-speed-display">
                                 <span class="speed-value" id="player1-current-speed">--</span>
-                                <span class="speed-unit">km/h</span>
+                                <span class="speed-unit">mph</span>
                             </div>
                         </div>
                         <canvas id="player1-speed-chart" class="speed-chart-canvas"></canvas>
@@ -83,7 +83,7 @@
                             <h3>Player 2 Speed</h3>
                             <div class="current-speed-display">
                                 <span class="speed-value" id="player2-current-speed">--</span>
-                                <span class="speed-unit">km/h</span>
+                                <span class="speed-unit">mph</span>
                             </div>
                         </div>
                         <canvas id="player2-speed-chart" class="speed-chart-canvas"></canvas>
@@ -116,11 +116,11 @@
                     </div>
                     <div class="stat-item">
                         <span class="stat-label">Max Ball Speed</span>
-                        <span class="stat-value" id="max-speed">0 km/h</span>
+                        <span class="stat-value" id="max-speed">0 mph</span>
                     </div>
                     <div class="stat-item">
                         <span class="stat-label">Avg Ball Speed</span>
-                        <span class="stat-value" id="avg-speed">0 km/h</span>
+                        <span class="stat-value" id="avg-speed">0 mph</span>
                     </div>
                 </div>
 
@@ -129,7 +129,7 @@
                     <h3>Current Shot</h3>
                     <div class="stat-item">
                         <span class="stat-label">Speed</span>
-                        <span class="stat-value" id="current-shot-speed">-- km/h</span>
+                        <span class="stat-value" id="current-shot-speed">-- mph</span>
                     </div>
                     <div class="stat-item">
                         <span class="stat-label">Type</span>
@@ -142,6 +142,95 @@
                     <div class="stat-item">
                         <span class="stat-label">Result</span>
                         <span class="stat-value" id="current-shot-result">--</span>
+                    </div>
+                </div>
+
+                <div class="stats-card">
+                    <h3>Shot Speed Metrics</h3>
+                    <div class="stat-item">
+                        <span class="stat-label">Fastest Shot</span>
+                        <span class="stat-value" id="shot-fastest">-- mph</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Average Shot</span>
+                        <span class="stat-value" id="shot-average">-- mph</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Avg Incoming</span>
+                        <span class="stat-value" id="shot-incoming">-- mph</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Avg Outgoing</span>
+                        <span class="stat-value" id="shot-outgoing">-- mph</span>
+                    </div>
+                </div>
+
+                <div class="stats-card">
+                    <h3>Serve Metrics</h3>
+                    <div class="stat-item">
+                        <span class="stat-label">Total Serves</span>
+                        <span class="stat-value" id="serve-total">--</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Successful Serves</span>
+                        <span class="stat-value" id="serve-successful">--</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Faults</span>
+                        <span class="stat-value" id="serve-faults">--</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Success Rate</span>
+                        <span class="stat-value" id="serve-success-rate">--</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Average Speed</span>
+                        <span class="stat-value" id="serve-average-speed">-- mph</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Fastest Serve</span>
+                        <span class="stat-value" id="serve-fastest-speed">-- mph</span>
+                    </div>
+                </div>
+
+                <div class="stats-card">
+                    <h3>Return Metrics</h3>
+                    <div class="stat-item">
+                        <span class="stat-label">Total Returns</span>
+                        <span class="stat-value" id="return-total">--</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Successful Returns</span>
+                        <span class="stat-value" id="return-successful">--</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Success Rate</span>
+                        <span class="stat-value" id="return-success-rate">--</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Average Speed</span>
+                        <span class="stat-value" id="return-average-speed">-- mph</span>
+                    </div>
+                </div>
+
+                <div class="stats-card">
+                    <h3>Shot Type Breakdown</h3>
+                    <div id="shot-type-breakdown">
+                        <p class="no-data">No data</p>
+                    </div>
+                </div>
+
+                <div class="stats-card">
+                    <h3>Player Breakdown</h3>
+                    <div id="player-breakdown">
+                        <p class="no-data">No data</p>
+                    </div>
+                </div>
+
+                <div class="stats-card">
+                    <h3>Momentum Timeline</h3>
+                    <div id="momentum-list">
+                        <p class="no-data">No momentum samples</p>
                     </div>
                 </div>
 
@@ -181,6 +270,10 @@
                 <div class="upload-group">
                     <label for="events-upload">Events File (events.json):</label>
                     <input type="file" id="events-upload" accept=".json">
+                </div>
+                <div class="upload-group">
+                    <label for="statistics-upload">Statistics File (statistics.json):</label>
+                    <input type="file" id="statistics-upload" accept=".json">
                 </div>
                 <div class="upload-group">
                     <label for="highlights-upload">Highlights File (highlights.json):</label>
