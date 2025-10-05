@@ -9,7 +9,11 @@ import androidx.navigation.navArgument
 import com.example.myapplication.ui.screens.highlights.HighlightsListScreen
 import com.example.myapplication.ui.screens.history.MatchDetailScreen
 import com.example.myapplication.ui.screens.history.MatchListScreen
+import com.example.myapplication.ui.screens.profile.ChangePasswordScreen
+import com.example.myapplication.ui.screens.profile.EditProfileScreen
 import com.example.myapplication.ui.screens.profile.ProfileScreen
+import com.example.myapplication.ui.screens.profile.SignInScreen
+import com.example.myapplication.ui.screens.profile.SignUpScreen
 import com.example.myapplication.ui.screens.upload.UploadScreen
 import com.example.myapplication.ui.screens.upload.WelcomeUpload
 
@@ -28,6 +32,67 @@ fun NavGraph(
         navController = navController,
         startDestination = startDestination
     ) {
+        // Sign In Screen
+        composable(route = Screen.SignIn.route) {
+            SignInScreen(
+                onSignInClick = { username, password ->
+                    // TODO: Implement authentication logic with ViewModel
+                    navController.navigate(Screen.Welcome.route) {
+                        popUpTo(Screen.SignIn.route) { inclusive = true }
+                    }
+                },
+                onSignUpClick = {
+                    navController.navigate(Screen.SignUp.route)
+                },
+                onForgotPasswordClick = {
+                    // TODO: Navigate to forgot password screen when implemented
+                },
+                onNavigateToUpload = {
+                    navController.navigate(Screen.Welcome.route) {
+                        popUpTo(Screen.SignIn.route) { inclusive = true }
+                    }
+                },
+                onNavigateToHistory = {
+                    navController.navigate(Screen.History.route)
+                },
+                onNavigateToHighlights = {
+                    navController.navigate(Screen.Highlights.route)
+                },
+                onNavigateToProfile = {
+                    navController.navigate(Screen.Profile.route)
+                }
+            )
+        }
+        
+        // Sign Up Screen
+        composable(route = Screen.SignUp.route) {
+            SignUpScreen(
+                onSignUpClick = { username, email, password, confirmPassword ->
+                    // TODO: Implement registration logic with ViewModel
+                    navController.navigate(Screen.Welcome.route) {
+                        popUpTo(Screen.SignUp.route) { inclusive = true }
+                    }
+                },
+                onSignInClick = {
+                    navController.navigateUp()
+                },
+                onNavigateToUpload = {
+                    navController.navigate(Screen.Welcome.route) {
+                        popUpTo(Screen.SignUp.route) { inclusive = true }
+                    }
+                },
+                onNavigateToHistory = {
+                    navController.navigate(Screen.History.route)
+                },
+                onNavigateToHighlights = {
+                    navController.navigate(Screen.Highlights.route)
+                },
+                onNavigateToProfile = {
+                    navController.navigate(Screen.Profile.route)
+                }
+            )
+        }
+        
         // Welcome/Home Screen
         composable(route = Screen.Welcome.route) {
             WelcomeUpload(
@@ -156,19 +221,52 @@ fun NavGraph(
                     navController.navigateUp()
                 },
                 onEditProfile = {
-                    // TODO: Navigate to edit profile screen when implemented
+                    navController.navigate(Screen.EditProfile.route)
                 },
                 onChangePassword = {
-                    // TODO: Navigate to change password screen when implemented
-                },
-                onNotifications = {
-                    // TODO: Navigate to notifications settings when implemented
+                    navController.navigate(Screen.ChangePassword.route)
                 },
                 onLogout = {
-                    // TODO: Handle logout and navigate to login/welcome
                     navController.navigate(Screen.Welcome.route) {
                         popUpTo(0) { inclusive = true }
                     }
+                },
+                onNavigateToUpload = {
+                    navController.navigate(Screen.Welcome.route) {
+                        popUpTo(Screen.Welcome.route) { inclusive = true }
+                    }
+                },
+                onNavigateToHistory = {
+                    navController.navigate(Screen.History.route)
+                },
+                onNavigateToHighlights = {
+                    navController.navigate(Screen.Highlights.route)
+                }
+            )
+        }
+        
+        // Edit Profile Screen
+        composable(route = Screen.EditProfile.route) {
+            EditProfileScreen(
+                onNavigateBack = {
+                    navController.navigateUp()
+                },
+                onSaveChanges = { fullName, email ->
+                    // TODO: Implement save changes logic with ViewModel
+                    navController.navigateUp()
+                }
+            )
+        }
+        
+        // Change Password Screen
+        composable(route = Screen.ChangePassword.route) {
+            ChangePasswordScreen(
+                onNavigateBack = {
+                    navController.navigateUp()
+                },
+                onUpdatePassword = { currentPassword, newPassword, confirmPassword ->
+                    // TODO: Implement password update logic with ViewModel
+                    navController.navigateUp()
                 }
             )
         }

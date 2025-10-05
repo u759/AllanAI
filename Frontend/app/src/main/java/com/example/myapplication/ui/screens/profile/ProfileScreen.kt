@@ -30,8 +30,10 @@ fun ProfileScreen(
     onNavigateBack: () -> Unit = {},
     onEditProfile: () -> Unit = {},
     onChangePassword: () -> Unit = {},
-    onNotifications: () -> Unit = {},
-    onLogout: () -> Unit = {}
+    onLogout: () -> Unit = {},
+    onNavigateToUpload: () -> Unit = {},
+    onNavigateToHistory: () -> Unit = {},
+    onNavigateToHighlights: () -> Unit = {}
 ) {
     Scaffold(
         topBar = {
@@ -42,7 +44,6 @@ fun ProfileScreen(
         ProfileContent(
             onEditProfile = onEditProfile,
             onChangePassword = onChangePassword,
-            onNotifications = onNotifications,
             onLogout = onLogout,
             modifier = Modifier
                 .fillMaxSize()
@@ -59,7 +60,7 @@ private fun ProfileTopBar(
     TopAppBar(
         title = {
             Text(
-                text = "Profile",
+                text = "Settings",
                 style = MaterialTheme.typography.titleLarge.copy(
                     fontWeight = FontWeight.Bold,
                     fontSize = 20.sp
@@ -92,12 +93,9 @@ private fun ProfileTopBar(
 private fun ProfileContent(
     onEditProfile: () -> Unit,
     onChangePassword: () -> Unit,
-    onNotifications: () -> Unit,
     onLogout: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var darkModeEnabled by remember { mutableStateOf(true) }
-
     Column(
         modifier = modifier
             .verticalScroll(rememberScrollState())
@@ -123,95 +121,6 @@ private fun ProfileContent(
                 )
             )
         )
-        
-        // Settings section
-        Column(
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            Text(
-                text = "Settings",
-                style = MaterialTheme.typography.titleMedium.copy(
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 18.sp
-                ),
-                color = Color(0xFF9CA3AF),
-                modifier = Modifier.padding(horizontal = 8.dp)
-            )
-            
-            Surface(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(8.dp),
-                color = Color(0xFF1A2831)
-            ) {
-                Column {
-                    // Notifications
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable(onClick = onNotifications)
-                            .padding(16.dp),
-                        horizontalArrangement = Arrangement.spacedBy(16.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Notifications,
-                            contentDescription = "Notifications",
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(24.dp)
-                        )
-                        Text(
-                            text = "Notifications",
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = Color.White,
-                            modifier = Modifier.weight(1f)
-                        )
-                        Icon(
-                            imageVector = Icons.Default.ChevronRight,
-                            contentDescription = "Go",
-                            tint = Color(0xFF9CA3AF),
-                            modifier = Modifier.size(24.dp)
-                        )
-                    }
-                    
-                    HorizontalDivider(
-                        color = Color(0xFF334155),
-                        thickness = 1.dp
-                    )
-                    
-                    // Dark Mode Toggle
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        horizontalArrangement = Arrangement.spacedBy(16.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.DarkMode,
-                            contentDescription = "Dark Mode",
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(24.dp)
-                        )
-                        Text(
-                            text = "Dark Mode",
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = Color.White,
-                            modifier = Modifier.weight(1f)
-                        )
-                        Switch(
-                            checked = darkModeEnabled,
-                            onCheckedChange = { darkModeEnabled = it },
-                            colors = SwitchDefaults.colors(
-                                checkedThumbColor = Color.White,
-                                checkedTrackColor = MaterialTheme.colorScheme.primary,
-                                uncheckedThumbColor = Color.White,
-                                uncheckedTrackColor = Color(0xFF334155)
-                            )
-                        )
-                    }
-                }
-            }
-        }
         
         // Logout button
         Button(
@@ -242,38 +151,15 @@ private fun ProfileHeader() {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // Profile picture with edit button
-        Box(
-            contentAlignment = Alignment.BottomEnd
-        ) {
-            AsyncImage(
-                model = "https://lh3.googleusercontent.com/aida-public/AB6AXuDxwgAqpGGI0jROT95p4-ou2DK4x9UMZN_YPJAcAhu88LVM-BUZnGSc06KePa8eGUEfrFXwSTTQYya5rVX1v4DkSf9fNsgVA_jPGN57IYdBeB7O9P5k1H44nb_V58P3UyE2K2W2wWWOcStdUJhvMgmgNRt2Uq85b6a01i8LRorIEhCF63jlfukPhu2wxRzDjr2Oc-ieAc-7ihCT58rYVp9cd9hQ4qJ7F5r42RKziKLigLZIewyDrr66SoqhuzJ4-EsrcoDKTOgkrpGM",
-                contentDescription = "Profile picture",
-                modifier = Modifier
-                    .size(96.dp)
-                    .clip(CircleShape),
-                contentScale = ContentScale.Crop
-            )
-            
-            // Edit button
-            Box(
-                modifier = Modifier
-                    .size(32.dp)
-                    .background(
-                        color = MaterialTheme.colorScheme.primary,
-                        shape = CircleShape
-                    )
-                    .clickable { /* Edit profile picture */ },
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Edit,
-                    contentDescription = "Edit",
-                    tint = Color.White,
-                    modifier = Modifier.size(16.dp)
-                )
-            }
-        }
+        // Profile picture
+        AsyncImage(
+            model = "https://lh3.googleusercontent.com/aida-public/AB6AXuDxwgAqpGGI0jROT95p4-ou2DK4x9UMZN_YPJAcAhu88LVM-BUZnGSc06KePa8eGUEfrFXwSTTQYya5rVX1v4DkSf9fNsgVA_jPGN57IYdBeB7O9P5k1H44nb_V58P3UyE2K2W2wWWOcStdUJhvMgmgNRt2Uq85b6a01i8LRorIEhCF63jlfukPhu2wxRzDjr2Oc-ieAc-7ihCT58rYVp9cd9hQ4qJ7F5r42RKziKLigLZIewyDrr66SoqhuzJ4-EsrcoDKTOgkrpGM",
+            contentDescription = "Profile picture",
+            modifier = Modifier
+                .size(96.dp)
+                .clip(CircleShape),
+            contentScale = ContentScale.Crop
+        )
         
         // Name and email
         Column(

@@ -55,8 +55,10 @@ android/app/src/main/java/com/allanai/
 │   ├── screens/
 │   │   ├── profile/
 │   │   │   ├── ProfileScreen.kt
-│   │   │   ├── SignUpPage.kt
-│   │   │   └── SignInPage.kt
+│   │   │   ├── EditProfileScreen.kt
+│   │   │   ├── ChangePasswordScreen.kt
+│   │   │   ├── SignUpScreen.kt
+│   │   │   └── SignInScreen.kt
 │   │   ├── upload/
 │   │   │   ├── UploadScreen.kt
 │   │   │   ├── RecordViewModel.kt
@@ -163,8 +165,10 @@ To maintain consistency across the entire app, **ALL screens MUST use the follow
 **DO NOT use alternative icons such as:**
 - ❌ `Icons.Default.Home` (use `Videocam` instead)
 - ❌ `Icons.Default.Upload` (use `Videocam` instead)
+- ❌ `Icons.Default.Publish` (use `Videocam` instead)
 - ❌ `Icons.Default.Movie` (use `Star` instead)
 - ❌ `Icons.Default.VideoLibrary` (use `Star` instead)
+- ❌ `Icons.Default.AutoAwesome` (use `Star` instead)
 
 **Why this matters:**
 - Consistent user experience across all screens
@@ -201,6 +205,42 @@ NavigationBar {
     )
 }
 ```
+
+**⚠️ IMPORTANT: Authentication Screens**
+
+The authentication flow includes sign-in and sign-up screens:
+
+| Screen | Route | Purpose | Fields |
+|--------|-------|---------|--------|
+| **SignInScreen** | `sign_in` | User login with username/password | Username, Password, "Forgot password?" link |
+| **SignUpScreen** | `sign_up` | New user registration | Username, Email, Password, Confirm Password |
+
+**Key Design Decisions:**
+- Both auth screens include bottom navigation bar (unusual but matches design requirements)
+- **SignInScreen** has centered "Allan AI" title with "Welcome back!" subtitle
+- **SignUpScreen** has "Allan AI" in top bar and "Create Account" as main heading
+- Auth screens use darker input backgrounds (`#1E293B` for SignUp, `#1A2831` for SignIn)
+- Password fields use `PasswordVisualTransformation` (no visibility toggle in these screens)
+- Both have "Already have an account? / Don't have an account?" text with clickable link
+- Bottom nav bar maintains the standard icon set: Videocam, History, Star, Person
+
+**⚠️ IMPORTANT: Profile Screen Navigation Flow**
+
+The Profile/Settings section consists of three screens that work together:
+
+| Screen | Route | Purpose | Navigation |
+|--------|-------|---------|-----------|
+| **ProfileScreen** | `profile` | Main settings screen showing user info and options | Navigate from bottom nav bar |
+| **EditProfileScreen** | `edit_profile` | Edit user name and email | Click "Edit Profile" from ProfileScreen |
+| **ChangePasswordScreen** | `change_password` | Update user password securely | Click "Change Password" from ProfileScreen |
+
+**Key Design Decisions:**
+- **ProfileScreen** displays user info (name, email, profile photo) with "Account" section containing Edit Profile and Change Password options, plus a Log Out button
+- **EditProfileScreen** allows editing full name and email with a "Save Changes" button
+- **ChangePasswordScreen** has three password fields (current, new, confirm) with visibility toggles and an "Update Password" button
+- All profile screens use the same top bar pattern: back button (left), centered title, empty spacer (right)
+- Profile picture editing is only available in EditProfileScreen, not on main ProfileScreen
+- No dark mode toggle or notifications settings (removed for simplicity)
 
 **Example - RecordScreen.kt**:
 ```kotlin

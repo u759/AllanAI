@@ -6,6 +6,8 @@ package com.example.myapplication.ui.navigation
  * Each sealed class represents a destination in the app
  */
 sealed class Screen(val route: String) {
+    object SignIn : Screen("sign_in")
+    object SignUp : Screen("sign_up")
     object Welcome : Screen("welcome")
     object Upload : Screen("upload")
     object History : Screen("history")
@@ -14,4 +16,6 @@ sealed class Screen(val route: String) {
     }
     object Highlights : Screen("highlights")
     object Profile : Screen("profile")
+    object EditProfile : Screen("edit_profile")
+    object ChangePassword : Screen("change_password")
 }
