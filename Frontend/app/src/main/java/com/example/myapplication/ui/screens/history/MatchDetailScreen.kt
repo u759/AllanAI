@@ -533,6 +533,8 @@ private fun RowScope.BottomNavItem(
  */
 @Composable
 private fun ShotStatisticsSection(match: Match) {
+    val stats = match.statistics
+
     Column(
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
@@ -545,46 +547,121 @@ private fun ShotStatisticsSection(match: Match) {
             color = Color.White
         )
 
-        // Calculate shot metrics
-        val totalShots = match.shots.size
-        val serves = match.shots.count { it.shotType == ShotType.SERVE }
-        val forehands = match.shots.count { it.shotType == ShotType.FOREHAND }
-        val backhands = match.shots.count { it.shotType == ShotType.BACKHAND }
-        val successfulShots = match.shots.count { it.result == ShotResult.IN }
-        val successRate = if (totalShots > 0) (successfulShots.toDouble() / totalShots * 100) else 0.0
+        // Use backend shotTypeBreakdown if available, otherwise calculate from shots
+        val shotBreakdown = stats?.shotTypeBreakdown
+        if (shotBreakdown != null && shotBreakdown.isNotEmpty()) {
+            val totalShots = shotBreakdown.sumOf { it.count }
 
-        MetricCard {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text(
-                    text = "Shot Breakdown",
-                    style = MaterialTheme.typography.bodyLarge.copy(
-                        fontWeight = FontWeight.Bold
-                    ),
-                    color = Color.White
-                )
-
-                ShotTypeRow("Serves", serves, totalShots)
-                ShotTypeRow("Forehands", forehands, totalShots)
-                ShotTypeRow("Backhands", backhands, totalShots)
-
-                HorizontalDivider(color = Color(0x1FFFFFFF), thickness = 1.dp)
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
+            MetricCard {
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     Text(
-                        text = "Success Rate",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = Color(0xFF9CA3AF)
-                    )
-                    Text(
-                        text = "${successRate.toInt()}%",
-                        style = MaterialTheme.typography.bodyMedium.copy(
+                        text = "Shot Breakdown",
+                        style = MaterialTheme.typography.bodyLarge.copy(
                             fontWeight = FontWeight.Bold
                         ),
-                        color = MaterialTheme.colorScheme.primary
+                        color = Color.White
                     )
+
+                    shotBreakdown.forEach { shotType ->
+                        ShotTypeRow(shotType.shotType, shotType.count, totalShots, shotType.averageSpeed)
+                    }
+                }
+            }
+        } else {
+            // Fallback to client-side calculation
+            val totalShots = match.shots.size
+            val serves = match.shots.count { it.shotType == ShotType.SERVE }
+            val forehands = match.shots.count { it.shotType == ShotType.FOREHAND }
+            val backhands = match.shots.count { it.shotType == ShotType.BACKHAND }
+            val successfulShots = match.shots.count { it.result == ShotResult.IN }
+            val successRate = if (totalShots > 0) (successfulShots.toDouble() / totalShots * 100) else 0.0
+
+            MetricCard {
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Text(
+                        text = "Shot Breakdown",
+                        style = MaterialTheme.typography.bodyLarge.copy(
+                            fontWeight = FontWeight.Bold
+                        ),
+                        color = Color.White
+                    )
+
+                    ShotTypeRow("Serves", serves, totalShots, null)
+                    ShotTypeRow("Forehands", forehands, totalShots, null)
+                    ShotTypeRow("Backhands", backhands, totalShots, null)
+
+                    HorizontalDivider(color = Color(0x1FFFFFFF), thickness = 1.dp)
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            text = "Success Rate",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = Color(0xFF9CA3AF)
+                        )
+                        Text(
+                            text = "${successRate.toInt()}%",
+                            style = MaterialTheme.typography.bodyMedium.copy(
+                                fontWeight = FontWeight.Bold
+                            ),
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                }
+            }
+        }
+
+        // Display Serve Metrics if available
+        stats?.serveMetrics?.let { serveMetrics ->
+            MetricCard {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(
+                        text = "Serve Statistics",
+                        style = MaterialTheme.typography.bodyLarge.copy(
+                            fontWeight = FontWeight.Bold
+                        ),
+                        color = Color.White
+                    )
+
+                    serveMetrics.totalServes?.let {
+                        StatRow("Total Serves", it.toString())
+                    }
+                    serveMetrics.successRate?.let {
+                        StatRow("Success Rate", "${(it * 100).toInt()}%")
+                    }
+                    serveMetrics.averageServeSpeed?.let {
+                        StatRow("Avg Speed", "%.1f mph".format(it))
+                    }
+                    serveMetrics.fastestServeSpeed?.let {
+                        StatRow("Fastest", "%.1f mph".format(it))
+                    }
+                }
+            }
+        }
+
+        // Display Return Metrics if available
+        stats?.returnMetrics?.let { returnMetrics ->
+            MetricCard {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(
+                        text = "Return Statistics",
+                        style = MaterialTheme.typography.bodyLarge.copy(
+                            fontWeight = FontWeight.Bold
+                        ),
+                        color = Color.White
+                    )
+
+                    returnMetrics.totalReturns?.let {
+                        StatRow("Total Returns", it.toString())
+                    }
+                    returnMetrics.successRate?.let {
+                        StatRow("Success Rate", "${(it * 100).toInt()}%")
+                    }
+                    returnMetrics.averageReturnSpeed?.let {
+                        StatRow("Avg Speed", "%.1f mph".format(it))
+                    }
                 }
             }
         }
@@ -592,7 +669,7 @@ private fun ShotStatisticsSection(match: Match) {
 }
 
 @Composable
-private fun ShotTypeRow(label: String, count: Int, total: Int) {
+private fun ShotTypeRow(label: String, count: Int, total: Int, avgSpeed: Double? = null) {
     val percentage = if (total > 0) (count.toDouble() / total * 100).toInt() else 0
 
     Row(
@@ -600,11 +677,20 @@ private fun ShotTypeRow(label: String, count: Int, total: Int) {
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.bodyMedium,
-            color = Color(0xFF9CA3AF)
-        )
+        Column {
+            Text(
+                text = label,
+                style = MaterialTheme.typography.bodyMedium,
+                color = Color(0xFF9CA3AF)
+            )
+            avgSpeed?.let {
+                Text(
+                    text = "Avg: %.1f mph".format(it),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color(0xFF6B7280)
+                )
+            }
+        }
         Row(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically
@@ -622,6 +708,28 @@ private fun ShotTypeRow(label: String, count: Int, total: Int) {
                 color = Color(0xFF9CA3AF)
             )
         }
+    }
+}
+
+@Composable
+private fun StatRow(label: String, value: String) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodyMedium,
+            color = Color(0xFF9CA3AF)
+        )
+        Text(
+            text = value,
+            style = MaterialTheme.typography.bodyMedium.copy(
+                fontWeight = FontWeight.Bold
+            ),
+            color = Color.White
+        )
     }
 }
 
@@ -708,6 +816,8 @@ private fun EventTypeRow(type: EventType, count: Int) {
  */
 @Composable
 private fun PlayerComparisonSection(match: Match) {
+    val stats = match.statistics
+
     Column(
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
@@ -720,43 +830,85 @@ private fun PlayerComparisonSection(match: Match) {
             color = Color.White
         )
 
-        // Calculate player stats
-        val player1Shots = match.shots.filter { it.player == 1 }
-        val player2Shots = match.shots.filter { it.player == 2 }
+        // Use backend playerBreakdown if available
+        val playerBreakdown = stats?.playerBreakdown
+        if (playerBreakdown != null && playerBreakdown.size >= 2) {
+            val player1Data = playerBreakdown.find { it.player == 1 }
+            val player2Data = playerBreakdown.find { it.player == 2 }
 
-        val player1AvgSpeed = if (player1Shots.isNotEmpty())
-            player1Shots.map { it.speed }.average() else 0.0
-        val player2AvgSpeed = if (player2Shots.isNotEmpty())
-            player2Shots.map { it.speed }.average() else 0.0
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                PlayerStatsCard(
+                    playerName = match.player1Name ?: "Player 1",
+                    shots = player1Data?.totalShots ?: 0,
+                    avgSpeed = player1Data?.averageShotSpeed ?: 0.0,
+                    successRate = (player1Data?.averageAccuracy ?: 0.0) * 100,
+                    score = stats.player1Score,
+                    pointsWon = player1Data?.totalPointsWon,
+                    serveSuccessRate = player1Data?.serveSuccessRate,
+                    returnSuccessRate = player1Data?.returnSuccessRate,
+                    modifier = Modifier.weight(1f)
+                )
 
-        val player1SuccessRate = if (player1Shots.isNotEmpty())
-            (player1Shots.count { it.result == ShotResult.IN }.toDouble() / player1Shots.size * 100)
-            else 0.0
-        val player2SuccessRate = if (player2Shots.isNotEmpty())
-            (player2Shots.count { it.result == ShotResult.IN }.toDouble() / player2Shots.size * 100)
-            else 0.0
+                PlayerStatsCard(
+                    playerName = match.player2Name ?: "Player 2",
+                    shots = player2Data?.totalShots ?: 0,
+                    avgSpeed = player2Data?.averageShotSpeed ?: 0.0,
+                    successRate = (player2Data?.averageAccuracy ?: 0.0) * 100,
+                    score = stats.player2Score,
+                    pointsWon = player2Data?.totalPointsWon,
+                    serveSuccessRate = player2Data?.serveSuccessRate,
+                    returnSuccessRate = player2Data?.returnSuccessRate,
+                    modifier = Modifier.weight(1f)
+                )
+            }
+        } else {
+            // Fallback to client-side calculation
+            val player1Shots = match.shots.filter { it.player == 1 }
+            val player2Shots = match.shots.filter { it.player == 2 }
 
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            PlayerStatsCard(
-                playerName = match.player1Name ?: "Player 1",
-                shots = player1Shots.size,
-                avgSpeed = player1AvgSpeed,
-                successRate = player1SuccessRate,
-                score = match.statistics?.player1Score ?: 0,
-                modifier = Modifier.weight(1f)
-            )
+            val player1AvgSpeed = if (player1Shots.isNotEmpty())
+                player1Shots.map { it.speed }.average() else 0.0
+            val player2AvgSpeed = if (player2Shots.isNotEmpty())
+                player2Shots.map { it.speed }.average() else 0.0
 
-            PlayerStatsCard(
-                playerName = match.player2Name ?: "Player 2",
-                shots = player2Shots.size,
-                avgSpeed = player2AvgSpeed,
-                successRate = player2SuccessRate,
-                score = match.statistics?.player2Score ?: 0,
-                modifier = Modifier.weight(1f)
-            )
+            val player1SuccessRate = if (player1Shots.isNotEmpty())
+                (player1Shots.count { it.result == ShotResult.IN }.toDouble() / player1Shots.size * 100)
+                else 0.0
+            val player2SuccessRate = if (player2Shots.isNotEmpty())
+                (player2Shots.count { it.result == ShotResult.IN }.toDouble() / player2Shots.size * 100)
+                else 0.0
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                PlayerStatsCard(
+                    playerName = match.player1Name ?: "Player 1",
+                    shots = player1Shots.size,
+                    avgSpeed = player1AvgSpeed,
+                    successRate = player1SuccessRate,
+                    score = stats?.player1Score ?: 0,
+                    pointsWon = null,
+                    serveSuccessRate = null,
+                    returnSuccessRate = null,
+                    modifier = Modifier.weight(1f)
+                )
+
+                PlayerStatsCard(
+                    playerName = match.player2Name ?: "Player 2",
+                    shots = player2Shots.size,
+                    avgSpeed = player2AvgSpeed,
+                    successRate = player2SuccessRate,
+                    score = stats?.player2Score ?: 0,
+                    pointsWon = null,
+                    serveSuccessRate = null,
+                    returnSuccessRate = null,
+                    modifier = Modifier.weight(1f)
+                )
+            }
         }
     }
 }
@@ -768,6 +920,9 @@ private fun PlayerStatsCard(
     avgSpeed: Double,
     successRate: Double,
     score: Int,
+    pointsWon: Int? = null,
+    serveSuccessRate: Double? = null,
+    returnSuccessRate: Double? = null,
     modifier: Modifier = Modifier
 ) {
     MetricCard() {
@@ -795,11 +950,22 @@ private fun PlayerStatsCard(
 
             Column(
                 verticalArrangement = Arrangement.spacedBy(4.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.fillMaxWidth()
             ) {
                 PlayerStatRow("Shots", "$shots")
-                PlayerStatRow("Avg Speed", "${avgSpeed.toInt()} km/h")
-                PlayerStatRow("Success", "${successRate.toInt()}%")
+                PlayerStatRow("Avg Speed", "%.1f mph".format(avgSpeed))
+                PlayerStatRow("Accuracy", "${successRate.toInt()}%")
+
+                pointsWon?.let {
+                    PlayerStatRow("Points Won", "$it")
+                }
+                serveSuccessRate?.let {
+                    PlayerStatRow("Serve Rate", "${(it * 100).toInt()}%")
+                }
+                returnSuccessRate?.let {
+                    PlayerStatRow("Return Rate", "${(it * 100).toInt()}%")
+                }
             }
         }
     }
