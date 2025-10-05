@@ -55,10 +55,14 @@ android/app/src/main/java/com/allanai/
 │   ├── screens/
 │   │   ├── profile/
 │   │   │   ├── ProfileScreen.kt
+│   │   │   ├── ProfileViewModel.kt
 │   │   │   ├── EditProfileScreen.kt
+│   │   │   ├── EditProfileViewModel.kt
 │   │   │   ├── ChangePasswordScreen.kt
+│   │   │   ├── ChangePasswordViewModel.kt
 │   │   │   ├── SignUpScreen.kt
-│   │   │   └── SignInScreen.kt
+│   │   │   ├── SignInScreen.kt
+│   │   │   └── AuthViewModel.kt
 │   │   ├── upload/
 │   │   │   ├── UploadScreen.kt
 │   │   │   ├── RecordViewModel.kt
@@ -96,12 +100,13 @@ android/app/src/main/java/com/allanai/
 ├── viewmodel/
 │   └── BaseViewModel.kt
 │
-├── repository/
-│   ├── MatchRepository.kt
-│   ├── VideoRepository.kt
-│   └── StatisticsRepository.kt
-│
 ├── data/
+│   ├── repository/
+│   │   ├── MatchRepository.kt
+│   │   ├── VideoRepository.kt
+│   │   ├── StatisticsRepository.kt
+│   │   └── AuthRepository.kt
+│   │
 │   ├── api/
 │   │   ├── AllanAIApiService.kt
 │   │   ├── ApiClient.kt
@@ -120,7 +125,8 @@ android/app/src/main/java/com/allanai/
 │   │
 │   └── local/
 │       ├── PreferencesManager.kt
-│       └── VideoCache.kt
+│       ├── VideoCache.kt
+│       └── AuthManager.kt
 │
 ├── camera/
 │   ├── CameraManager.kt
@@ -129,7 +135,8 @@ android/app/src/main/java/com/allanai/
 ├── di/
 │   ├── AppModule.kt
 │   ├── NetworkModule.kt
-│   └── RepositoryModule.kt
+│   ├── RepositoryModule.kt
+│   └── AuthModule.kt
 │
 └── util/
     ├── Constants.kt
@@ -657,6 +664,133 @@ data class StatisticsState(
     val isLoading: Boolean = false,
     val statistics: MatchStatistics? = null,
     val error: String? = null
+)
+```
+
+**Example - AuthViewModel.kt** (Authentication Screens):
+```kotlin
+@HiltViewModel
+class AuthViewModel @Inject constructor(
+    val authRepository: AuthRepository
+) : ViewModel() {
+    
+    private val _signInState = MutableStateFlow(SignInState())
+    val signInState: StateFlow<SignInState> = _signInState.asStateFlow()
+    
+    private val _signUpState = MutableStateFlow(SignUpState())
+    val signUpState: StateFlow<SignUpState> = _signUpState.asStateFlow()
+    
+    fun signIn(username: String, password: String) {
+        viewModelScope.launch {
+            _signInState.value = _signInState.value.copy(
+                isLoading = true,
+                error = null
+            )
+            
+            authRepository.signIn(username, password)
+                .onSuccess {
+                    _signInState.value = _signInState.value.copy(
+                        isLoading = false,
+                        isSuccess = true
+                    )
+                }
+                .onFailure { error ->
+                    _signInState.value = _signInState.value.copy(
+                        isLoading = false,
+                        error = error.message
+                    )
+                }
+        }
+    }
+    
+    fun signUp(username: String, email: String, password: String, confirmPassword: String) {
+        // Validate inputs
+        when {
+            username.isBlank() -> {
+                _signUpState.value = _signUpState.value.copy(error = "Username cannot be empty")
+                return
+            }
+            password != confirmPassword -> {
+                _signUpState.value = _signUpState.value.copy(error = "Passwords do not match")
+                return
+            }
+        }
+        
+        viewModelScope.launch {
+            _signUpState.value = _signUpState.value.copy(isLoading = true, error = null)
+            
+            authRepository.signUp(username, email, password)
+                .onSuccess {
+                    // Auto-login after successful signup
+                    authRepository.signIn(username, password)
+                        .onSuccess {
+                            _signUpState.value = _signUpState.value.copy(
+                                isLoading = false,
+                                isSuccess = true
+                            )
+                        }
+                }
+                .onFailure { error ->
+                    _signUpState.value = _signUpState.value.copy(
+                        isLoading = false,
+                        error = error.message
+                    )
+                }
+        }
+    }
+}
+
+data class SignInState(
+    val isLoading: Boolean = false,
+    val isSuccess: Boolean = false,
+    val error: String? = null
+)
+
+data class SignUpState(
+    val isLoading: Boolean = false,
+    val isSuccess: Boolean = false,
+    val error: String? = null
+)
+```
+
+**Example - ProfileViewModel.kt**:
+```kotlin
+@HiltViewModel
+class ProfileViewModel @Inject constructor(
+    private val authRepository: AuthRepository
+) : ViewModel() {
+    
+    private val _state = MutableStateFlow(ProfileState())
+    val state: StateFlow<ProfileState> = _state.asStateFlow()
+    
+    init {
+        loadProfile()
+    }
+    
+    private fun loadProfile() {
+        viewModelScope.launch {
+            val username = authRepository.getCurrentUsername() ?: "User"
+            val email = authRepository.getCurrentUserEmail() ?: ""
+            
+            _state.value = _state.value.copy(
+                username = username,
+                email = email
+            )
+        }
+    }
+    
+    fun logout() {
+        viewModelScope.launch {
+            authRepository.logout()
+            _state.value = _state.value.copy(isLoggedOut = true)
+        }
+    }
+}
+
+data class ProfileState(
+    val username: String = "",
+    val email: String = "",
+    val isLoggedOut: Boolean = false
 )
 ```
 

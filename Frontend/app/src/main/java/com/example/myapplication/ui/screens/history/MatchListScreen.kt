@@ -11,79 +11,32 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.example.myapplication.ui.theme.MyApplicationTheme
 
-data class MatchItem(
-    val id: String,
-    val player1: String,
-    val player2: String,
-    val score1: Int,
-    val score2: Int,
-    val thumbnailUrl: String
-)
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MatchListScreen(
+    viewModel: MatchesViewModel,
     onNavigateBack: () -> Unit = {},
     onNavigateToUpload: () -> Unit = {},
     onNavigateToHighlights: () -> Unit = {},
     onNavigateToProfile: () -> Unit = {},
     onMatchClick: (String) -> Unit = {}
 ) {
-    // Mock data - in production, this would come from ViewModel
-    val matches = listOf(
-        MatchItem(
-            id = "1",
-            player1 = "Player 1",
-            player2 = "Player 2",
-            score1 = 11,
-            score2 = 5,
-            thumbnailUrl = "https://lh3.googleusercontent.com/aida-public/AB6AXuCEN5R1Phl90yI9Mn33AQNkuFoXCS1W2lJZ36YfuQxf2worp_SsjWkJFZEBLpr4RopEyXVkYUK0LLQlCOaU9xk2ySdoa8aFNPu99inVhBG7SiHAKDWVUuPRrHgv1ST3-kIdd8ayCoIuSEQQ4tHSWqaAAPMLprC45Jp30L_JAJf1PumH9D5wVpn5biB38Wg_gcOh7S31X9J1Wu9uopydS6p7tf1MTAEGBeG8bPccRGicRapnD6eyxU1J-zsNtXN0G-faIOOgIk88YdzA"
-        ),
-        MatchItem(
-            id = "2",
-            player1 = "Player 1",
-            player2 = "Player 2",
-            score1 = 8,
-            score2 = 11,
-            thumbnailUrl = "https://lh3.googleusercontent.com/aida-public/AB6AXuA4Nc688oh5dDMLytkQcDbF2uRCSTqDXLto_X7-80U6Ok8ILSffy_tb2NnHZpUq6I_8pS-reEw2g8nfvv8UZ_8rt6Tm-CDb__-xD8b3uCzR9dVHi88qSUienv19yhJI_6g65MxWUUCQgI4xQ904pp7lqk0ZnkYpFd7EaCOTR_SipuCIsylnNPUvX_PDZa-PwrX4qAX_JQdFiNlkvBTfQAoJcwgvAlk8hA7z7faEet-OE6ivCOe6ZseZE_S7seOwpPEEWR7LJN78c3-1"
-        ),
-        MatchItem(
-            id = "3",
-            player1 = "Player 1",
-            player2 = "Player 2",
-            score1 = 11,
-            score2 = 9,
-            thumbnailUrl = "https://lh3.googleusercontent.com/aida-public/AB6AXuAwJ7L0JmuTZZX5hzpfSKsgwBLMKXv1NgHa45tRl7nDBWG-AHDBfSwRw-3xvS3EjqL5-AH_pEEsyJf1SqEx2UHEVLcuYQHBtkY5wmNOoJ7-jyBDRsetlNLY5UlPpp9eQtHgRa1HEbGWb5eHt8swPPNehW7xqqzgVDCLkpmE1Mf_tUDim9j3RN7xBZSZUi-6znWFi05-sNAzXC9v6FJ9HLjhJ23wlhFvoNaulKidv0fd2ddAUtPylHVxKyI-olIlT55dMpac1cIzNcQG"
-        ),
-        MatchItem(
-            id = "4",
-            player1 = "Player 1",
-            player2 = "Player 2",
-            score1 = 5,
-            score2 = 11,
-            thumbnailUrl = "https://lh3.googleusercontent.com/aida-public/AB6AXuBZohyCZrF9b38k7JzTItk74hjn7GzsBskmbjyNCpx8IedRihUTHSavV0o0w0NSfNwzXTCHY17VAmU-qVh_JcFbUXbFfh7ZLyBz-ssq4oatd-ELi0o3_wgX7blnH_lggjqxoGqOWKmFYELc-Jv77WpS8z2IQjCcrGxMwNXBZ66IuLub8dsfNkZ01yhcifJpq6b-xSUI8VuIPzZ4q-CX1gwl3lc1z0gZUthrF-OGDIr5rDsvXSbubbipS-bMoSqfQXJBqamLOfM8bqN2"
-        ),
-        MatchItem(
-            id = "5",
-            player1 = "Player 1",
-            player2 = "Player 2",
-            score1 = 11,
-            score2 = 2,
-            thumbnailUrl = "https://lh3.googleusercontent.com/aida-public/AB6AXuCxa5_9epXLMnNAdLs0YxXZtWCnVIi39tP_HXHgKUgDRMiQTEWFC0ze3gvQZXsl7gOI8t8vA3Yf4b8F6adMsmVvCB9Fq8ep5AaU5G63pUxowdo8a7WdbShPuR8XU-NEAEWDl3kMh_FytZtgT_H2qKQScOfofZmWcR0b9Qb_heLc_J_TOMBnZAmmybawZaOm4TebdCvb_X7AsLHgHZcap-MbShBBbWP1uRClcJ-KjQC3N6ElP41LcdvoOalOKNase1P8GqKl4UTeLEwS"
-        )
-    )
+    val uiState by viewModel.uiState.collectAsState()
 
     Scaffold(
         topBar = {
@@ -100,13 +53,33 @@ fun MatchListScreen(
         },
         containerColor = MaterialTheme.colorScheme.background
     ) { paddingValues ->
-        MatchListContent(
-            matches = matches,
-            onMatchClick = onMatchClick,
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-        )
+        ) {
+            when (uiState) {
+                is MatchListUiState.Loading -> {
+                    LoadingState()
+                }
+                is MatchListUiState.Success -> {
+                    MatchListContent(
+                        matches = (uiState as MatchListUiState.Success).matches,
+                        onMatchClick = onMatchClick,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
+                is MatchListUiState.Empty -> {
+                    EmptyState()
+                }
+                is MatchListUiState.Error -> {
+                    ErrorState(
+                        message = (uiState as MatchListUiState.Error).message,
+                        onRetry = { viewModel.refreshMatches() }
+                    )
+                }
+            }
+        }
     }
 }
 
@@ -363,10 +336,88 @@ private fun BottomNavigationBar(
     }
 }
 
-@Preview(showBackground = true, showSystemUi = true)
 @Composable
-fun MatchListScreenPreview() {
-    MyApplicationTheme {
-        MatchListScreen()
+private fun LoadingState() {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        CircularProgressIndicator(
+            color = MaterialTheme.colorScheme.primary
+        )
+    }
+}
+
+@Composable
+private fun EmptyState() {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Default.History,
+                contentDescription = "No matches",
+                modifier = Modifier.size(64.dp),
+                tint = Color.White.copy(alpha = 0.4f)
+            )
+            Text(
+                text = "No match history yet",
+                style = MaterialTheme.typography.titleMedium,
+                color = Color.White.copy(alpha = 0.6f)
+            )
+            Text(
+                text = "Upload your first match to get started",
+                style = MaterialTheme.typography.bodyMedium,
+                color = Color.White.copy(alpha = 0.4f),
+                textAlign = TextAlign.Center
+            )
+        }
+    }
+}
+
+@Composable
+private fun ErrorState(
+    message: String,
+    onRetry: () -> Unit
+) {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+            modifier = Modifier.padding(32.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Default.Error,
+                contentDescription = "Error",
+                modifier = Modifier.size(64.dp),
+                tint = MaterialTheme.colorScheme.error
+            )
+            Text(
+                text = "Failed to load matches",
+                style = MaterialTheme.typography.titleMedium,
+                color = Color.White
+            )
+            Text(
+                text = message,
+                style = MaterialTheme.typography.bodyMedium,
+                color = Color.White.copy(alpha = 0.6f),
+                textAlign = TextAlign.Center
+            )
+            Button(
+                onClick = onRetry,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary
+                )
+            ) {
+                Text("Retry")
+            }
+        }
     }
 }

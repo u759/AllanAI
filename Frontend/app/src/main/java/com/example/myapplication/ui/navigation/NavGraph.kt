@@ -11,8 +11,10 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.example.myapplication.ui.screens.highlights.HighlightsListScreen
+import com.example.myapplication.ui.screens.highlights.HighlightsViewModel
 import com.example.myapplication.ui.screens.history.MatchDetailScreen
 import com.example.myapplication.ui.screens.history.MatchListScreen
+import com.example.myapplication.ui.screens.history.MatchesViewModel
 import com.example.myapplication.ui.screens.profile.AuthViewModel
 import com.example.myapplication.ui.screens.profile.ChangePasswordScreen
 import com.example.myapplication.ui.screens.profile.ChangePasswordViewModel
@@ -75,20 +77,6 @@ fun NavGraph(
                 },
                 onForgotPasswordClick = {
                     // TODO: Navigate to forgot password screen when implemented
-                },
-                onNavigateToUpload = {
-                    navController.navigate(Screen.Welcome.route) {
-                        popUpTo(Screen.SignIn.route) { inclusive = true }
-                    }
-                },
-                onNavigateToHistory = {
-                    navController.navigate(Screen.History.route)
-                },
-                onNavigateToHighlights = {
-                    navController.navigate(Screen.Highlights.route)
-                },
-                onNavigateToProfile = {
-                    navController.navigate(Screen.Profile.route)
                 }
             )
         }
@@ -115,20 +103,6 @@ fun NavGraph(
                 },
                 onSignInClick = {
                     navController.navigateUp()
-                },
-                onNavigateToUpload = {
-                    navController.navigate(Screen.Welcome.route) {
-                        popUpTo(Screen.SignUp.route) { inclusive = true }
-                    }
-                },
-                onNavigateToHistory = {
-                    navController.navigate(Screen.History.route)
-                },
-                onNavigateToHighlights = {
-                    navController.navigate(Screen.Highlights.route)
-                },
-                onNavigateToProfile = {
-                    navController.navigate(Screen.Profile.route)
                 }
             )
         }
@@ -175,7 +149,9 @@ fun NavGraph(
         
         // History Screen (Match List)
         composable(route = Screen.History.route) {
+            val viewModel: MatchesViewModel = hiltViewModel()
             MatchListScreen(
+                viewModel = viewModel,
                 onNavigateBack = {
                     navController.navigateUp()
                 },
@@ -232,7 +208,9 @@ fun NavGraph(
         
         // Highlights Screen
         composable(route = Screen.Highlights.route) {
+            val viewModel: HighlightsViewModel = hiltViewModel()
             HighlightsListScreen(
+                viewModel = viewModel,
                 onNavigateBack = {
                     navController.navigateUp()
                 },

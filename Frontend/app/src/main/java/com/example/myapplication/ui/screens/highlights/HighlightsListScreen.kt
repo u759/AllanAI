@@ -12,6 +12,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -19,70 +21,24 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.example.myapplication.ui.theme.MyApplicationTheme
 
-data class HighlightGroup(
-    val title: String,
-    val highlights: List<HighlightItem>
-)
-
-data class HighlightItem(
-    val id: String,
-    val title: String,
-    val duration: String,
-    val thumbnailUrl: String
-)
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HighlightsListScreen(
+    viewModel: HighlightsViewModel,
     onNavigateBack: () -> Unit = {},
     onNavigateToUpload: () -> Unit = {},
     onNavigateToHistory: () -> Unit = {},
     onNavigateToProfile: () -> Unit = {},
     onHighlightClick: (String) -> Unit = {}
 ) {
-    // Mock data
-    val highlightGroups = listOf(
-        HighlightGroup(
-            title = "Match vs. Alex - 23/10/2023",
-            highlights = listOf(
-                HighlightItem(
-                    id = "1",
-                    title = "Clutch Play",
-                    duration = "0:45",
-                    thumbnailUrl = "https://lh3.googleusercontent.com/aida-public/AB6AXuA58uYUU3Kl5b6NormCVtZruihKIOljtFsMTGHHO_o6Fhmu_LK-1qJWvMkem0FA8m36Unh52J8FCYoX4zh74w7mwqzsvTTDDL7gPrFyxdMYxO93p73sviLQlbLw5fyFnwupIb6N9WOnuiVeepTfzG_AG2buTjscEXzm-L1Jhz4_1EmhKjn49i8tddrrnmph-OvE0bTTulZ6Mgh1t-1mgM3xJc88bmP4EM3aSlv6FhWgQG2McIVDGAlALOrXGggTcKolx7CPxrYqN-Lu"
-                ),
-                HighlightItem(
-                    id = "2",
-                    title = "Epic Comeback",
-                    duration = "1:12",
-                    thumbnailUrl = "https://lh3.googleusercontent.com/aida-public/AB6AXuAmDo-Wzk6mZZFrfOvkzJubkz1n-g9yuDl4bSzYM_5AL0viKTvHFs5fywIbTxitIa62PwrODu4W27dX4X5g3UubeJnFrTwLVimvQLU9hL2j2qtxHVsH_E98RBC0SMkCJmyThlJ2i1ROSdPpRRdmCx1kPzYL0IF40VFzKDjiu-1OzOBbDvrSekWHHm5FNaiYLH9DtUOXkJbYp6p1x9a4AfOgmRwdExKEsilhS12l_wTEKpCtd0MBUBvXMpBHKBmgWpiYdGs3gei9VIxZ"
-                )
-            )
-        ),
-        HighlightGroup(
-            title = "Training Session - 22/10/2023",
-            highlights = listOf(
-                HighlightItem(
-                    id = "3",
-                    title = "Forehand Drills",
-                    duration = "2:33",
-                    thumbnailUrl = "https://lh3.googleusercontent.com/aida-public/AB6AXuCnc8ZOIEm4toCUsiJsPvpjHSRdoMdHI5OvBxyUoS5c4Z_YVoqk52tJHgxswQwzuNEubGyB_ZQJttkkqrWGnq_gHx8s36SDMy_2nOTz3-1JK2_7ptbg_B00xdFO8Sew0fUZN4vozQuQBviJYGBOuK3dfw42Zg1rWUl9-eIuPWDCi6U_dnM1Gs82LNrJXGu3FuYe_u9OmY0Jw0MofVdI498j3Tsw70K4PerH6o7Vc5hqpLmsQvTiCUHQbqEmxQQ8Cz-8x3sYmvgKq_0U"
-                ),
-                HighlightItem(
-                    id = "4",
-                    title = "Serve Practice",
-                    duration = "0:58",
-                    thumbnailUrl = "https://lh3.googleusercontent.com/aida-public/AB6AXuCMLtWWa8w8hSnqAhv_nGg137jSlYnZVrOVSJR2B3xNgQEwYPmnQ6nMAJhLXmVj1nRkrhcjN4CXmFjzkqlxgDH0CXTlqUxA32yoSKz8wyIhh7tGqjL2WiAfoOJlHd7VlvhnBLpUap9wXTy9AhqzPmz9CE5oU8anCxuYqaaJDCD41HVJkls_2-jUkxKBK_d5Kipy-G-6__9fbafYqVauKIDCaZt5Bw6icpiL9tPziQk2Uvtlz36EMqwsvJaSdmtCVZyia265uFx7zoiv"
-                )
-            )
-        )
-    )
+    val uiState by viewModel.uiState.collectAsState()
 
     Scaffold(
         topBar = {
@@ -99,13 +55,33 @@ fun HighlightsListScreen(
         },
         containerColor = MaterialTheme.colorScheme.background
     ) { paddingValues ->
-        HighlightsContent(
-            highlightGroups = highlightGroups,
-            onHighlightClick = onHighlightClick,
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-        )
+        ) {
+            when (uiState) {
+                is HighlightsUiState.Loading -> {
+                    LoadingState()
+                }
+                is HighlightsUiState.Success -> {
+                    HighlightsContent(
+                        highlightGroups = (uiState as HighlightsUiState.Success).highlightGroups,
+                        onHighlightClick = onHighlightClick,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
+                is HighlightsUiState.Empty -> {
+                    EmptyState()
+                }
+                is HighlightsUiState.Error -> {
+                    ErrorState(
+                        message = (uiState as HighlightsUiState.Error).message,
+                        onRetry = { viewModel.refreshHighlights() }
+                    )
+                }
+            }
+        }
     }
 }
 
@@ -394,10 +370,91 @@ private fun RowScope.BottomNavItem(
     }
 }
 
-@Preview(showBackground = true, showSystemUi = true)
 @Composable
-fun HighlightsListScreenPreview() {
-    MyApplicationTheme {
-        HighlightsListScreen()
+private fun LoadingState() {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        CircularProgressIndicator(
+            color = MaterialTheme.colorScheme.primary
+        )
     }
 }
+
+@Composable
+private fun EmptyState() {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Default.Star,
+                contentDescription = "No highlights",
+                modifier = Modifier.size(64.dp),
+                tint = Color.White.copy(alpha = 0.4f)
+            )
+            Text(
+                text = "No highlights yet",
+                style = MaterialTheme.typography.titleMedium,
+                color = Color.White.copy(alpha = 0.6f)
+            )
+            Text(
+                text = "Upload and complete a match to see highlights",
+                style = MaterialTheme.typography.bodyMedium,
+                color = Color.White.copy(alpha = 0.4f),
+                textAlign = TextAlign.Center
+            )
+        }
+    }
+}
+
+@Composable
+private fun ErrorState(
+    message: String,
+    onRetry: () -> Unit
+) {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+            modifier = Modifier.padding(32.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Default.Error,
+                contentDescription = "Error",
+                modifier = Modifier.size(64.dp),
+                tint = MaterialTheme.colorScheme.error
+            )
+            Text(
+                text = "Failed to load highlights",
+                style = MaterialTheme.typography.titleMedium,
+                color = Color.White
+            )
+            Text(
+                text = message,
+                style = MaterialTheme.typography.bodyMedium,
+                color = Color.White.copy(alpha = 0.6f),
+                textAlign = TextAlign.Center
+            )
+            Button(
+                onClick = onRetry,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary
+                )
+            ) {
+                Text("Retry")
+            }
+        }
+    }
+}
+
+// Preview removed - screen requires ViewModel which can only be injected at runtime
+// To preview this screen, run the app and navigate to the Highlights screen
