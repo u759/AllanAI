@@ -28,6 +28,18 @@ class MatchVisualizer {
         this.player2MaxSpeed = 0;
         this.player2TotalSpeed = 0;
         this.player2ShotCount = 0;
+
+        // Data sources
+        this.statisticsData = null;
+        this.momentumTimeline = [];
+
+        // Runtime state
+        this.currentScoreIndex = -1;
+        this.currentScoreState = { player1: 0, player2: 0 };
+        this.activeShot = null;
+        this.activeShotKey = null;
+        this.scoreToastTimeouts = [];
+        this.estimatedFps = null;
         
         this.initializeElements();
         this.setupEventListeners();
@@ -41,9 +53,10 @@ class MatchVisualizer {
         
         // Upload elements
         this.videoUpload = document.getElementById('video-upload');
-        this.logUpload = document.getElementById('log-upload');
-        this.eventsUpload = document.getElementById('events-upload');
-        this.highlightsUpload = document.getElementById('highlights-upload');
+    this.logUpload = document.getElementById('log-upload');
+    this.eventsUpload = document.getElementById('events-upload');
+    this.highlightsUpload = document.getElementById('highlights-upload');
+    this.statisticsUpload = document.getElementById('statistics-upload');
         this.loadBtn = document.getElementById('load-btn');
         this.uploadSection = document.getElementById('upload-section');
         
@@ -90,7 +103,8 @@ class MatchVisualizer {
         this.videoUpload?.addEventListener('change', () => this.checkAllFilesLoaded());
         this.logUpload?.addEventListener('change', () => this.checkAllFilesLoaded());
         this.eventsUpload?.addEventListener('change', () => this.checkAllFilesLoaded());
-        this.highlightsUpload?.addEventListener('change', () => this.checkAllFilesLoaded());
+    this.highlightsUpload?.addEventListener('change', () => this.checkAllFilesLoaded());
+    this.statisticsUpload?.addEventListener('change', () => this.checkAllFilesLoaded());
         this.loadBtn?.addEventListener('click', () => this.loadVisualizer());
         
         // Video controls
@@ -109,10 +123,12 @@ class MatchVisualizer {
     }
 
     checkAllFilesLoaded() {
-        const allLoaded = this.videoUpload?.files.length > 0 &&
-                         this.logUpload?.files.length > 0 &&
-                         this.eventsUpload?.files.length > 0 &&
-                         this.highlightsUpload?.files.length > 0;
+    const videoLoaded = this.videoUpload?.files.length > 0;
+    const logLoaded = this.logUpload?.files.length > 0;
+    const eventsLoaded = this.eventsUpload?.files.length > 0;
+    const highlightsLoaded = this.highlightsUpload?.files.length > 0;
+    const statsLoaded = this.statisticsUpload ? this.statisticsUpload.files.length > 0 : true;
+    const allLoaded = videoLoaded && logLoaded && eventsLoaded && highlightsLoaded && statsLoaded;
         
         if (this.loadBtn) {
             this.loadBtn.disabled = !allLoaded;
@@ -121,6 +137,8 @@ class MatchVisualizer {
 
     async loadVisualizer() {
         try {
+            this.resetVisualizerState();
+
             // Load video
             const videoFile = this.videoUpload?.files[0];
             if (videoFile && this.video) {
@@ -134,9 +152,27 @@ class MatchVisualizer {
             
             // Load JSON files
             this.logData = await this.readJSONFile(this.logUpload?.files[0]);
-            this.eventsData = await this.readJSONFile(this.eventsUpload?.files[0]);
+            if (Array.isArray(this.logData?.shots)) {
+                this.logData.shots = this.logData.shots
+                    .filter(shot => typeof shot === 'object' && shot !== null)
+                    .sort((a, b) => {
+                        const aTime = typeof a?.timestampMs === 'number' ? a.timestampMs : (Array.isArray(a?.timestampSeries) ? a.timestampSeries[0] : 0);
+                        const bTime = typeof b?.timestampMs === 'number' ? b.timestampMs : (Array.isArray(b?.timestampSeries) ? b.timestampSeries[0] : 0);
+                        return aTime - bTime;
+                    });
+            }
+            const eventsRaw = await this.readJSONFile(this.eventsUpload?.files[0]);
+            this.eventsData = Array.isArray(eventsRaw)
+                ? eventsRaw.filter(event => typeof event?.timestampMs === 'number')
+                : [];
             this.highlightsData = await this.readJSONFile(this.highlightsUpload?.files[0]);
-            
+            const hasSeparateStats = this.statisticsUpload?.files?.length > 0;
+            if (hasSeparateStats) {
+                this.statisticsData = await this.readJSONFile(this.statisticsUpload.files[0]);
+            } else {
+                this.statisticsData = this.logData?.statistics || null;
+            }
+
             // Initialize display
             this.initializeDisplay();
             
@@ -169,19 +205,71 @@ class MatchVisualizer {
         });
     }
 
-    initializeDisplay() {
-        // Update statistics
-        if (this.logData?.statistics) {
-            const stats = this.logData.statistics;
-            if (this.totalRalliesEl) this.totalRalliesEl.textContent = stats.totalRallies || 0;
-            if (this.avgRallyEl) this.avgRallyEl.textContent = (stats.avgRallyLength || 0).toFixed(1);
-            if (this.maxSpeedEl) this.maxSpeedEl.textContent = `${(stats.maxBallSpeed || 0).toFixed(1)} km/h`;
-            if (this.avgSpeedEl) this.avgSpeedEl.textContent = `${(stats.avgBallSpeed || 0).toFixed(1)} km/h`;
-            
-            if (this.player1ScoreEl) this.player1ScoreEl.textContent = stats.player1Score || 0;
-            if (this.player2ScoreEl) this.player2ScoreEl.textContent = stats.player2Score || 0;
+    resetVisualizerState() {
+        this.player1SpeedData = [];
+        this.player2SpeedData = [];
+        this.player1MaxSpeed = 0;
+        this.player1TotalSpeed = 0;
+        this.player1ShotCount = 0;
+        this.player2MaxSpeed = 0;
+        this.player2TotalSpeed = 0;
+        this.player2ShotCount = 0;
+        this.statisticsData = null;
+        this.momentumTimeline = [];
+        this.currentScoreIndex = -1;
+        this.currentScoreState = { player1: 0, player2: 0 };
+        this.activeShot = null;
+        this.activeShotKey = null;
+        this.estimatedFps = null;
+        this.scoreToastTimeouts.forEach(clearTimeout);
+        this.scoreToastTimeouts = [];
+    document.querySelectorAll('.score-toast').forEach(node => node.remove());
+
+        if (this.player1ScoreEl) {
+            this.player1ScoreEl.textContent = '0';
+            this.player1ScoreEl.style.backgroundColor = '';
         }
-        
+        if (this.player2ScoreEl) {
+            this.player2ScoreEl.textContent = '0';
+            this.player2ScoreEl.style.backgroundColor = '';
+        }
+        if (this.player1CurrentSpeedEl) this.player1CurrentSpeedEl.textContent = '--';
+        if (this.player2CurrentSpeedEl) this.player2CurrentSpeedEl.textContent = '--';
+    }
+
+    initializeDisplay() {
+        const stats = this.statisticsData || this.logData?.statistics || {};
+
+        // Pre-calc fps from metadata if available
+        const totalFrames = stats.totalFrames || this.logData?.statistics?.totalFrames;
+        if (totalFrames && this.logData?.durationSeconds) {
+            this.estimatedFps = totalFrames / this.logData.durationSeconds;
+        }
+
+        // Update headline statistics
+        if (this.totalRalliesEl) this.totalRalliesEl.textContent = stats.totalRallies ?? stats?.rallyMetrics?.totalRallies ?? 0;
+        if (this.avgRallyEl) this.avgRallyEl.textContent = ((stats.avgRallyLength ?? stats?.rallyMetrics?.averageRallyLength) || 0).toFixed(1);
+        if (this.maxSpeedEl) this.maxSpeedEl.textContent = `${((stats.maxBallSpeed ?? stats?.shotSpeedMetrics?.fastestShotMph) || 0).toFixed(1)} mph`;
+        if (this.avgSpeedEl) this.avgSpeedEl.textContent = `${((stats.avgBallSpeed ?? stats?.shotSpeedMetrics?.averageShotMph) || 0).toFixed(1)} mph`;
+
+        // Configure momentum timeline and starting score
+        this.momentumTimeline = Array.isArray(stats.momentumTimeline) ? [...stats.momentumTimeline] : [];
+        if (this.momentumTimeline.length === 0 && Array.isArray(this.logData?.statistics?.momentumTimeline)) {
+            this.momentumTimeline = [...this.logData.statistics.momentumTimeline];
+        }
+        this.momentumTimeline.sort((a, b) => (a?.timestampMs ?? 0) - (b?.timestampMs ?? 0));
+
+        const initialScore = this.momentumTimeline.length > 0 && this.momentumTimeline[0]?.scoreAfter
+            ? this.momentumTimeline[0].scoreAfter
+            : { player1: stats.player1Score ?? 0, player2: stats.player2Score ?? 0 };
+        this.applyScore(initialScore);
+
+        // Populate extended statistic panels when available
+        this.populateExtendedStats(stats);
+
+        document.querySelectorAll('.speed-unit')
+            .forEach(unitEl => { unitEl.textContent = 'mph'; });
+
         // Process shot data for speed charts
         this.processPlayerSpeedData();
         
@@ -196,6 +284,132 @@ class MatchVisualizer {
         
         // Build highlights
         this.buildHighlightsList();
+    }
+
+    applyScore(scoreState) {
+        const safePlayer1 = Number(scoreState?.player1 ?? 0);
+        const safePlayer2 = Number(scoreState?.player2 ?? 0);
+        this.currentScoreState = { player1: safePlayer1, player2: safePlayer2 };
+
+        if (this.player1ScoreEl) {
+            this.player1ScoreEl.textContent = safePlayer1;
+            this.player1ScoreEl.dataset.score = safePlayer1;
+        }
+        if (this.player2ScoreEl) {
+            this.player2ScoreEl.textContent = safePlayer2;
+            this.player2ScoreEl.dataset.score = safePlayer2;
+        }
+    }
+
+    populateExtendedStats(stats) {
+        if (!stats) return;
+
+        const serveMetrics = stats.serveMetrics || {};
+        const returnMetrics = stats.returnMetrics || {};
+        const shotSpeedMetrics = stats.shotSpeedMetrics || {};
+
+        this.setElementText('serve-total', serveMetrics.totalServes);
+        this.setElementText('serve-successful', serveMetrics.successfulServes);
+        this.setElementText('serve-faults', serveMetrics.faults);
+        this.setElementText('serve-success-rate', serveMetrics.successRate, '%');
+        this.setElementText('serve-average-speed', serveMetrics.averageServeSpeed, ' mph');
+        this.setElementText('serve-fastest-speed', serveMetrics.fastestServeSpeed, ' mph');
+
+        this.setElementText('return-total', returnMetrics.totalReturns);
+        this.setElementText('return-successful', returnMetrics.successfulReturns);
+        this.setElementText('return-success-rate', returnMetrics.successRate, '%');
+        this.setElementText('return-average-speed', returnMetrics.averageReturnSpeed, ' mph');
+
+        this.setElementText('shot-fastest', shotSpeedMetrics.fastestShotMph, ' mph');
+        this.setElementText('shot-average', shotSpeedMetrics.averageShotMph, ' mph');
+        this.setElementText('shot-incoming', shotSpeedMetrics.averageIncomingShotMph, ' mph');
+        this.setElementText('shot-outgoing', shotSpeedMetrics.averageOutgoingShotMph, ' mph');
+
+        const shotBreakdownEl = document.getElementById('shot-type-breakdown');
+        if (shotBreakdownEl) {
+            shotBreakdownEl.innerHTML = '';
+            if (Array.isArray(stats.shotTypeBreakdown) && stats.shotTypeBreakdown.length > 0) {
+                stats.shotTypeBreakdown.forEach(item => {
+                    const row = document.createElement('div');
+                    row.className = 'breakdown-row';
+                    row.innerHTML = `
+                        <span class="breakdown-label">${item.shotType}</span>
+                        <span class="breakdown-value">${item.count}</span>
+                        <span class="breakdown-value">${(item.averageSpeed ?? 0).toFixed(1)} mph</span>
+                        <span class="breakdown-value">${(item.averageAccuracy ?? 0).toFixed(1)}%</span>
+                    `;
+                    shotBreakdownEl.appendChild(row);
+                });
+            } else {
+                shotBreakdownEl.innerHTML = '<p class="no-data">No data</p>';
+            }
+        }
+
+        const playerBreakdownEl = document.getElementById('player-breakdown');
+        if (playerBreakdownEl) {
+            playerBreakdownEl.innerHTML = '';
+            if (Array.isArray(stats.playerBreakdown) && stats.playerBreakdown.length > 0) {
+                stats.playerBreakdown.forEach(playerStats => {
+                    const block = document.createElement('div');
+                    block.className = 'player-breakdown-card';
+                    block.innerHTML = `
+                        <h4>Player ${playerStats.player}</h4>
+                        <p>Points Won: ${playerStats.totalPointsWon}</p>
+                        <p>Shot Speed: ${(playerStats.averageShotSpeed ?? 0).toFixed(1)} mph</p>
+                        <p>Accuracy: ${(playerStats.averageAccuracy ?? 0).toFixed(1)}%</p>
+                        <p>Serve Success: ${(playerStats.serveSuccessRate ?? 0).toFixed(1)}%</p>
+                        <p>Return Success: ${(playerStats.returnSuccessRate ?? 0).toFixed(1)}%</p>
+                    `;
+                    playerBreakdownEl.appendChild(block);
+                });
+            } else {
+                playerBreakdownEl.innerHTML = '<p class="no-data">No data</p>';
+            }
+        }
+
+        const momentumListEl = document.getElementById('momentum-list');
+        if (momentumListEl) {
+            momentumListEl.innerHTML = '';
+            if (Array.isArray(this.momentumTimeline) && this.momentumTimeline.length > 0) {
+                this.momentumTimeline.forEach(sample => {
+                    const item = document.createElement('div');
+                    item.className = 'momentum-item';
+                    const scoreAfter = sample.scoreAfter || { player1: 0, player2: 0 };
+                    const scorer = sample.scoringPlayer ? `Player ${sample.scoringPlayer}` : 'Start';
+                    item.innerHTML = `
+                        <span class="momentum-time">${this.formatTime((sample.timestampMs || 0) / 1000)}</span>
+                        <span class="momentum-scorer">${scorer}</span>
+                        <span class="momentum-score">${scoreAfter.player1}-${scoreAfter.player2}</span>
+                    `;
+                    momentumListEl.appendChild(item);
+                });
+            } else {
+                momentumListEl.innerHTML = '<p class="no-data">No momentum samples</p>';
+            }
+        }
+    }
+
+    setElementText(id, value, suffix = '') {
+        const element = document.getElementById(id);
+        if (!element) return;
+        if (value === undefined || value === null || Number.isNaN(value)) {
+            if (suffix && suffix.trim().length > 0) {
+                const trimmed = suffix.trim();
+                if (suffix.startsWith(' ')) {
+                    element.textContent = `--${suffix}`;
+                } else if (trimmed === '%') {
+                    element.textContent = '--%';
+                } else {
+                    element.textContent = `-- ${suffix}`;
+                }
+            } else {
+                element.textContent = '--';
+            }
+        } else if (typeof value === 'number') {
+            element.textContent = `${value.toFixed(1)}${suffix}`.replace('.0', '');
+        } else {
+            element.textContent = `${value}${suffix}`;
+        }
     }
 
     processPlayerSpeedData() {
@@ -219,18 +433,18 @@ class MatchVisualizer {
         
         // Update display
         if (this.player1MaxSpeedEl) {
-            this.player1MaxSpeedEl.textContent = `${this.player1MaxSpeed.toFixed(1)} km/h`;
+            this.player1MaxSpeedEl.textContent = `${this.player1MaxSpeed.toFixed(1)} mph`;
         }
         if (this.player1AvgSpeedEl) {
             const avg = this.player1ShotCount > 0 ? this.player1TotalSpeed / this.player1ShotCount : 0;
-            this.player1AvgSpeedEl.textContent = `${avg.toFixed(1)} km/h`;
+            this.player1AvgSpeedEl.textContent = `${avg.toFixed(1)} mph`;
         }
         if (this.player2MaxSpeedEl) {
-            this.player2MaxSpeedEl.textContent = `${this.player2MaxSpeed.toFixed(1)} km/h`;
+            this.player2MaxSpeedEl.textContent = `${this.player2MaxSpeed.toFixed(1)} mph`;
         }
         if (this.player2AvgSpeedEl) {
             const avg = this.player2ShotCount > 0 ? this.player2TotalSpeed / this.player2ShotCount : 0;
-            this.player2AvgSpeedEl.textContent = `${avg.toFixed(1)} km/h`;
+            this.player2AvgSpeedEl.textContent = `${avg.toFixed(1)} mph`;
         }
     }
 
@@ -337,7 +551,8 @@ class MatchVisualizer {
     buildTimeline() {
         if (!this.timelineEl || !this.eventsData || !this.logData) return;
         
-        const duration = this.logData.durationSeconds * 1000; // ms
+    const durationSeconds = this.logData?.durationSeconds ?? (this.video?.duration ?? 1);
+    const duration = Math.max(durationSeconds, 1) * 1000; // ms
         
         // Clear existing markers
         this.timelineEl.innerHTML = '<div class="timeline-current" id="timeline-current"></div>';
@@ -351,6 +566,22 @@ class MatchVisualizer {
             marker.addEventListener('click', () => this.seekToTime(event.timestampMs / 1000));
             this.timelineEl.appendChild(marker);
         });
+
+        // Add score markers
+        if (Array.isArray(this.momentumTimeline)) {
+            this.momentumTimeline.forEach((sample, index) => {
+                if (index === 0) return; // skip initial state
+                const scoreMarker = document.createElement('div');
+                scoreMarker.className = 'timeline-marker score-marker';
+                scoreMarker.style.left = `${((sample.timestampMs || 0) / duration) * 100}%`;
+                scoreMarker.style.background = '#4caf50';
+                scoreMarker.style.width = '6px';
+                scoreMarker.style.height = '16px';
+                scoreMarker.title = `Score ${sample.scoreAfter?.player1 ?? 0}-${sample.scoreAfter?.player2 ?? 0}`;
+                scoreMarker.addEventListener('click', () => this.seekToTime((sample.timestampMs || 0) / 1000));
+                this.timelineEl.appendChild(scoreMarker);
+            });
+        }
     }
 
     buildEventsList() {
@@ -358,17 +589,24 @@ class MatchVisualizer {
         
         this.eventsListEl.innerHTML = '';
         
-        if (this.eventsData.length === 0) {
+        const validEvents = this.eventsData.filter(event => typeof event?.timestampMs === 'number');
+
+        if (validEvents.length === 0) {
             this.eventsListEl.innerHTML = '<p class="no-data">No events</p>';
             return;
         }
         
-        this.eventsData.forEach((event, index) => {
+        validEvents.forEach((event, index) => {
             const eventItem = document.createElement('div');
             eventItem.className = 'event-item';
             eventItem.dataset.index = index;
+            const typeLabel = event.type ? `<span class="event-type">${event.type}</span>` : '';
+            const playerLabel = Number.isFinite(event.player) ? `<span class="event-player">P${event.player}</span>` : '';
+            const speedValue = typeof event?.metadata?.shotSpeed === 'number' ? event.metadata.shotSpeed.toFixed(1) : null;
+            const speedLabel = speedValue ? `<span class="event-speed">${speedValue} mph</span>` : '';
             eventItem.innerHTML = `
                 <div class="event-title">${event.title}</div>
+                <div class="event-meta">${typeLabel}${playerLabel}${speedLabel}</div>
                 <div class="event-description">${event.description || ''}</div>
                 <div class="event-time">${this.formatTime(event.timestampMs / 1000)}</div>
             `;
@@ -475,11 +713,15 @@ class MatchVisualizer {
         
         // Update timeline cursor
         const timelineCurrent = document.getElementById('timeline-current');
-        if (timelineCurrent && this.logData) {
-            const duration = this.logData.durationSeconds * 1000;
-            timelineCurrent.style.left = `${(currentMs / duration) * 100}%`;
+        if (timelineCurrent) {
+            const durationSeconds = this.logData?.durationSeconds ?? (this.video?.duration ?? 1);
+            const duration = Math.max(durationSeconds, 1) * 1000;
+            timelineCurrent.style.left = `${Math.min(100, (currentMs / duration) * 100)}%`;
         }
         
+        // Update score progression
+        this.updateScore(currentMs);
+
         // Update current event
         this.updateCurrentEvent(currentMs);
         
@@ -521,53 +763,121 @@ class MatchVisualizer {
         });
     }
 
-    updateCurrentShot(currentMs) {
-        if (!this.logData?.shots) return;
-        
-        // Find current shot
-        let currentShot = null;
-        for (const shot of this.logData.shots) {
-            const shotTime = shot.timestampMs || (shot.frame / 120 * 1000); // Assume 120fps if timestampMs missing
-            if (Math.abs(shotTime - currentMs) < 100) { // 100ms window
-                currentShot = shot;
+    updateScore(currentMs) {
+        if (!Array.isArray(this.momentumTimeline) || this.momentumTimeline.length === 0) {
+            return;
+        }
+
+        let targetIndex = this.currentScoreIndex;
+        for (let i = 0; i < this.momentumTimeline.length; i++) {
+            const eventTime = this.momentumTimeline[i]?.timestampMs ?? 0;
+            if (currentMs >= eventTime) {
+                targetIndex = i;
+            } else {
                 break;
             }
         }
-        
-        // Update shot info display
-        if (currentShot) {
-            if (this.currentShotSpeedEl) {
-                this.currentShotSpeedEl.textContent = `${(currentShot.speed || 0).toFixed(1)} km/h`;
+
+        if (targetIndex === -1 || targetIndex === this.currentScoreIndex) {
+            return;
+        }
+
+        const entry = this.momentumTimeline[targetIndex];
+        const scoreAfter = entry?.scoreAfter || this.currentScoreState;
+        const previousScore = { ...this.currentScoreState };
+
+        this.applyScore(scoreAfter);
+        this.currentScoreIndex = targetIndex;
+
+        if (entry?.scoringPlayer) {
+            const playerKey = `player${entry.scoringPlayer}`;
+            const previous = previousScore[playerKey] ?? 0;
+            const current = this.currentScoreState[playerKey] ?? 0;
+            if (current > previous) {
+                this.showScoreNotification(entry.scoringPlayer, scoreAfter);
             }
-            if (this.currentShotTypeEl) {
-                this.currentShotTypeEl.textContent = (currentShot.shotType || 'UNKNOWN').toUpperCase();
+        }
+    }
+
+    showScoreNotification(playerNumber, scoreAfter) {
+        const scoreElement = playerNumber === 1 ? this.player1ScoreEl : this.player2ScoreEl;
+        if (!scoreElement) return;
+
+        const container = scoreElement.closest('.player-score') || scoreElement.parentElement || scoreElement;
+        if (!container) return;
+
+        if (getComputedStyle(container).position === 'static') {
+            container.style.position = 'relative';
+        }
+
+        const toast = document.createElement('div');
+    toast.className = 'score-toast';
+    toast.textContent = `+1`;
+        toast.style.position = 'absolute';
+        toast.style.top = '-28px';
+        toast.style.left = '50%';
+        toast.style.transform = 'translateX(-50%)';
+        toast.style.padding = '4px 10px';
+        toast.style.borderRadius = '999px';
+        toast.style.background = playerNumber === 1 ? 'rgba(102, 126, 234, 0.95)' : 'rgba(233, 30, 99, 0.95)';
+        toast.style.color = '#fff';
+        toast.style.fontWeight = '700';
+        toast.style.boxShadow = '0 2px 6px rgba(0,0,0,0.2)';
+        toast.style.zIndex = '10';
+    toast.dataset.score = `${scoreAfter?.player1 ?? 0}-${scoreAfter?.player2 ?? 0}`;
+
+        container.appendChild(toast);
+
+        scoreElement.style.transition = 'background-color 0.3s ease';
+        scoreElement.style.backgroundColor = 'rgba(255, 235, 59, 0.6)';
+
+        const clearHighlight = setTimeout(() => {
+            scoreElement.style.backgroundColor = '';
+        }, 600);
+        const removeToast = setTimeout(() => {
+            toast.remove();
+        }, 1500);
+
+        this.scoreToastTimeouts.push(clearHighlight, removeToast);
+    }
+
+    updateCurrentShot(currentMs) {
+        if (!Array.isArray(this.logData?.shots) || this.logData.shots.length === 0) {
+            return;
+        }
+
+        let closestShot = null;
+        let closestDiff = Infinity;
+
+        for (const shot of this.logData.shots) {
+            const shotTime = this.getShotTimestamp(shot);
+            if (shotTime === null) continue;
+            const diff = Math.abs(shotTime - currentMs);
+            if (diff < closestDiff) {
+                closestDiff = diff;
+                closestShot = shot;
             }
-            if (this.currentShotAccuracyEl) {
-                this.currentShotAccuracyEl.textContent = `${(currentShot.accuracy || 0).toFixed(1)}%`;
+        }
+
+        if (closestShot && closestDiff <= 400) {
+            const shotKey = this.buildShotKey(closestShot);
+            if (shotKey !== this.activeShotKey) {
+                this.activeShotKey = shotKey;
+                this.activeShot = closestShot;
+                this.renderShotDetails(closestShot);
+                this.updatePlayerSpeedChart(closestShot);
             }
-            if (this.currentShotResultEl) {
-                this.currentShotResultEl.textContent = (currentShot.result || 'UNKNOWN').toUpperCase();
-                this.currentShotResultEl.style.color = currentShot.result === 'IN' ? '#4caf50' : '#f44336';
-            }
-            
-            // Update player speed charts
-            this.updatePlayerSpeedChart(currentShot);
-        } else {
-            // Clear display
-            if (this.currentShotSpeedEl) this.currentShotSpeedEl.textContent = '-- km/h';
-            if (this.currentShotTypeEl) this.currentShotTypeEl.textContent = '--';
-            if (this.currentShotAccuracyEl) this.currentShotAccuracyEl.textContent = '--%';
-            if (this.currentShotResultEl) {
-                this.currentShotResultEl.textContent = '--';
-                this.currentShotResultEl.style.color = '#333';
-            }
+        } else if (this.activeShot) {
+            this.clearShotDetails();
+            this.activeShot = null;
+            this.activeShotKey = null;
         }
     }
 
     updatePlayerSpeedChart(shot) {
         const player = shot.player || 1;
-        const speed = shot.speed || 0;
-        const timestamp = shot.timestampMs || (shot.frame / 120 * 1000);
+    const speed = Number(shot.speed || 0);
+    const timestamp = this.getShotTimestamp(shot) ?? Date.now();
         
         if (player === 1) {
             // Update current speed display
@@ -604,24 +914,131 @@ class MatchVisualizer {
         }
     }
 
+    getShotTimestamp(shot) {
+        if (typeof shot?.timestampMs === 'number') {
+            return shot.timestampMs;
+        }
+        if (Array.isArray(shot?.timestampSeries) && shot.timestampSeries.length > 0) {
+            return shot.timestampSeries[0];
+        }
+        if (Array.isArray(shot?.frameSeries) && shot.frameSeries.length > 0 && this.estimatedFps) {
+            return (shot.frameSeries[0] / this.estimatedFps) * 1000;
+        }
+        if (Array.isArray(shot?.detections) && shot.detections.length > 0 && this.estimatedFps) {
+            const frame = shot.detections[0].frameNumber;
+            if (typeof frame === 'number') {
+                return (frame / this.estimatedFps) * 1000;
+            }
+        }
+        return null;
+    }
+
+    buildShotKey(shot) {
+        const stamp = this.getShotTimestamp(shot) ?? Math.random();
+        const player = shot?.player ?? 0;
+        const shotType = shot?.shotType ?? 'unknown';
+        return `${player}-${shotType}-${stamp}`;
+    }
+
+    renderShotDetails(shot) {
+        const speed = Number(shot?.speed ?? 0);
+        const shotType = shot?.shotType ? String(shot.shotType).toUpperCase() : 'UNKNOWN';
+        const accuracy = Number(shot?.accuracy ?? 0);
+        const result = shot?.result ? String(shot.result).toUpperCase() : 'UNKNOWN';
+
+        if (this.currentShotSpeedEl) {
+            this.currentShotSpeedEl.textContent = `${speed.toFixed(1)} mph`;
+        }
+        if (this.currentShotTypeEl) {
+            this.currentShotTypeEl.textContent = shotType;
+        }
+        if (this.currentShotAccuracyEl) {
+            this.currentShotAccuracyEl.textContent = `${accuracy.toFixed(1)}%`;
+        }
+        if (this.currentShotResultEl) {
+            this.currentShotResultEl.textContent = result;
+            this.currentShotResultEl.style.color = result === 'IN' ? '#4caf50' : '#f44336';
+        }
+    }
+
+    clearShotDetails() {
+        if (this.currentShotSpeedEl) this.currentShotSpeedEl.textContent = '-- mph';
+        if (this.currentShotTypeEl) this.currentShotTypeEl.textContent = '--';
+        if (this.currentShotAccuracyEl) this.currentShotAccuracyEl.textContent = '--%';
+        if (this.currentShotResultEl) {
+            this.currentShotResultEl.textContent = '--';
+            this.currentShotResultEl.style.color = '#333';
+        }
+    }
+
+    pickDetectionForShot(shot, currentMs) {
+        if (!Array.isArray(shot?.detections) || shot.detections.length === 0) {
+            return null;
+        }
+
+        let targetFrame = null;
+        if (this.estimatedFps) {
+            targetFrame = Math.round((currentMs / 1000) * this.estimatedFps);
+        }
+
+        const primaryFrame = Array.isArray(shot.frameSeries) && shot.frameSeries.length > 0
+            ? shot.frameSeries[0]
+            : null;
+
+        let bestDetection = shot.detections[0];
+        let bestScore = Infinity;
+
+        shot.detections.forEach(detection => {
+            const frameNumber = detection.frameNumber ?? primaryFrame ?? 0;
+            const confidence = detection.confidence ?? 0;
+            let frameDiff = 0;
+            if (targetFrame !== null && typeof frameNumber === 'number') {
+                frameDiff = Math.abs(frameNumber - targetFrame);
+            } else if (typeof frameNumber === 'number' && typeof primaryFrame === 'number') {
+                frameDiff = Math.abs(frameNumber - primaryFrame);
+            }
+
+            const score = frameDiff - confidence * 10;
+            if (score < bestScore) {
+                bestScore = score;
+                bestDetection = detection;
+            }
+        });
+
+        return bestDetection;
+    }
+
     drawOverlay(currentMs) {
         if (!this.ctx || !this.canvas || !this.logData?.shots) return;
         
         // Clear canvas
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
         
-        // Find shots near current time
-        const nearbyShots = this.logData.shots.filter(shot => {
-            const shotTime = shot.timestampMs || (shot.frame / 120 * 1000);
-            return Math.abs(shotTime - currentMs) < 500; // 500ms window
-        });
-        
-        // Draw ball positions
-        nearbyShots.forEach(shot => {
-            if (shot.detections && shot.detections.length > 0) {
-                shot.detections.forEach(detection => {
-                    this.drawBallPosition(detection);
-                });
+        const shotsToRender = [];
+
+        if (this.activeShot) {
+            shotsToRender.push(this.activeShot);
+        } else {
+            let fallbackShot = null;
+            let fallbackDiff = Infinity;
+            for (const shot of this.logData.shots) {
+                const shotTime = this.getShotTimestamp(shot);
+                if (shotTime === null) continue;
+                const diff = Math.abs(shotTime - currentMs);
+                if (diff < fallbackDiff && diff < 500) {
+                    fallbackDiff = diff;
+                    fallbackShot = shot;
+                }
+            }
+            if (fallbackShot) {
+                shotsToRender.push(fallbackShot);
+            }
+        }
+
+        shotsToRender.forEach(shot => {
+            const detection = this.pickDetectionForShot(shot, currentMs);
+            if (detection) {
+                this.drawBallPosition(detection, shot);
             }
         });
         
@@ -632,7 +1049,7 @@ class MatchVisualizer {
         }
     }
 
-    drawBallPosition(detection) {
+    drawBallPosition(detection, shot) {
         if (!this.ctx) return;
         
         const x = detection.x + detection.width / 2;
@@ -654,6 +1071,17 @@ class MatchVisualizer {
         this.ctx.strokeStyle = '#FF4500';
         this.ctx.lineWidth = 2;
         this.ctx.strokeRect(detection.x, detection.y, detection.width, detection.height);
+
+        if (shot && typeof shot.speed === 'number' && shot.speed > 0) {
+            const speedLabel = `${shot.speed.toFixed(1)} mph`;
+            this.ctx.font = 'bold 20px "Segoe UI", sans-serif';
+            this.ctx.textAlign = 'center';
+            this.ctx.lineWidth = 4;
+            this.ctx.strokeStyle = 'rgba(0, 0, 0, 0.6)';
+            this.ctx.strokeText(speedLabel, x, y - radius - 12);
+            this.ctx.fillStyle = '#00e5ff';
+            this.ctx.fillText(speedLabel, x, y - radius - 12);
+        }
     }
 
     drawTrajectory(trajectory) {
