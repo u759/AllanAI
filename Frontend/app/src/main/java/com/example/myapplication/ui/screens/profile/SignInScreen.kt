@@ -22,7 +22,8 @@ import com.example.myapplication.ui.theme.MyApplicationTheme
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SignInScreen(
-    onSignInClick: (String, String) -> Boolean = { _, _ -> false },
+    state: SignInState,
+    onSignInClick: (String, String) -> Unit = { _, _ -> },
     onSignUpClick: () -> Unit = {},
     onForgotPasswordClick: () -> Unit = {},
     onNavigateToUpload: () -> Unit = {},
@@ -30,9 +31,9 @@ fun SignInScreen(
     onNavigateToHighlights: () -> Unit = {},
     onNavigateToProfile: () -> Unit = {}
 ) {
+    // Local state for form fields only
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
-    var errorMessage by remember { mutableStateOf<String?>(null) }
     
     Scaffold(
         bottomBar = {
@@ -49,16 +50,12 @@ fun SignInScreen(
         SignInContent(
             username = username,
             password = password,
-            errorMessage = errorMessage,
+            isLoading = state.isLoading,
+            errorMessage = state.error,
             onUsernameChange = { username = it },
             onPasswordChange = { password = it },
             onSignInClick = {
-                val success = onSignInClick(username, password)
-                if (!success) {
-                    errorMessage = "Invalid username or password"
-                } else {
-                    errorMessage = null
-                }
+                onSignInClick(username, password)
             },
             onSignUpClick = onSignUpClick,
             onForgotPasswordClick = onForgotPasswordClick,
@@ -73,6 +70,7 @@ fun SignInScreen(
 private fun SignInContent(
     username: String,
     password: String,
+    isLoading: Boolean,
     errorMessage: String?,
     onUsernameChange: (String) -> Unit,
     onPasswordChange: (String) -> Unit,
@@ -374,6 +372,6 @@ private fun AuthBottomNavBar(
 @Composable
 fun SignInScreenPreview() {
     MyApplicationTheme {
-        SignInScreen()
+        SignInScreen(state = SignInState())
     }
 }

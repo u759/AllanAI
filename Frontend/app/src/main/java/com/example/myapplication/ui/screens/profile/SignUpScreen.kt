@@ -22,18 +22,19 @@ import com.example.myapplication.ui.theme.MyApplicationTheme
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SignUpScreen(
-    onSignUpClick: (String, String, String, String) -> com.example.myapplication.data.local.SignUpResult = { _, _, _, _ -> com.example.myapplication.data.local.SignUpResult.Success },
+    state: SignUpState,
+    onSignUpClick: (String, String, String, String) -> Unit = { _, _, _, _ -> },
     onSignInClick: () -> Unit = {},
     onNavigateToUpload: () -> Unit = {},
     onNavigateToHistory: () -> Unit = {},
     onNavigateToHighlights: () -> Unit = {},
     onNavigateToProfile: () -> Unit = {}
 ) {
+    // Local state for form fields only
     var username by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
-    var errorMessage by remember { mutableStateOf<String?>(null) }
     
     Scaffold(
         topBar = {
@@ -55,41 +56,14 @@ fun SignUpScreen(
             email = email,
             password = password,
             confirmPassword = confirmPassword,
-            errorMessage = errorMessage,
+            isLoading = state.isLoading,
+            errorMessage = state.error,
             onUsernameChange = { username = it },
             onEmailChange = { email = it },
             onPasswordChange = { password = it },
             onConfirmPasswordChange = { confirmPassword = it },
             onSignUpClick = {
-                // Validate inputs
-                when {
-                    username.isBlank() -> {
-                        errorMessage = "Username cannot be empty"
-                    }
-                    email.isBlank() -> {
-                        errorMessage = "Email cannot be empty"
-                    }
-                    password.isBlank() -> {
-                        errorMessage = "Password cannot be empty"
-                    }
-                    password != confirmPassword -> {
-                        errorMessage = "Passwords do not match"
-                    }
-                    else -> {
-                        val result = onSignUpClick(username, email, password, confirmPassword)
-                        when (result) {
-                            is com.example.myapplication.data.local.SignUpResult.Success -> {
-                                errorMessage = null
-                            }
-                            is com.example.myapplication.data.local.SignUpResult.UsernameTaken -> {
-                                errorMessage = "Username is already taken"
-                            }
-                            is com.example.myapplication.data.local.SignUpResult.EmailTaken -> {
-                                errorMessage = "Email is already registered"
-                            }
-                        }
-                    }
-                }
+                onSignUpClick(username, email, password, confirmPassword)
             },
             onSignInClick = onSignInClick,
             modifier = Modifier
@@ -127,6 +101,7 @@ private fun SignUpContent(
     email: String,
     password: String,
     confirmPassword: String,
+    isLoading: Boolean,
     errorMessage: String?,
     onUsernameChange: (String) -> Unit,
     onEmailChange: (String) -> Unit,
@@ -429,6 +404,6 @@ private fun AuthBottomNavBar(
 @Composable
 fun SignUpScreenPreview() {
     MyApplicationTheme {
-        SignUpScreen()
+        SignUpScreen(state = SignUpState())
     }
 }

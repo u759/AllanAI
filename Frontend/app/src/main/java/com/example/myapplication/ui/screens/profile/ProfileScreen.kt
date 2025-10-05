@@ -27,8 +27,7 @@ import com.example.myapplication.ui.theme.MyApplicationTheme
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileScreen(
-    username: String = "User",
-    email: String = "",
+    state: ProfileState,
     onNavigateBack: () -> Unit = {},
     onEditProfile: () -> Unit = {},
     onChangePassword: () -> Unit = {},
@@ -44,8 +43,8 @@ fun ProfileScreen(
         containerColor = MaterialTheme.colorScheme.background
     ) { paddingValues ->
         ProfileContent(
-            username = username,
-            email = email,
+            username = state.username,
+            email = state.email,
             onEditProfile = onEditProfile,
             onChangePassword = onChangePassword,
             onLogout = onLogout,
@@ -270,6 +269,11 @@ data class SettingItem(
 @Composable
 fun ProfileScreenPreview() {
     MyApplicationTheme {
-        ProfileScreen()
+        ProfileScreen(
+            state = ProfileState(
+                username = "Alex Doe",
+                email = "alex.doe@example.com"
+            )
+        )
     }
 }

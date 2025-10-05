@@ -25,14 +25,12 @@ import com.example.myapplication.ui.theme.MyApplicationTheme
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditProfileScreen(
-    initialUsername: String = "",
-    initialEmail: String = "",
+    state: EditProfileState,
+    onUsernameChange: (String) -> Unit = {},
+    onEmailChange: (String) -> Unit = {},
     onNavigateBack: () -> Unit = {},
-    onSaveChanges: (String, String) -> com.example.myapplication.data.local.ProfileUpdateResult = { _, _ -> com.example.myapplication.data.local.ProfileUpdateResult.Success }
+    onSaveChanges: () -> Unit = {}
 ) {
-    var fullName by remember { mutableStateOf(initialUsername) }
-    var email by remember { mutableStateOf(initialEmail) }
-    var errorMessage by remember { mutableStateOf<String?>(null) }
 
     Scaffold(
         topBar = {
@@ -41,28 +39,13 @@ fun EditProfileScreen(
         containerColor = MaterialTheme.colorScheme.background
     ) { paddingValues ->
         EditProfileContent(
-            fullName = fullName,
-            email = email,
-            errorMessage = errorMessage,
-            onFullNameChange = { fullName = it },
-            onEmailChange = { email = it },
-            onSaveClick = {
-                val result = onSaveChanges(fullName, email)
-                when (result) {
-                    is com.example.myapplication.data.local.ProfileUpdateResult.Success -> {
-                        errorMessage = null
-                    }
-                    is com.example.myapplication.data.local.ProfileUpdateResult.UsernameTaken -> {
-                        errorMessage = "Username is already taken"
-                    }
-                    is com.example.myapplication.data.local.ProfileUpdateResult.EmailTaken -> {
-                        errorMessage = "Email is already registered"
-                    }
-                    is com.example.myapplication.data.local.ProfileUpdateResult.NotLoggedIn -> {
-                        errorMessage = "You must be logged in"
-                    }
-                }
-            },
+            fullName = state.username,
+            email = state.email,
+            isLoading = state.isLoading,
+            errorMessage = state.error,
+            onFullNameChange = onUsernameChange,
+            onEmailChange = onEmailChange,
+            onSaveClick = onSaveChanges,
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
@@ -111,6 +94,7 @@ private fun EditProfileTopBar(
 private fun EditProfileContent(
     fullName: String,
     email: String,
+    isLoading: Boolean,
     errorMessage: String?,
     onFullNameChange: (String) -> Unit,
     onEmailChange: (String) -> Unit,
@@ -303,6 +287,11 @@ private fun ProfilePhotoSection() {
 @Composable
 fun EditProfileScreenPreview() {
     MyApplicationTheme {
-        EditProfileScreen()
+        EditProfileScreen(
+            state = EditProfileState(
+                username = "Alex Doe",
+                email = "alex.doe@example.com"
+            )
+        )
     }
 }

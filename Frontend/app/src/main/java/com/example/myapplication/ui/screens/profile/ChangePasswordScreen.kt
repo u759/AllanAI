@@ -21,14 +21,14 @@ import com.example.myapplication.ui.theme.MyApplicationTheme
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChangePasswordScreen(
+    state: ChangePasswordState,
+    onCurrentPasswordChange: (String) -> Unit = {},
+    onNewPasswordChange: (String) -> Unit = {},
+    onConfirmPasswordChange: (String) -> Unit = {},
     onNavigateBack: () -> Unit = {},
-    onUpdatePassword: (String, String, String) -> com.example.myapplication.data.local.PasswordChangeResult = { _, _, _ -> com.example.myapplication.data.local.PasswordChangeResult.Success }
+    onUpdatePassword: () -> Unit = {}
 ) {
-    var currentPassword by remember { mutableStateOf("") }
-    var newPassword by remember { mutableStateOf("") }
-    var confirmPassword by remember { mutableStateOf("") }
-    var errorMessage by remember { mutableStateOf<String?>(null) }
-    
+    // Local UI state for password visibility
     var currentPasswordVisible by remember { mutableStateOf(false) }
     var newPasswordVisible by remember { mutableStateOf(false) }
     var confirmPasswordVisible by remember { mutableStateOf(false) }
@@ -40,47 +40,21 @@ fun ChangePasswordScreen(
         containerColor = MaterialTheme.colorScheme.background
     ) { paddingValues ->
         ChangePasswordContent(
-            currentPassword = currentPassword,
-            newPassword = newPassword,
-            confirmPassword = confirmPassword,
-            errorMessage = errorMessage,
+            currentPassword = state.currentPassword,
+            newPassword = state.newPassword,
+            confirmPassword = state.confirmPassword,
+            isLoading = state.isLoading,
+            errorMessage = state.error,
             currentPasswordVisible = currentPasswordVisible,
             newPasswordVisible = newPasswordVisible,
             confirmPasswordVisible = confirmPasswordVisible,
-            onCurrentPasswordChange = { currentPassword = it },
-            onNewPasswordChange = { newPassword = it },
-            onConfirmPasswordChange = { confirmPassword = it },
+            onCurrentPasswordChange = onCurrentPasswordChange,
+            onNewPasswordChange = onNewPasswordChange,
+            onConfirmPasswordChange = onConfirmPasswordChange,
             onCurrentPasswordVisibilityToggle = { currentPasswordVisible = !currentPasswordVisible },
             onNewPasswordVisibilityToggle = { newPasswordVisible = !newPasswordVisible },
             onConfirmPasswordVisibilityToggle = { confirmPasswordVisible = !confirmPasswordVisible },
-            onUpdateClick = {
-                // Validate inputs
-                when {
-                    currentPassword.isBlank() -> {
-                        errorMessage = "Current password cannot be empty"
-                    }
-                    newPassword.isBlank() -> {
-                        errorMessage = "New password cannot be empty"
-                    }
-                    newPassword != confirmPassword -> {
-                        errorMessage = "Passwords do not match"
-                    }
-                    else -> {
-                        val result = onUpdatePassword(currentPassword, newPassword, confirmPassword)
-                        when (result) {
-                            is com.example.myapplication.data.local.PasswordChangeResult.Success -> {
-                                errorMessage = null
-                            }
-                            is com.example.myapplication.data.local.PasswordChangeResult.WrongCurrentPassword -> {
-                                errorMessage = "Current password is incorrect"
-                            }
-                            is com.example.myapplication.data.local.PasswordChangeResult.NotLoggedIn -> {
-                                errorMessage = "You must be logged in"
-                            }
-                        }
-                    }
-                }
-            },
+            onUpdateClick = onUpdatePassword,
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
@@ -130,6 +104,7 @@ private fun ChangePasswordContent(
     currentPassword: String,
     newPassword: String,
     confirmPassword: String,
+    isLoading: Boolean,
     errorMessage: String?,
     currentPasswordVisible: Boolean,
     newPasswordVisible: Boolean,
@@ -295,6 +270,6 @@ private fun PasswordField(
 @Composable
 fun ChangePasswordScreenPreview() {
     MyApplicationTheme {
-        ChangePasswordScreen()
+        ChangePasswordScreen(state = ChangePasswordState())
     }
 }
