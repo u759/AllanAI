@@ -40,6 +40,7 @@ import androidx.media3.ui.PlayerView
 import com.example.myapplication.R
 import com.example.myapplication.data.model.Match
 import kotlinx.coroutines.delay
+import androidx.core.net.toUri
 
 /**
  * Video player with bounding box overlay for match analysis.
@@ -162,7 +163,7 @@ fun VideoPlayerWithOverlay(
  */
 private fun createExoPlayer(context: Context): ExoPlayer {
     return ExoPlayer.Builder(context).build().apply {
-        val videoUri = Uri.parse("android.resource://${context.packageName}/${R.raw.test_2}")
+        val videoUri = "android.resource://${context.packageName}/${R.raw.test_2}".toUri()
         setMediaItem(MediaItem.fromUri(videoUri))
         prepare()
     }
