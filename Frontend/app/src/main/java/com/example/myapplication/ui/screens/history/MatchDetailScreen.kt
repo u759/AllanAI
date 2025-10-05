@@ -11,7 +11,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -22,19 +22,31 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
+import com.example.myapplication.data.model.Match
 import com.example.myapplication.ui.theme.MyApplicationTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MatchDetailScreen(
-    matchId: String = "1",
+    matchId: String = "0ee996ad-3f02-4ba9-bafd-465a6a6dcf10",
     onNavigateBack: () -> Unit = {},
     onNavigateToUpload: () -> Unit = {},
     onNavigateToHistory: () -> Unit = {},
     onNavigateToHighlights: () -> Unit = {},
-    onNavigateToProfile: () -> Unit = {}
+    onNavigateToProfile: () -> Unit = {},
+    viewModel: MatchDetailViewModel = hiltViewModel()
 ) {
+    val uiState by viewModel.uiState.collectAsState()
+    val currentPositionMs by viewModel.currentPositionMs.collectAsState()
+    val isPlaying by viewModel.isPlaying.collectAsState()
+
+    // Load match when screen opens
+    LaunchedEffect(matchId) {
+        viewModel.loadMatch(matchId)
+    }
+
     Scaffold(
         topBar = {
             MatchDetailTopBar(onNavigateBack = onNavigateBack)
@@ -50,11 +62,46 @@ fun MatchDetailScreen(
         },
         containerColor = MaterialTheme.colorScheme.background
     ) { paddingValues ->
-        MatchDetailContent(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-        )
+        when (val state = uiState) {
+            is MatchDetailUiState.Loading -> {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
+                }
+            }
+            is MatchDetailUiState.Error -> {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = state.message,
+                        color = Color.Red,
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+                }
+            }
+            is MatchDetailUiState.Success -> {
+                MatchDetailContent(
+                    match = state.match,
+                    currentPositionMs = currentPositionMs,
+                    isPlaying = isPlaying,
+                    onPositionChange = { viewModel.updatePosition(it) },
+                    onPlaybackStateChange = { viewModel.updatePlaybackState(it) },
+                    getDetections = { viewModel.getDetectionsForPosition(state.match, currentPositionMs) },
+                    getTrajectory = { viewModel.getTrajectoryForPosition(state.match, currentPositionMs) },
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues)
+                )
+            }
+        }
     }
 }
 
@@ -101,6 +148,13 @@ private fun MatchDetailTopBar(
 
 @Composable
 private fun MatchDetailContent(
+    match: Match,
+    currentPositionMs: Long,
+    isPlaying: Boolean,
+    onPositionChange: (Long) -> Unit,
+    onPlaybackStateChange: (Boolean) -> Unit,
+    getDetections: () -> List<DetectionWithType>,
+    getTrajectory: () -> List<List<Double>>?,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -109,100 +163,27 @@ private fun MatchDetailContent(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(24.dp)
     ) {
-        // Video Player
-        VideoPlayerSection()
-        
-        // Match Summary
-        MatchSummarySection()
-        
-        // Performance Metrics
-        PerformanceMetricsSection()
-    }
-}
-
-@Composable
-private fun VideoPlayerSection() {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .aspectRatio(16f / 9f)
-            .clip(RoundedCornerShape(8.dp))
-            .background(Color(0xFF111827))
-    ) {
-        // Video poster/thumbnail
-        AsyncImage(
-            model = "https://lh3.googleusercontent.com/aida-public/AB6AXuDC58P__OyJuDMKuqMPuJtwv2WklBoXFBI7AK92FrxFePIMDOuICmJnuAPADkM6CfyzwT-5CrElS00wL6yVi9GBwi3NWlZTF2KyBD4n1IRdKCkhPZRkjitub7s4FAy44ZsEa9o3qkMUhD1oS0hvrw53j5-1_jVhnlmYWjBCfFOZAzaZV10qd97RKh3gIXU2Cs2WqFtkpJajG0muE110lnBkTrCKsO_db4bm3As8816pHjO3XcwgZ1VFLpJSvuD_5Ru3Ebc0oBTWNYK1",
-            contentDescription = "Match video",
-            modifier = Modifier.fillMaxSize(),
-            contentScale = ContentScale.Crop
+        // Video Player with Overlay
+        VideoPlayerWithOverlay(
+            match = match,
+            currentPositionMs = currentPositionMs,
+            isPlaying = isPlaying,
+            onPositionChange = onPositionChange,
+            onPlaybackStateChange = onPlaybackStateChange,
+            detections = getDetections(),
+            trajectory = getTrajectory()
         )
-        
-        // Overlay gradient and play button
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color.Black.copy(alpha = 0.4f))
-        ) {
-            // Play button
-            IconButton(
-                onClick = { /* Play video */ },
-                modifier = Modifier
-                    .size(64.dp)
-                    .align(Alignment.Center)
-                    .background(
-                        color = Color.White.copy(alpha = 0.2f),
-                        shape = CircleShape
-                    )
-            ) {
-                Icon(
-                    imageVector = Icons.Default.PlayArrow,
-                    contentDescription = "Play",
-                    tint = Color.White,
-                    modifier = Modifier.size(32.dp)
-                )
-            }
-            
-            // Video controls at bottom
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .align(Alignment.BottomCenter)
-                    .background(
-                        Brush.verticalGradient(
-                            colors = listOf(
-                                Color.Transparent,
-                                Color.Black.copy(alpha = 0.6f)
-                            )
-                        )
-                    )
-                    .padding(16.dp)
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "1:34 / 28:15",
-                        style = MaterialTheme.typography.bodySmall.copy(
-                            fontWeight = FontWeight.Medium
-                        ),
-                        color = Color.White
-                    )
-                    Icon(
-                        imageVector = Icons.Default.Fullscreen,
-                        contentDescription = "Fullscreen",
-                        tint = Color.White,
-                        modifier = Modifier.size(24.dp)
-                    )
-                }
-            }
-        }
+
+        // Match Summary
+        MatchSummarySection(match = match)
+
+        // Performance Metrics
+        PerformanceMetricsSection(match = match)
     }
 }
 
 @Composable
-private fun MatchSummarySection() {
+private fun MatchSummarySection(match: Match) {
     Column(
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
@@ -264,9 +245,9 @@ private fun MatchSummarySection() {
         Column(
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            MatchDetailRow("Date", "July 22, 2024")
-            MatchDetailRow("Duration", "45 minutes")
-            MatchDetailRow("Winner", "Ethan")
+            MatchDetailRow("Date", match.createdAt.toString().substringBefore("T"))
+            MatchDetailRow("Duration", formatDuration(match.durationSeconds ?: 0))
+            MatchDetailRow("Score", "${match.statistics?.player1Score ?: 0} - ${match.statistics?.player2Score ?: 0}")
         }
     }
 }
@@ -293,7 +274,7 @@ private fun MatchDetailRow(label: String, value: String) {
 }
 
 @Composable
-private fun PerformanceMetricsSection() {
+private fun PerformanceMetricsSection(match: Match) {
     Column(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
@@ -306,32 +287,46 @@ private fun PerformanceMetricsSection() {
             color = Color.White
         )
         
-        // Score Progression Card
-        ScoreProgressionCard()
-        
-        // Serve Success Rate Card
-        ServeSuccessCard()
-        
-        // Shot Types Card
-        ShotTypesCard()
+        // Statistics Cards
+        StatsCard(
+            title = "Max Ball Speed",
+            value = "${match.statistics?.maxBallSpeed ?: 0} km/h",
+            subtitle = "Fastest shot"
+        )
+
+        StatsCard(
+            title = "Avg Ball Speed",
+            value = "${match.statistics?.avgBallSpeed ?: 0} km/h",
+            subtitle = "Average speed"
+        )
+
+        StatsCard(
+            title = "Rally Stats",
+            value = "${match.statistics?.totalRallies ?: 0} rallies",
+            subtitle = "Avg length: ${match.statistics?.avgRallyLength ?: 0}"
+        )
     }
 }
 
 @Composable
-private fun ScoreProgressionCard() {
+private fun StatsCard(
+    title: String,
+    value: String,
+    subtitle: String
+) {
     MetricCard {
         Column(
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Text(
-                text = "Score Progression",
+                text = title,
                 style = MaterialTheme.typography.bodyLarge.copy(
                     fontWeight = FontWeight.Medium
                 ),
                 color = Color.White
             )
             Text(
-                text = "11-9",
+                text = value,
                 style = MaterialTheme.typography.displayMedium.copy(
                     fontWeight = FontWeight.Bold,
                     fontSize = 30.sp
@@ -339,210 +334,9 @@ private fun ScoreProgressionCard() {
                 color = MaterialTheme.colorScheme.primary
             )
             Text(
-                text = "Final Score",
+                text = subtitle,
                 style = MaterialTheme.typography.bodySmall,
                 color = Color(0xFF9CA3AF)
-            )
-            
-            // Simple chart placeholder
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(192.dp)
-                    .padding(vertical = 16.dp)
-            ) {
-                // Chart gradient area
-                Canvas(
-                    modifier = Modifier.fillMaxSize()
-                ) {
-                    // This would be a proper chart library in production
-                    // For now, showing a simplified representation
-                }
-                
-                Text(
-                    text = "Chart visualization would go here",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = Color(0xFF9CA3AF),
-                    modifier = Modifier.align(Alignment.Center)
-                )
-            }
-            
-            // X-axis labels
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly
-            ) {
-                (1..7).forEach { num ->
-                    Text(
-                        text = num.toString(),
-                        style = MaterialTheme.typography.labelSmall.copy(
-                            fontWeight = FontWeight.Bold
-                        ),
-                        color = Color(0xFF6B7280)
-                    )
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun ServeSuccessCard() {
-    MetricCard {
-        Column(
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            Text(
-                text = "Serve Success Rate",
-                style = MaterialTheme.typography.bodyLarge.copy(
-                    fontWeight = FontWeight.Medium
-                ),
-                color = Color.White
-            )
-            Text(
-                text = "75%",
-                style = MaterialTheme.typography.displayMedium.copy(
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 30.sp
-                ),
-                color = MaterialTheme.colorScheme.primary
-            )
-            Text(
-                text = "Ethan",
-                style = MaterialTheme.typography.bodySmall,
-                color = Color(0xFF9CA3AF),
-                modifier = Modifier.padding(bottom = 16.dp)
-            )
-            
-            // Bar chart
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(192.dp),
-                horizontalArrangement = Arrangement.SpaceEvenly,
-                verticalAlignment = Alignment.Bottom
-            ) {
-                // Success bar
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth(0.5f)
-                            .fillMaxHeight(0.75f)
-                            .background(
-                                color = Color(0x4D13A4EC),
-                                shape = RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp)
-                            )
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = "Success",
-                        style = MaterialTheme.typography.labelSmall.copy(
-                            fontWeight = FontWeight.Bold
-                        ),
-                        color = Color(0xFF6B7280)
-                    )
-                }
-                
-                // Failure bar
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth(0.5f)
-                            .fillMaxHeight(0.25f)
-                            .background(
-                                color = Color(0x4D13A4EC),
-                                shape = RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp)
-                            )
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = "Failure",
-                        style = MaterialTheme.typography.labelSmall.copy(
-                            fontWeight = FontWeight.Bold
-                        ),
-                        color = Color(0xFF6B7280)
-                    )
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun ShotTypesCard() {
-    MetricCard {
-        Column(
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            Text(
-                text = "Shot Types",
-                style = MaterialTheme.typography.bodyLarge.copy(
-                    fontWeight = FontWeight.Medium
-                ),
-                color = Color.White
-            )
-            Text(
-                text = "40% Forehand",
-                style = MaterialTheme.typography.displayMedium.copy(
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 30.sp
-                ),
-                color = MaterialTheme.colorScheme.primary
-            )
-            Text(
-                text = "Ethan",
-                style = MaterialTheme.typography.bodySmall,
-                color = Color(0xFF9CA3AF),
-                modifier = Modifier.padding(bottom = 16.dp)
-            )
-            
-            // Progress bars
-            Column(
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                ShotTypeProgressBar("Forehand", 0.4f)
-                ShotTypeProgressBar("Backhand", 0.35f)
-                ShotTypeProgressBar("Smash", 0.25f)
-            }
-        }
-    }
-}
-
-@Composable
-private fun ShotTypeProgressBar(label: String, progress: Float) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelSmall.copy(
-                fontWeight = FontWeight.Bold
-            ),
-            color = Color(0xFF6B7280),
-            modifier = Modifier.width(64.dp),
-            textAlign = androidx.compose.ui.text.style.TextAlign.End
-        )
-        Box(
-            modifier = Modifier
-                .weight(1f)
-                .height(10.dp)
-                .clip(RoundedCornerShape(5.dp))
-                .background(Color(0xFF374151))
-        ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth(progress)
-                    .fillMaxHeight()
-                    .clip(RoundedCornerShape(5.dp))
-                    .background(MaterialTheme.colorScheme.primary)
             )
         }
     }
@@ -673,6 +467,15 @@ private fun RowScope.BottomNavItem(
             color = if (selected) MaterialTheme.colorScheme.primary else Color(0xFF71717A)
         )
     }
+}
+
+/**
+ * Format duration in seconds to readable string.
+ */
+private fun formatDuration(seconds: Int): String {
+    val mins = seconds / 60
+    val secs = seconds % 60
+    return String.format("%d:%02d", mins, secs)
 }
 
 @Preview(showBackground = true, showSystemUi = true)

@@ -1,0 +1,862 @@
+[
+    {
+        "id": "56897489-dd37-4c0d-b811-5fde4c4845a4",
+        "timestampMs": 508,
+        "timestampSeries": [
+            475,
+            508,
+            608
+        ],
+        "frameSeries": [
+            61
+        ],
+        "type": "SCORE",
+        "title": "Point Scored",
+        "description": "Ball Bounce",
+        "player": 1,
+        "importance": 5,
+        "metadata": {
+            "shotSpeed": 52.3,
+            "rallyLength": 1,
+            "shotType": "SMASH",
+            "ballTrajectory": [
+                [
+                    569.1614379882812,
+                    645.4163513183594
+                ],
+                [
+                    85.38263702392578,
+                    653.2964782714844
+                ]
+            ],
+            "frameNumber": 61,
+            "frameSeries": [
+                61
+            ],
+            "scoreAfter": {
+                "player1": 1,
+                "player2": 0
+            },
+            "eventWindow": {
+                "preMs": 33,
+                "postMs": 100
+            },
+            "confidence": 0.8382103443145752,
+            "source": "MODEL",
+            "detections": [
+                {
+                    "frameNumber": 61,
+                    "x": null,
+                    "y": null,
+                    "width": null,
+                    "height": null,
+                    "confidence": 0.8382103443145752
+                }
+            ]
+        }
+    },
+    {
+        "id": "47cc44eb-c05a-4ea8-8b8c-a3c3152fbd89",
+        "timestampMs": 592,
+        "timestampSeries": [
+            559,
+            592,
+            692
+        ],
+        "frameSeries": [
+            71
+        ],
+        "type": "SCORE",
+        "title": "Point Scored",
+        "description": "Ball Bounce",
+        "player": 1,
+        "importance": 6,
+        "metadata": {
+            "shotSpeed": 14.3,
+            "rallyLength": 2,
+            "shotType": "SMASH",
+            "ballTrajectory": [
+                [
+                    296.4763641357422,
+                    582.9335327148438
+                ],
+                [
+                    424.1794738769531,
+                    549.3275756835938
+                ]
+            ],
+            "frameNumber": 71,
+            "frameSeries": [
+                71
+            ],
+            "scoreAfter": {
+                "player1": 2,
+                "player2": 0
+            },
+            "eventWindow": {
+                "preMs": 33,
+                "postMs": 100
+            },
+            "confidence": 0.863712728023529,
+            "source": "MODEL",
+            "detections": [
+                {
+                    "frameNumber": 71,
+                    "x": null,
+                    "y": null,
+                    "width": null,
+                    "height": null,
+                    "confidence": 0.863712728023529
+                }
+            ]
+        }
+    },
+    {
+        "id": "5b579601-f03a-4557-baf5-71b8dbf086a5",
+        "timestampMs": 675,
+        "timestampSeries": [
+            642,
+            675,
+            775
+        ],
+        "frameSeries": [
+            81
+        ],
+        "type": "SCORE",
+        "title": "Point Scored",
+        "description": "Ball Bounce",
+        "player": 1,
+        "importance": 6,
+        "metadata": {
+            "shotSpeed": 14.4,
+            "rallyLength": 3,
+            "shotType": "SMASH",
+            "ballTrajectory": [
+                [
+                    567.9083557128906,
+                    521.208984375
+                ],
+                [
+                    699.5888061523438,
+                    502.21498107910156
+                ]
+            ],
+            "frameNumber": 81,
+            "frameSeries": [
+                81
+            ],
+            "scoreAfter": {
+                "player1": 3,
+                "player2": 0
+            },
+            "eventWindow": {
+                "preMs": 33,
+                "postMs": 100
+            },
+            "confidence": 0.7013648748397827,
+            "source": "MODEL",
+            "detections": [
+                {
+                    "frameNumber": 81,
+                    "x": null,
+                    "y": null,
+                    "width": null,
+                    "height": null,
+                    "confidence": 0.7013648748397827
+                }
+            ]
+        }
+    },
+    {
+        "id": "0fee3118-bab6-4cda-9a34-1e21742346e6",
+        "timestampMs": 758,
+        "timestampSeries": [
+            725,
+            758,
+            858
+        ],
+        "frameSeries": [
+            91
+        ],
+        "type": "SCORE",
+        "title": "Point Scored",
+        "description": "Ball Bounce",
+        "player": 1,
+        "importance": 7,
+        "metadata": {
+            "shotSpeed": 8.7,
+            "rallyLength": 4,
+            "shotType": "SMASH",
+            "ballTrajectory": [
+                [
+                    835.5529174804688,
+                    496.5842590332031
+                ],
+                [
+                    916.2817077636719,
+                    498.4551086425781
+                ]
+            ],
+            "frameNumber": 91,
+            "frameSeries": [
+                91
+            ],
+            "scoreAfter": {
+                "player1": 4,
+                "player2": 0
+            },
+            "eventWindow": {
+                "preMs": 33,
+                "postMs": 100
+            },
+            "confidence": 0.873944878578186,
+            "source": "MODEL",
+            "detections": [
+                {
+                    "frameNumber": 91,
+                    "x": null,
+                    "y": null,
+                    "width": null,
+                    "height": null,
+                    "confidence": 0.873944878578186
+                }
+            ]
+        }
+    },
+    {
+        "id": "d3f1aec3-20f8-4511-85f6-3b71263a6495",
+        "timestampMs": 2708,
+        "timestampSeries": [
+            2675,
+            2708,
+            2808
+        ],
+        "frameSeries": [
+            325
+        ],
+        "type": "FASTEST_SHOT",
+        "title": "Fastest Shot",
+        "description": "Fast Shot",
+        "player": 1,
+        "importance": 8,
+        "metadata": {
+            "shotSpeed": 115.2,
+            "rallyLength": null,
+            "shotType": "FOREHAND",
+            "ballTrajectory": [
+                [
+                    75.57738494873047,
+                    524.3743896484375
+                ],
+                [
+                    1408.1795043945312,
+                    495.38726806640625
+                ]
+            ],
+            "frameNumber": 325,
+            "frameSeries": [
+                325
+            ],
+            "scoreAfter": null,
+            "eventWindow": {
+                "preMs": 33,
+                "postMs": 100
+            },
+            "confidence": 0.39945390820503235,
+            "source": "MODEL",
+            "detections": [
+                {
+                    "frameNumber": 325,
+                    "x": null,
+                    "y": null,
+                    "width": null,
+                    "height": null,
+                    "confidence": 0.39945390820503235
+                }
+            ]
+        }
+    },
+    {
+        "id": "4c99b9af-dac8-4c3b-8445-1b83f4297070",
+        "timestampMs": 2717,
+        "timestampSeries": [
+            2684,
+            2717,
+            2817
+        ],
+        "frameSeries": [
+            326
+        ],
+        "type": "FASTEST_SHOT",
+        "title": "Fastest Shot",
+        "description": "Fast Shot",
+        "player": 1,
+        "importance": 8,
+        "metadata": {
+            "shotSpeed": 117.0,
+            "rallyLength": null,
+            "shotType": "FOREHAND",
+            "ballTrajectory": [
+                [
+                    54.40883255004883,
+                    525.1223754882812
+                ],
+                [
+                    1407.9749145507812,
+                    495.8866271972656
+                ]
+            ],
+            "frameNumber": 326,
+            "frameSeries": [
+                326
+            ],
+            "scoreAfter": null,
+            "eventWindow": {
+                "preMs": 33,
+                "postMs": 100
+            },
+            "confidence": 0.5569331049919128,
+            "source": "MODEL",
+            "detections": [
+                {
+                    "frameNumber": 326,
+                    "x": null,
+                    "y": null,
+                    "width": null,
+                    "height": null,
+                    "confidence": 0.5569331049919128
+                }
+            ]
+        }
+    },
+    {
+        "id": "1e61435d-2308-4958-8feb-4979dd7416c9",
+        "timestampMs": 2758,
+        "timestampSeries": [
+            2725,
+            2758,
+            2858
+        ],
+        "frameSeries": [
+            331
+        ],
+        "type": "FASTEST_SHOT",
+        "title": "Fastest Shot",
+        "description": "Fast Shot",
+        "player": 2,
+        "importance": 8,
+        "metadata": {
+            "shotSpeed": 87.9,
+            "rallyLength": null,
+            "shotType": "FOREHAND",
+            "ballTrajectory": [
+                [
+                    1408.1795043945312,
+                    495.38726806640625
+                ],
+                [
+                    390.47450256347656,
+                    482.8817138671875
+                ]
+            ],
+            "frameNumber": 331,
+            "frameSeries": [
+                331
+            ],
+            "scoreAfter": null,
+            "eventWindow": {
+                "preMs": 33,
+                "postMs": 100
+            },
+            "confidence": 0.7887550592422485,
+            "source": "MODEL",
+            "detections": [
+                {
+                    "frameNumber": 331,
+                    "x": null,
+                    "y": null,
+                    "width": null,
+                    "height": null,
+                    "confidence": 0.7887550592422485
+                }
+            ]
+        }
+    },
+    {
+        "id": "0584fcd0-ac4d-4c9a-a437-55f0e8a821c7",
+        "timestampMs": 2775,
+        "timestampSeries": [
+            2742,
+            2775,
+            2875
+        ],
+        "frameSeries": [
+            333
+        ],
+        "type": "FASTEST_SHOT",
+        "title": "Fastest Shot",
+        "description": "Fast Shot",
+        "player": 2,
+        "importance": 8,
+        "metadata": {
+            "shotSpeed": 78.4,
+            "rallyLength": null,
+            "shotType": "FOREHAND",
+            "ballTrajectory": [
+                [
+                    1407.9749145507812,
+                    495.8866271972656
+                ],
+                [
+                    500.7669982910156,
+                    475.5082244873047
+                ]
+            ],
+            "frameNumber": 333,
+            "frameSeries": [
+                333
+            ],
+            "scoreAfter": null,
+            "eventWindow": {
+                "preMs": 33,
+                "postMs": 100
+            },
+            "confidence": 0.7168949842453003,
+            "source": "MODEL",
+            "detections": [
+                {
+                    "frameNumber": 333,
+                    "x": null,
+                    "y": null,
+                    "width": null,
+                    "height": null,
+                    "confidence": 0.7168949842453003
+                }
+            ]
+        }
+    },
+    {
+        "id": "fddc85fd-1776-447f-b8c2-18c0ed6aa30a",
+        "timestampMs": 5475,
+        "timestampSeries": [
+            5442,
+            5475,
+            5575
+        ],
+        "frameSeries": [
+            657
+        ],
+        "type": "FASTEST_SHOT",
+        "title": "Fastest Shot",
+        "description": "Fast Shot",
+        "player": 1,
+        "importance": 8,
+        "metadata": {
+            "shotSpeed": 115.2,
+            "rallyLength": null,
+            "shotType": "FOREHAND",
+            "ballTrajectory": [
+                [
+                    102.07550430297852,
+                    535.286865234375
+                ],
+                [
+                    1434.4794311523438,
+                    477.3201141357422
+                ]
+            ],
+            "frameNumber": 657,
+            "frameSeries": [
+                657
+            ],
+            "scoreAfter": null,
+            "eventWindow": {
+                "preMs": 33,
+                "postMs": 100
+            },
+            "confidence": 0.4056444466114044,
+            "source": "MODEL",
+            "detections": [
+                {
+                    "frameNumber": 657,
+                    "x": null,
+                    "y": null,
+                    "width": null,
+                    "height": null,
+                    "confidence": 0.4056444466114044
+                }
+            ]
+        }
+    },
+    {
+        "id": "f234ebde-43dc-4d6f-b2a6-d08a42eeb0a2",
+        "timestampMs": 5600,
+        "timestampSeries": [
+            5567,
+            5600,
+            5700
+        ],
+        "frameSeries": [
+            672
+        ],
+        "type": "FASTEST_SHOT",
+        "title": "Fastest Shot",
+        "description": "Fast Shot",
+        "player": 2,
+        "importance": 8,
+        "metadata": {
+            "shotSpeed": 79.0,
+            "rallyLength": null,
+            "shotType": "FOREHAND",
+            "ballTrajectory": [
+                [
+                    1434.4794311523438,
+                    477.3201141357422
+                ],
+                [
+                    520.5235900878906,
+                    485.4474182128906
+                ]
+            ],
+            "frameNumber": 672,
+            "frameSeries": [
+                672
+            ],
+            "scoreAfter": null,
+            "eventWindow": {
+                "preMs": 33,
+                "postMs": 100
+            },
+            "confidence": 0.8323289155960083,
+            "source": "MODEL",
+            "detections": [
+                {
+                    "frameNumber": 672,
+                    "x": null,
+                    "y": null,
+                    "width": null,
+                    "height": null,
+                    "confidence": 0.8323289155960083
+                }
+            ]
+        }
+    },
+    {
+        "id": "82135e8d-7dfe-484a-9a3f-fab2cec86bee",
+        "timestampMs": 6325,
+        "timestampSeries": [
+            6292,
+            6325,
+            6425
+        ],
+        "frameSeries": [
+            759
+        ],
+        "type": "FASTEST_SHOT",
+        "title": "Fastest Shot",
+        "description": "Fast Shot",
+        "player": 1,
+        "importance": 8,
+        "metadata": {
+            "shotSpeed": 103.2,
+            "rallyLength": null,
+            "shotType": "FOREHAND",
+            "ballTrajectory": [
+                [
+                    209.36720275878906,
+                    522.8048553466797
+                ],
+                [
+                    1401.29736328125,
+                    447.4324951171875
+                ]
+            ],
+            "frameNumber": 759,
+            "frameSeries": [
+                759
+            ],
+            "scoreAfter": null,
+            "eventWindow": {
+                "preMs": 33,
+                "postMs": 100
+            },
+            "confidence": 0.5418563485145569,
+            "source": "MODEL",
+            "detections": [
+                {
+                    "frameNumber": 759,
+                    "x": null,
+                    "y": null,
+                    "width": null,
+                    "height": null,
+                    "confidence": 0.5418563485145569
+                }
+            ]
+        }
+    },
+    {
+        "id": "456ccea7-c66d-4fba-86e2-adf5586474a6",
+        "timestampMs": 6483,
+        "timestampSeries": [
+            6450,
+            6483,
+            6583
+        ],
+        "frameSeries": [
+            778
+        ],
+        "type": "FASTEST_SHOT",
+        "title": "Fastest Shot",
+        "description": "Fast Shot",
+        "player": 2,
+        "importance": 8,
+        "metadata": {
+            "shotSpeed": 95.3,
+            "rallyLength": null,
+            "shotType": "FOREHAND",
+            "ballTrajectory": [
+                [
+                    1434.566162109375,
+                    477.1595153808594
+                ],
+                [
+                    331.48077392578125,
+                    494.82383728027344
+                ]
+            ],
+            "frameNumber": 778,
+            "frameSeries": [
+                778
+            ],
+            "scoreAfter": null,
+            "eventWindow": {
+                "preMs": 33,
+                "postMs": 100
+            },
+            "confidence": 0.4615291655063629,
+            "source": "MODEL",
+            "detections": [
+                {
+                    "frameNumber": 778,
+                    "x": null,
+                    "y": null,
+                    "width": null,
+                    "height": null,
+                    "confidence": 0.4615291655063629
+                }
+            ]
+        }
+    },
+    {
+        "id": "333e98a2-f267-4551-8f3d-f38611611f88",
+        "timestampMs": 7367,
+        "timestampSeries": [
+            7334,
+            7367,
+            7467
+        ],
+        "frameSeries": [
+            884
+        ],
+        "type": "FASTEST_SHOT",
+        "title": "Fastest Shot",
+        "description": "Fast Shot",
+        "player": 1,
+        "importance": 8,
+        "metadata": {
+            "shotSpeed": 101.9,
+            "rallyLength": null,
+            "shotType": "FOREHAND",
+            "ballTrajectory": [
+                [
+                    226.60669708251953,
+                    533.5074157714844
+                ],
+                [
+                    1402.8653564453125,
+                    448.22418212890625
+                ]
+            ],
+            "frameNumber": 884,
+            "frameSeries": [
+                884
+            ],
+            "scoreAfter": null,
+            "eventWindow": {
+                "preMs": 33,
+                "postMs": 100
+            },
+            "confidence": 0.3915694057941437,
+            "source": "MODEL",
+            "detections": [
+                {
+                    "frameNumber": 884,
+                    "x": null,
+                    "y": null,
+                    "width": null,
+                    "height": null,
+                    "confidence": 0.3915694057941437
+                }
+            ]
+        }
+    },
+    {
+        "id": "819041ff-0827-4919-b761-3630eb051282",
+        "timestampMs": 7417,
+        "timestampSeries": [
+            7384,
+            7417,
+            7517
+        ],
+        "frameSeries": [
+            890
+        ],
+        "type": "FASTEST_SHOT",
+        "title": "Fastest Shot",
+        "description": "Fast Shot",
+        "player": 2,
+        "importance": 8,
+        "metadata": {
+            "shotSpeed": 78.9,
+            "rallyLength": null,
+            "shotType": "FOREHAND",
+            "ballTrajectory": [
+                [
+                    1402.8653564453125,
+                    448.22418212890625
+                ],
+                [
+                    490.24859619140625,
+                    454.9447021484375
+                ]
+            ],
+            "frameNumber": 890,
+            "frameSeries": [
+                890
+            ],
+            "scoreAfter": null,
+            "eventWindow": {
+                "preMs": 33,
+                "postMs": 100
+            },
+            "confidence": 0.5788621306419373,
+            "source": "MODEL",
+            "detections": [
+                {
+                    "frameNumber": 890,
+                    "x": null,
+                    "y": null,
+                    "width": null,
+                    "height": null,
+                    "confidence": 0.5788621306419373
+                }
+            ]
+        }
+    },
+    {
+        "id": "0a3234c5-b3dd-4014-ab34-94fee4eaf2b9",
+        "timestampMs": 8325,
+        "timestampSeries": [
+            8292,
+            8325,
+            8425
+        ],
+        "frameSeries": [
+            999
+        ],
+        "type": "FASTEST_SHOT",
+        "title": "Fastest Shot",
+        "description": "Fast Shot",
+        "player": 1,
+        "importance": 8,
+        "metadata": {
+            "shotSpeed": 106.6,
+            "rallyLength": null,
+            "shotType": "FOREHAND",
+            "ballTrajectory": [
+                [
+                    202.79873657226562,
+                    535.0065612792969
+                ],
+                [
+                    1435.7509765625,
+                    478.1285705566406
+                ]
+            ],
+            "frameNumber": 999,
+            "frameSeries": [
+                999
+            ],
+            "scoreAfter": null,
+            "eventWindow": {
+                "preMs": 33,
+                "postMs": 100
+            },
+            "confidence": 0.41825777292251587,
+            "source": "MODEL",
+            "detections": [
+                {
+                    "frameNumber": 999,
+                    "x": null,
+                    "y": null,
+                    "width": null,
+                    "height": null,
+                    "confidence": 0.41825777292251587
+                }
+            ]
+        }
+    },
+    {
+        "id": "e666fe9e-827b-4643-8f0c-d4ab6d5da040",
+        "timestampMs": 8358,
+        "timestampSeries": [
+            8325,
+            8358,
+            8458
+        ],
+        "frameSeries": [
+            1003
+        ],
+        "type": "FASTEST_SHOT",
+        "title": "Fastest Shot",
+        "description": "Fast Shot",
+        "player": 2,
+        "importance": 8,
+        "metadata": {
+            "shotSpeed": 101.2,
+            "rallyLength": null,
+            "shotType": "FOREHAND",
+            "ballTrajectory": [
+                [
+                    1435.7509765625,
+                    478.1285705566406
+                ],
+                [
+                    264.0547103881836,
+                    470.7451629638672
+                ]
+            ],
+            "frameNumber": 1003,
+            "frameSeries": [
+                1003
+            ],
+            "scoreAfter": null,
+            "eventWindow": {
+                "preMs": 33,
+                "postMs": 100
+            },
+            "confidence": 0.8315931558609009,
+            "source": "MODEL",
+            "detections": [
+                {
+                    "frameNumber": 1003,
+                    "x": null,
+                    "y": null,
+                    "width": null,
+                    "height": null,
+                    "confidence": 0.8315931558609009
+                }
+            ]
+        }
+    }
+]

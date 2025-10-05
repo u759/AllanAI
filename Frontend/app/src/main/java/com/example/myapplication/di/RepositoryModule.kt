@@ -2,6 +2,7 @@ package com.example.myapplication.di
 
 import com.example.myapplication.data.repository.ApiMatchRepository
 import com.example.myapplication.data.repository.MatchRepository
+import com.example.myapplication.data.repository.MockMatchRepository
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -36,6 +37,6 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun bindMatchRepository(
-        impl: ApiMatchRepository
+        impl: MockMatchRepository
     ): MatchRepository
 }
