@@ -48,10 +48,11 @@ class BallPosition:
 class EventDetector:
     """Detects table tennis events from ball trajectory."""
     
-    def __init__(self, fps: float, frame_height: int, frame_width: int):
+    def __init__(self, fps: float, frame_height: int, frame_width: int, pixels_per_meter: float = 1000.0):
         self.fps = fps
         self.frame_height = frame_height
         self.frame_width = frame_width
+        self.pixels_per_meter = pixels_per_meter  # Calibration for speed calculation
         self.history = deque(maxlen=30)  # Keep last 30 positions
         self.last_bounce_frame = -100
         self.rally_start_frame = 0
@@ -88,24 +89,23 @@ class EventDetector:
             
         # Check for Y-direction reversal (ball going up after going down)
         y_velocities = [positions[i+1].y - positions[i].y for i in range(len(positions)-1)]
-        
+        # Normalize bounce threshold to frame height
+        bounce_threshold = max(5, self.frame_height * 0.01)  # 1% of frame height
         if len(y_velocities) >= 4:
             # Look for pattern: negative (going up) to positive (going down) to negative (bouncing back up)
             for i in range(len(y_velocities) - 2):
-                if y_velocities[i] > 5 and y_velocities[i+1] > 5 and y_velocities[i+2] < -5:
+                if y_velocities[i] > bounce_threshold and y_velocities[i+1] > bounce_threshold and y_velocities[i+2] < -bounce_threshold:
                     # Detected bounce pattern
                     self.last_bounce_frame = current.frame
                     self.rally_shot_count += 1
-                    
                     # Calculate shot speed from trajectory
                     dx = abs(positions[-1].x - positions[-5].x)
                     dy = abs(positions[-1].y - positions[-5].y)
                     distance_pixels = (dx**2 + dy**2) ** 0.5
                     time_seconds = 4 / self.fps
                     speed_pixels_per_second = distance_pixels / time_seconds
-                    # Estimate real speed (rough calibration: 1000 pixels ≈ 1 meter at typical distance)
-                    speed_mps = speed_pixels_per_second / 1000.0 * 3.6  # Convert to km/h
-                    
+                    # Use calibrated pixels_per_meter for speed
+                    speed_mps = speed_pixels_per_second / self.pixels_per_meter * 3.6  # Convert to km/h
                     return {
                         "frame": current.frame,
                         "timestampMs": (current.frame / self.fps) * 1000.0,
@@ -139,9 +139,10 @@ class EventDetector:
         distance = (dx**2 + dy**2) ** 0.5
         
         # If ball moved more than 1/3 of frame width in 5 frames, it's fast
-        if distance > self.frame_width / 3:
-            speed_mps = (distance / 5) * self.fps / 1000.0 * 3.6
-            
+        fast_shot_threshold = self.frame_width / 3
+        if distance > fast_shot_threshold:
+            speed_pixels_per_second = (distance / 5) * self.fps
+            speed_mps = speed_pixels_per_second / self.pixels_per_meter * 3.6
             # Only report if significantly fast and not recently reported
             if speed_mps > 50 and current.frame - self.last_bounce_frame > 15:
                 return {
@@ -241,7 +242,9 @@ def analyze_video(video_path: str, output_json_path: str, confidence_threshold: 
         }
     }
     
-    detector = EventDetector(fps, frame_height, frame_width)
+    # You may want to calibrate pixels_per_meter for your camera setup
+    pixels_per_meter = 1000.0  # Default, adjust as needed for your production videos
+    detector = EventDetector(fps, frame_height, frame_width, pixels_per_meter)
     frame_idx = 0
     no_ball_frames = 0
     speeds = []

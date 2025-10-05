@@ -2,8 +2,8 @@ package com.backend.backend.dto;
 
 import java.util.List;
 
-public record HighlightsResponse(String playOfTheGame,
-                                 List<String> topRallies,
-                                 List<String> fastestShots,
-                                 List<String> bestServes) {
+public record HighlightsResponse(HighlightReferenceResponse playOfTheGame,
+                                 List<HighlightReferenceResponse> topRallies,
+                                 List<HighlightReferenceResponse> fastestShots,
+                                 List<HighlightReferenceResponse> bestServes) {
 }

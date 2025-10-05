@@ -22,6 +22,7 @@ public class MatchDocument {
     private List<Shot> shots = new ArrayList<>();
     private List<Event> events = new ArrayList<>();
     private Highlights highlights;
+    private ProcessingSummary processingSummary;
 
     public String getId() {
         return id;
@@ -111,6 +112,14 @@ public class MatchDocument {
         this.highlights = highlights;
     }
 
+    public ProcessingSummary getProcessingSummary() {
+        return processingSummary;
+    }
+
+    public void setProcessingSummary(ProcessingSummary processingSummary) {
+        this.processingSummary = processingSummary;
+    }
+
     public static class MatchStatistics {
         private Integer player1Score;
         private Integer player2Score;
@@ -170,11 +179,14 @@ public class MatchDocument {
 
     public static class Shot {
         private long timestampMs;
+        private List<Long> timestampSeries = new ArrayList<>();
+        private List<Integer> frameSeries = new ArrayList<>();
         private int player;
         private ShotType shotType;
         private double speed;
         private double accuracy;
         private ShotResult result;
+        private List<Detection> detections = new ArrayList<>();
 
         public long getTimestampMs() {
             return timestampMs;
@@ -182,6 +194,22 @@ public class MatchDocument {
 
         public void setTimestampMs(long timestampMs) {
             this.timestampMs = timestampMs;
+        }
+
+        public List<Long> getTimestampSeries() {
+            return timestampSeries;
+        }
+
+        public void setTimestampSeries(List<Long> timestampSeries) {
+            this.timestampSeries = timestampSeries;
+        }
+
+        public List<Integer> getFrameSeries() {
+            return frameSeries;
+        }
+
+        public void setFrameSeries(List<Integer> frameSeries) {
+            this.frameSeries = frameSeries;
         }
 
         public int getPlayer() {
@@ -223,11 +251,21 @@ public class MatchDocument {
         public void setResult(ShotResult result) {
             this.result = result;
         }
+
+        public List<Detection> getDetections() {
+            return detections;
+        }
+
+        public void setDetections(List<Detection> detections) {
+            this.detections = detections;
+        }
     }
 
     public static class Event {
         private String id;
         private long timestampMs;
+        private List<Long> timestampSeries = new ArrayList<>();
+        private List<Integer> frameSeries = new ArrayList<>();
         private EventType type;
         private String title;
         private String description;
@@ -249,6 +287,22 @@ public class MatchDocument {
 
         public void setTimestampMs(long timestampMs) {
             this.timestampMs = timestampMs;
+        }
+
+        public List<Long> getTimestampSeries() {
+            return timestampSeries;
+        }
+
+        public void setTimestampSeries(List<Long> timestampSeries) {
+            this.timestampSeries = timestampSeries;
+        }
+
+        public List<Integer> getFrameSeries() {
+            return frameSeries;
+        }
+
+        public void setFrameSeries(List<Integer> frameSeries) {
+            this.frameSeries = frameSeries;
         }
 
         public EventType getType() {
@@ -306,10 +360,12 @@ public class MatchDocument {
         private String shotType;
         private List<List<Double>> ballTrajectory;
         private Integer frameNumber;
+        private List<Integer> frameSeries = new ArrayList<>();
         private ScoreState scoreAfter;
         private EventWindow eventWindow;
         private Double confidence;
         private String source;
+        private List<Detection> detections = new ArrayList<>();
 
         public Double getShotSpeed() {
             return shotSpeed;
@@ -351,6 +407,14 @@ public class MatchDocument {
             this.frameNumber = frameNumber;
         }
 
+        public List<Integer> getFrameSeries() {
+            return frameSeries;
+        }
+
+        public void setFrameSeries(List<Integer> frameSeries) {
+            this.frameSeries = frameSeries;
+        }
+
         public ScoreState getScoreAfter() {
             return scoreAfter;
         }
@@ -381,6 +445,14 @@ public class MatchDocument {
 
         public void setSource(String source) {
             this.source = source;
+        }
+
+        public List<Detection> getDetections() {
+            return detections;
+        }
+
+        public void setDetections(List<Detection> detections) {
+            this.detections = detections;
         }
     }
 
@@ -443,41 +515,167 @@ public class MatchDocument {
     }
 
     public static class Highlights {
-        private String playOfTheGame;
-        private List<String> topRallies = new ArrayList<>();
-        private List<String> fastestShots = new ArrayList<>();
-        private List<String> bestServes = new ArrayList<>();
+        private HighlightRef playOfTheGame;
+        private List<HighlightRef> topRallies = new ArrayList<>();
+        private List<HighlightRef> fastestShots = new ArrayList<>();
+        private List<HighlightRef> bestServes = new ArrayList<>();
 
-        public String getPlayOfTheGame() {
+        public HighlightRef getPlayOfTheGame() {
             return playOfTheGame;
         }
 
-        public void setPlayOfTheGame(String playOfTheGame) {
+        public void setPlayOfTheGame(HighlightRef playOfTheGame) {
             this.playOfTheGame = playOfTheGame;
         }
 
-        public List<String> getTopRallies() {
+        public List<HighlightRef> getTopRallies() {
             return topRallies;
         }
 
-        public void setTopRallies(List<String> topRallies) {
+        public void setTopRallies(List<HighlightRef> topRallies) {
             this.topRallies = topRallies;
         }
 
-        public List<String> getFastestShots() {
+        public List<HighlightRef> getFastestShots() {
             return fastestShots;
         }
 
-        public void setFastestShots(List<String> fastestShots) {
+        public void setFastestShots(List<HighlightRef> fastestShots) {
             this.fastestShots = fastestShots;
         }
 
-        public List<String> getBestServes() {
+        public List<HighlightRef> getBestServes() {
             return bestServes;
         }
 
-        public void setBestServes(List<String> bestServes) {
-                this.bestServes = bestServes;
+        public void setBestServes(List<HighlightRef> bestServes) {
+            this.bestServes = bestServes;
+        }
+    }
+
+    public static class HighlightRef {
+        private String eventId;
+        private Long timestampMs;
+        private List<Long> timestampSeries = new ArrayList<>();
+
+        public String getEventId() {
+            return eventId;
+        }
+
+        public void setEventId(String eventId) {
+            this.eventId = eventId;
+        }
+
+        public Long getTimestampMs() {
+            return timestampMs;
+        }
+
+        public void setTimestampMs(Long timestampMs) {
+            this.timestampMs = timestampMs;
+        }
+
+        public List<Long> getTimestampSeries() {
+            return timestampSeries;
+        }
+
+        public void setTimestampSeries(List<Long> timestampSeries) {
+            this.timestampSeries = timestampSeries;
+        }
+    }
+
+    public static class Detection {
+        private Integer frameNumber;
+        private Double x;
+        private Double y;
+        private Double width;
+        private Double height;
+        private Double confidence;
+
+        public Integer getFrameNumber() {
+            return frameNumber;
+        }
+
+        public void setFrameNumber(Integer frameNumber) {
+            this.frameNumber = frameNumber;
+        }
+
+        public Double getX() {
+            return x;
+        }
+
+        public void setX(Double x) {
+            this.x = x;
+        }
+
+        public Double getY() {
+            return y;
+        }
+
+        public void setY(Double y) {
+            this.y = y;
+        }
+
+        public Double getWidth() {
+            return width;
+        }
+
+        public void setWidth(Double width) {
+            this.width = width;
+        }
+
+        public Double getHeight() {
+            return height;
+        }
+
+        public void setHeight(Double height) {
+            this.height = height;
+        }
+
+        public Double getConfidence() {
+            return confidence;
+        }
+
+        public void setConfidence(Double confidence) {
+            this.confidence = confidence;
+        }
+    }
+
+    public static class ProcessingSummary {
+        private String primarySource;
+        private boolean heuristicFallbackUsed;
+        private List<String> sources = new ArrayList<>();
+        private List<String> notes = new ArrayList<>();
+
+        public String getPrimarySource() {
+            return primarySource;
+        }
+
+        public void setPrimarySource(String primarySource) {
+            this.primarySource = primarySource;
+        }
+
+        public boolean isHeuristicFallbackUsed() {
+            return heuristicFallbackUsed;
+        }
+
+        public void setHeuristicFallbackUsed(boolean heuristicFallbackUsed) {
+            this.heuristicFallbackUsed = heuristicFallbackUsed;
+        }
+
+        public List<String> getSources() {
+            return sources;
+        }
+
+        public void setSources(List<String> sources) {
+            this.sources = sources;
+        }
+
+        public List<String> getNotes() {
+            return notes;
+        }
+
+        public void setNotes(List<String> notes) {
+            this.notes = notes;
         }
     }
 }

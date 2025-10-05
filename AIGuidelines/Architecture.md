@@ -374,42 +374,99 @@ DELETE /api/matches/{id}            # Delete match
   "shots": [
     {
       "timestampMs": Number,
-      "player": Number, // 1 or 2
-      "shotType": String, // SERVE, FOREHAND, BACKHAND
+      "timestampSeries": [Number],      // Array of ms timestamps (primary + context frames)
+      "frameSeries": [Number],          // Array of frame indices matching timestampSeries
+      "player": Number,                 // 1 or 2
+      "shotType": String,               // SERVE, FOREHAND, BACKHAND
       "speed": Number,
       "accuracy": Number,
-      "result": String // IN, OUT, NET
+      "result": String,                 // IN, OUT, NET
+      "detections": [                   // Ball bounding boxes detected for this shot
+        {
+          "frameNumber": Number,
+          "x": Number,
+          "y": Number,
+          "width": Number,
+          "height": Number,
+          "confidence": Number
+        }
+      ]
     }
   ],
   "events": [
     {
       "_id": ObjectId,
       "timestampMs": Number,
-      "type": String, // PLAY_OF_GAME, SCORE, MISS, RALLY_HIGHLIGHT, SERVE_ACE
+      "timestampSeries": [Number],      // Array of ms timestamps (primary + context frames)
+      "frameSeries": [Number],          // Array of frame indices matching timestampSeries
+      "type": String,                   // PLAY_OF_GAME, SCORE, MISS, RALLY_HIGHLIGHT, SERVE_ACE, FASTEST_SHOT
       "title": String,
       "description": String,
-      "player": Number, // 1 or 2, or null for both
-      "importance": Number, // 1-10 rating for highlight priority
+      "player": Number,                 // 1 or 2, or null for both
+      "importance": Number,             // 1-10 rating for highlight priority
       "metadata": {
         "shotSpeed": Number,
         "rallyLength": Number,
         "shotType": String,
-        "ballTrajectory": [[Number]], // Array of [x, y] coordinates
-        "frameNumber": Number,        // Source frame as provided by detectors
+        "ballTrajectory": [[Number]],   // Array of [x, y] coordinates
+        "frameNumber": Number,          // Source frame as provided by detectors
+        "frameSeries": [Number],        // Redundant frame series (kept for legacy; prefer event.frameSeries)
         "eventWindow": {
-          "preMs": Number,           // Typically 4 frames (≈33ms each) before event
-          "postMs": Number           // Typically 12 frames after event
+          "preMs": Number,              // Typically 4 frames (≈33ms each) before event
+          "postMs": Number              // Typically 12 frames after event
         },
-        "confidence": Number,         // Model confidence score 0-1
-        "source": String              // MANUAL | MODEL | HYBRID
+        "scoreAfter": {                 // Score state after this event
+          "player1": Number,
+          "player2": Number
+        },
+        "confidence": Number,           // Model confidence score 0-1
+        "source": String,               // MODEL | HEURISTIC
+        "detections": [                 // Ball bounding boxes detected for this event
+          {
+            "frameNumber": Number,
+            "x": Number,
+            "y": Number,
+            "width": Number,
+            "height": Number,
+            "confidence": Number
+          }
+        ]
       }
     }
   ],
   "highlights": {
-    "playOfTheGame": ObjectId, // Reference to events._id
-    "topRallies": [ObjectId],
-    "fastestShots": [ObjectId],
-    "bestServes": [ObjectId]
+    "playOfTheGame": {                // Reference to primary event
+      "eventId": ObjectId,
+      "timestampMs": Number,
+      "timestampSeries": [Number]
+    },
+    "topRallies": [                   // Array of highlight references
+      {
+        "eventId": ObjectId,
+        "timestampMs": Number,
+        "timestampSeries": [Number]
+      }
+    ],
+    "fastestShots": [
+      {
+        "eventId": ObjectId,
+        "timestampMs": Number,
+        "timestampSeries": [Number]
+      }
+    ],
+    "bestServes": [
+      {
+        "eventId": ObjectId,
+        "timestampMs": Number,
+        "timestampSeries": [Number]
+      }
+    ]
+  },
+  "processingSummary": {              // Tracks source of analysis
+    "primarySource": String,          // MODEL or HEURISTIC
+    "heuristicFallbackUsed": Boolean,
+    "sources": [String],              // List of all sources used
+    "notes": [String]                 // Optional processing notes
   }
 }
 ```

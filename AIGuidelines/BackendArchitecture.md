@@ -2,7 +2,66 @@
 
 ## Overview
 
-The AllanAI backend is built with Spring Boot and provides RESTful APIs for video upload, processing orchestration, and statistics retrieval. It integrates with OpenCV for computer vision analysis of table tennis gameplay.
+The AllanAI backe    public static class Event {
+        private String id;
+     public static class EventWindow {
+        private Integer preMs;   // usually 4 frames ≈ 33 ms each
+        private Integer postMs;  // usually 12 frames
+    }
+
+    public static class Highlights {
+        private HighlightRef playOfTheGame;
+        private List<HighlightRef> topRallies = new ArrayList<>();
+        private List<HighlightRef> fastestShots = new ArrayList<>();
+        private List<HighlightRef> bestServes = new ArrayList<>();
+    }
+
+    public static class HighlightRef {
+        private String eventId;
+        private Long timestampMs;
+        private List<Long> timestampSeries = new ArrayList<>();
+    }
+
+    public static class Detection {
+        private Integer frameNumber;
+        private Double x;
+        private Double y;
+        private Double width;
+        private Double height;
+        private Double confidence;
+    }
+
+    public static class ProcessingSummary {
+        private String primarySource;           // MODEL or HEURISTIC
+        private Boolean heuristicFallbackUsed;
+        private List<String> sources = new ArrayList<>();
+        private List<String> notes = new ArrayList<>();
+    }
+}
+``` private Long timestampMs;
+        private List<Long> timestampSeries = new ArrayList<>();  // Context frame timestamps
+        private List<Integer> frameSeries = new ArrayList<>();    // Context frame indices
+        private EventType type;
+        private String title;
+        private String description;
+        private Integer player;
+        private Integer importance;
+        private EventMetadata metadata;
+    }
+
+    public static class EventMetadata {
+        private Double shotSpeed;
+        private Integer rallyLength;
+        private String shotType;
+        private Integer frameNumber;               // 120 fps-aligned source frame
+        private List<Integer> frameSeries = new ArrayList<>();  // Redundant; prefer Event.frameSeries
+        private EventWindow eventWindow;
+        private List<List<Double>> ballTrajectory;
+        private ScoreState scoreAfter;
+        private Double confidence;
+        private String source;                     // MODEL | HEURISTIC
+        private List<Detection> detections = new ArrayList<>();  // Ball bounding boxes
+    }ring Boot and provides RESTful APIs for video upload, processing orchestration, and statistics retrieval. It integrates with OpenCV for computer vision analysis of table tennis gameplay.
 
 ### Dataset & Event Annotation Strategy
 - **Benchmark references**: TTNet (CVPR 2020 workshop) demonstrates multi-task inference on the OpenTTGames dataset; AllanAI extends these ideas with modular services and MongoDB persistence.
@@ -77,11 +136,28 @@ public class MatchDocument {
     private List<Shot> shots = new ArrayList<>();
     private List<Event> events = new ArrayList<>();
     private Highlights highlights;
+    private ProcessingSummary processingSummary;
+
+    public static class Shot {
+        private Long timestampMs;
+        private List<Long> timestampSeries = new ArrayList<>();
+        private List<Integer> frameSeries = new ArrayList<>();
+        private Integer player;
+        private ShotType shotType;
+        private Double speed;
+        private Double accuracy;
+        private ShotResult result;
+        private List<Detection> detections = new ArrayList<>();
+    }
 
     public static class Event {
         private String id;
         private Long timestampMs;
+        private List<Long> timestampSeries = new ArrayList<>();
+        private List<Integer> frameSeries = new ArrayList<>();
         private EventType type;
+        private String title;
+        private String description;
         private Integer player;
         private Integer importance;
         private EventMetadata metadata;

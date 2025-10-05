@@ -65,6 +65,8 @@ public class ModelInferenceResult {
     public static class ModelEvent {
         private Long frame;
         private Double timestampMs;
+        private List<Double> timestampSeries;
+        private List<Integer> frameSeries;
         private String label;
         private String type;
         private Double confidence;
@@ -78,6 +80,7 @@ public class ModelInferenceResult {
         private Integer postEventFrames;
         private Integer frameNumber;
         private List<List<Double>> ballTrajectory;
+    private List<ModelDetection> detections;
 
         public Long getFrame() {
             return frame;
@@ -93,6 +96,22 @@ public class ModelInferenceResult {
 
         public void setTimestampMs(Double timestampMs) {
             this.timestampMs = timestampMs;
+        }
+
+        public List<Double> getTimestampSeries() {
+            return timestampSeries;
+        }
+
+        public void setTimestampSeries(List<Double> timestampSeries) {
+            this.timestampSeries = timestampSeries;
+        }
+
+        public List<Integer> getFrameSeries() {
+            return frameSeries;
+        }
+
+        public void setFrameSeries(List<Integer> frameSeries) {
+            this.frameSeries = frameSeries;
         }
 
         public String getLabel() {
@@ -199,6 +218,14 @@ public class ModelInferenceResult {
             this.ballTrajectory = ballTrajectory;
         }
 
+        public List<ModelDetection> getDetections() {
+            return detections;
+        }
+
+        public void setDetections(List<ModelDetection> detections) {
+            this.detections = detections;
+        }
+
         public void applyDefaults(ModelProperties properties) {
             if (preEventFrames == null) {
                 preEventFrames = properties.getPreEventFrames();
@@ -215,17 +242,29 @@ public class ModelInferenceResult {
             if (ballTrajectory == null) {
                 ballTrajectory = Collections.emptyList();
             }
+            if (timestampSeries == null) {
+                timestampSeries = Collections.emptyList();
+            }
+            if (frameSeries == null) {
+                frameSeries = Collections.emptyList();
+            }
+            if (detections == null) {
+                detections = Collections.emptyList();
+            }
         }
     }
 
     public static class ModelShot {
         private Long frame;
+        private List<Double> timestampSeries;
+        private List<Integer> frameSeries;
         private Integer player;
         private Double speed;
         private Double accuracy;
         private String shotType;
         private String result;
         private Double confidence;
+        private List<ModelDetection> detections;
 
         public Long getFrame() {
             return frame;
@@ -233,6 +272,22 @@ public class ModelInferenceResult {
 
         public void setFrame(Long frame) {
             this.frame = frame;
+        }
+
+        public List<Double> getTimestampSeries() {
+            return timestampSeries;
+        }
+
+        public void setTimestampSeries(List<Double> timestampSeries) {
+            this.timestampSeries = timestampSeries;
+        }
+
+        public List<Integer> getFrameSeries() {
+            return frameSeries;
+        }
+
+        public void setFrameSeries(List<Integer> frameSeries) {
+            this.frameSeries = frameSeries;
         }
 
         public Integer getPlayer() {
@@ -283,6 +338,14 @@ public class ModelInferenceResult {
             this.confidence = confidence;
         }
 
+        public List<ModelDetection> getDetections() {
+            return detections;
+        }
+
+        public void setDetections(List<ModelDetection> detections) {
+            this.detections = detections;
+        }
+
         public void applyDefaults() {
             if (shotType == null) {
                 shotType = "UNKNOWN";
@@ -293,6 +356,72 @@ public class ModelInferenceResult {
             if (confidence == null) {
                 confidence = 0.5;
             }
+            if (timestampSeries == null) {
+                timestampSeries = Collections.emptyList();
+            }
+            if (frameSeries == null) {
+                frameSeries = Collections.emptyList();
+            }
+            if (detections == null) {
+                detections = Collections.emptyList();
+            }
+        }
+    }
+
+    public static class ModelDetection {
+        private Integer frameNumber;
+        private Double x;
+        private Double y;
+        private Double width;
+        private Double height;
+        private Double confidence;
+
+        public Integer getFrameNumber() {
+            return frameNumber;
+        }
+
+        public void setFrameNumber(Integer frameNumber) {
+            this.frameNumber = frameNumber;
+        }
+
+        public Double getX() {
+            return x;
+        }
+
+        public void setX(Double x) {
+            this.x = x;
+        }
+
+        public Double getY() {
+            return y;
+        }
+
+        public void setY(Double y) {
+            this.y = y;
+        }
+
+        public Double getWidth() {
+            return width;
+        }
+
+        public void setWidth(Double width) {
+            this.width = width;
+        }
+
+        public Double getHeight() {
+            return height;
+        }
+
+        public void setHeight(Double height) {
+            this.height = height;
+        }
+
+        public Double getConfidence() {
+            return confidence;
+        }
+
+        public void setConfidence(Double confidence) {
+            this.confidence = confidence;
         }
     }
 

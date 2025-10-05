@@ -2,7 +2,7 @@
 
 ## Overview
 
-This guide explains how to integrate the YOLOv11-based ping pong ball detection model (trained on the OpenTTGames dataset) into the AllanAI backend for automated match analysis.
+This guide explains how to integrate the YOLOv11-based ping pong ball detection model (trained on the OpenTTGames dataset) into the AllanAI backend for automated match analysis. The backend now persists multi-timestamp timelines, frame series, and detection metadata, so the model output you generate should include these richer structures wherever possible.
 
 ## Model Background
 
@@ -12,7 +12,8 @@ This guide explains how to integrate the YOLOv11-based ping pong ball detection 
 - **Capabilities**: 
   - Ball position detection (x, y coordinates per frame)
   - Event detection (bounces, net hits, serves)
-  - Frame-level annotations with bounding boxes
+    - Frame-level annotations with bounding boxes
+    - Optional multi-timestamp/frame series aligned to the video FPS
 - **Citation**: TTNet research paper (Voeikov et al., CVPR 2020)
 
 ### Training Details
@@ -196,12 +197,27 @@ Your existing `ModelEventDetectionService` is already configured to execute exte
 The service will:
 1. Execute: `python model_service.py <video_path> <output_json>`
 2. Read the JSON output containing detections
-3. Parse into `ModelInferenceResult` with events, shots, and statistics
+3. Parse into `ModelInferenceResult` with events, shots, statistics, timeline series, and detection metadata
 4. Return to `MatchProcessingService` for integration
+
+### 3a. Backend Persistence Contract
+
+The backend normalizes model output and stores it in MongoDB using the `MatchDocument` structure described in `AIGuidelines/BackendArchitecture.md`. Keep the following expectations in mind when emitting JSON:
+
+- **Timeline fidelity** – Provide `timestampMs` *and* the optional `timestampSeries`/`frameSeries` arrays for events and shots. The service deduplicates and sorts these, preserving additional context frames around highlights even when fallback windows are used.
+- **Detection metadata** – Include a `detections` array with bounding boxes (frame number, x/y/width/height, confidence) whenever the model tracks the ball in that interval. Missing detections trigger heuristic placeholders.
+- **Processing summary** – Accurate confidence values and explicit timestamps allow the backend to set `processingSummary.primarySource` to `MODEL` and flag `heuristicFallbackUsed` only when necessary. Heuristic paths add notes automatically, but richer model output keeps this summary authoritative.
+- **Highlight references** – Highlights reference events via `HighlightRef` objects (event ID + timestamps) that the backend derives from the processed event list. Accurate timestamps and ordering ensure highlight playlists and cross-links stay consistent.
 
 ### 4. Expected JSON Output Format
 
-The Python service should output JSON matching your `ModelInferenceResult` structure:
+The Python service should output JSON matching your `ModelInferenceResult` structure. The backend will transform this into the final MongoDB schema by:
+- Generating `_id`, `title`, `description` for events
+- Building `eventWindow` from `preEventFrames`/`postEventFrames`
+- Creating `highlights` and `processingSummary` structures
+- Adding top-level match metadata (`createdAt`, `status`, etc.)
+
+**Python model output format:**
 
 ```json
 {
@@ -210,6 +226,8 @@ The Python service should output JSON matching your `ModelInferenceResult` struc
     {
       "frame": 186,
       "timestampMs": 1550.0,
+      "timestampSeries": [1480.0, 1550.0, 1620.0],
+      "frameSeries": [178, 186, 194],
       "type": "bounce",
       "label": "Ball Bounce",
       "confidence": 0.92,
@@ -221,18 +239,41 @@ The Python service should output JSON matching your `ModelInferenceResult` struc
       "ballTrajectory": [[450.2, 320.5], [455.1, 280.3]],
       "preEventFrames": 4,
       "postEventFrames": 12,
-      "frameNumber": 186
+      "frameNumber": 186,
+      "detections": [
+        {
+          "frameNumber": 186,
+          "x": 452.1,
+          "y": 278.4,
+          "width": 32.0,
+          "height": 32.0,
+          "confidence": 0.92
+        }
+      ]
     }
   ],
   "shots": [
     {
       "frame": 185,
+      "timestampMs": 1541.67,
+      "timestampSeries": [1472.0, 1541.67],
+      "frameSeries": [177, 185],
       "player": 1,
       "speed": 45.2,
       "accuracy": 85.0,
       "shotType": "forehand",
       "result": "in",
-      "confidence": 0.89
+      "confidence": 0.89,
+      "detections": [
+        {
+          "frameNumber": 185,
+          "x": 448.0,
+          "y": 300.5,
+          "width": 30.0,
+          "height": 30.0,
+          "confidence": 0.88
+        }
+      ]
     }
   ],
   "statistics": {
@@ -245,6 +286,12 @@ The Python service should output JSON matching your `ModelInferenceResult` struc
   }
 }
 ```
+
+**Key differences from MongoDB schema:**
+- **Events**: Python outputs flat structure with `rallyLength`/`shotSpeed` at top level; backend moves these into `metadata` during transformation
+- **Shots**: Python must include `timestampMs` alongside `frame` (calculate as `frame / fps * 1000`)
+- **Backend-generated fields**: `_id`, `title`, `description`, `eventWindow`, `highlights`, `processingSummary` are created by `MatchProcessingService`
+- **Top-level match fields**: `createdAt`, `status`, `videoPath`, etc. are managed by the backend service layer
 
 ### 5. Testing the Integration
 
@@ -269,7 +316,7 @@ curl http://localhost:8080/api/matches/{id}/events
 
 ### 6. Fallback Behavior
 
-If the model fails or is unavailable, the backend automatically falls back to OpenCV heuristic processing:
+If the model fails or is unavailable, the backend automatically falls back to OpenCV heuristic processing. The resulting document records this in `processingSummary.heuristicFallbackUsed` and appends `HEURISTIC` to the `sources` list so downstream systems can flag the run:
 
 ```java
 // In MatchProcessingService.processVideo()
@@ -283,6 +330,8 @@ if (inference.isPresent() && !inference.get().getEvents().isEmpty()) {
     applyHeuristicProcessing(match, videoPath, metadata);
 }
 ```
+
+Even in fallback mode the service synthesizes `timestampSeries`, `frameSeries`, and minimal `detections` so the schema stays consistent for highlights and playback.
 
 ## Model Capabilities & Limitations
 

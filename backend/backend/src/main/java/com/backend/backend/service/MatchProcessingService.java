@@ -7,15 +7,19 @@ import com.backend.backend.model.MatchDocument;
 import com.backend.backend.model.MatchDocument.Event;
 import com.backend.backend.model.MatchDocument.EventMetadata;
 import com.backend.backend.model.MatchDocument.EventWindow;
+import com.backend.backend.model.MatchDocument.Detection;
 import com.backend.backend.model.MatchDocument.Highlights;
+import com.backend.backend.model.MatchDocument.HighlightRef;
 import com.backend.backend.model.MatchDocument.MatchStatistics;
 import com.backend.backend.model.MatchDocument.ScoreState;
 import com.backend.backend.model.MatchDocument.Shot;
+import com.backend.backend.model.MatchDocument.ProcessingSummary;
 import com.backend.backend.model.MatchStatus;
 import com.backend.backend.model.ShotResult;
 import com.backend.backend.model.ShotType;
 import com.backend.backend.service.model.ModelInferenceResult;
 import com.backend.backend.service.model.ModelInferenceResult.ModelEvent;
+import com.backend.backend.service.model.ModelInferenceResult.ModelDetection;
 import com.backend.backend.service.model.ModelInferenceResult.ModelShot;
 import com.backend.backend.service.model.ModelInferenceResult.ModelStatistics;
 import org.opencv.core.Core;
@@ -35,6 +39,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -93,7 +98,7 @@ public class MatchProcessingService {
             applyModelResults(match, inference.get(), metadata);
         } else {
             LOGGER.warn("Research model unavailable or returned no events for match {}; falling back to heuristic processing", match.getId());
-            applyHeuristicProcessing(match, videoPath, metadata);
+            applyHeuristicProcessing(match, videoPath, metadata, inference.isPresent());
         }
     }
 
@@ -103,12 +108,16 @@ public class MatchProcessingService {
         List<Shot> shots = new ArrayList<>();
         for (ModelShot modelShot : result.getShots()) {
             Shot shot = new Shot();
-            shot.setTimestampMs(resolveTimestamp(modelShot.getFrame(), null, fps));
+            long timestamp = resolveTimestamp(modelShot.getFrame(), null, fps);
+            shot.setTimestampMs(timestamp);
+            shot.setTimestampSeries(deriveTimestampSeries(modelShot.getTimestampSeries(), timestamp, modelProperties.getPreEventFrames(), modelProperties.getPostEventFrames(), fps));
+            shot.setFrameSeries(deriveFrameSeries(modelShot.getFrameSeries(), modelShot.getFrame()));
             shot.setPlayer(modelShot.getPlayer() == null ? 1 : modelShot.getPlayer());
             shot.setShotType(resolveShotType(modelShot.getShotType()));
             shot.setSpeed(safeDouble(modelShot.getSpeed(), 0.0));
             shot.setAccuracy(safeDouble(modelShot.getAccuracy(), 80.0));
             shot.setResult(resolveShotResult(modelShot.getResult()));
+            shot.setDetections(convertDetections(modelShot.getDetections(), modelShot.getFrame(), modelShot.getConfidence()));
             shots.add(shot);
         }
 
@@ -121,6 +130,8 @@ public class MatchProcessingService {
             event.setType(type);
             long timestampMs = resolveTimestamp(modelEvent.getFrame(), modelEvent.getTimestampMs(), fps);
             event.setTimestampMs(timestampMs);
+            event.setTimestampSeries(deriveTimestampSeries(modelEvent.getTimestampSeries(), timestampMs, modelEvent.getPreEventFrames(), modelEvent.getPostEventFrames(), fps));
+            event.setFrameSeries(deriveFrameSeries(modelEvent.getFrameSeries(), modelEvent.getFrameNumber()));
             event.setPlayer(modelEvent.getPlayer());
             event.setImportance(modelEvent.getImportance() == null ? 6 : modelEvent.getImportance());
             event.setTitle(resolveEventTitle(type));
@@ -132,9 +143,11 @@ public class MatchProcessingService {
             metadata.setShotType(resolveShotType(modelEvent.getShotType()).name());
             metadata.setBallTrajectory(modelEvent.getBallTrajectory() == null ? List.of() : modelEvent.getBallTrajectory());
             metadata.setFrameNumber(resolveFrameNumber(modelEvent, fps));
+            metadata.setFrameSeries(new ArrayList<>(event.getFrameSeries()));
             metadata.setEventWindow(buildEventWindow(modelEvent, fps));
             metadata.setConfidence(modelEvent.getConfidence());
             metadata.setSource("MODEL");
+            metadata.setDetections(convertDetections(modelEvent.getDetections(), modelEvent.getFrameNumber(), modelEvent.getConfidence()));
             event.setMetadata(metadata);
 
             events.add(event);
@@ -143,13 +156,15 @@ public class MatchProcessingService {
 
         if (events.isEmpty()) {
             LOGGER.warn("Model output returned zero events; reprocessing with heuristic pipeline");
-            applyHeuristicProcessing(match, videoStorageService.resolvePath(match.getVideoPath()), videoMetadata);
+            applyHeuristicProcessing(match, videoStorageService.resolvePath(match.getVideoPath()), videoMetadata, true);
             return;
         }
 
+        boolean synthesizedShots = false;
         if (shots.isEmpty()) {
             LOGGER.warn("Model output returned zero shots; synthesizing shots from events");
             shots = synthesizeShotsFromEvents(events, fps);
+            synthesizedShots = true;
         }
 
         MatchStatistics statistics = buildStatisticsFromModel(result.getStatistics(), events, shots);
@@ -159,9 +174,19 @@ public class MatchProcessingService {
         match.setEvents(events);
         match.setShots(shots);
         match.setHighlights(highlights);
+
+        ProcessingSummary summary = new ProcessingSummary();
+        summary.setPrimarySource("MODEL");
+        summary.setHeuristicFallbackUsed(synthesizedShots);
+        summary.getSources().add("MODEL");
+        if (synthesizedShots) {
+            summary.getSources().add("HEURISTIC_SYNTHESIZED_SHOTS");
+            summary.getNotes().add("Synthesized shots from events because model output did not include shot data.");
+        }
+        match.setProcessingSummary(summary);
     }
 
-    private void applyHeuristicProcessing(MatchDocument match, Path videoPath, VideoMetadata metadata) {
+    private void applyHeuristicProcessing(MatchDocument match, Path videoPath, VideoMetadata metadata, boolean invokedAsFallback) {
         VideoCapture capture = new VideoCapture(videoPath.toString());
         if (!capture.isOpened()) {
             throw new IllegalStateException("Unable to open video: " + videoPath);
@@ -200,7 +225,7 @@ public class MatchProcessingService {
                         double estimatedSpeed = Math.min(65.0, threshold + motionScore);
                         cumulativeSpeed += estimatedSpeed;
                         maxSpeed = Math.max(maxSpeed, estimatedSpeed);
-                        Shot shot = buildHeuristicShot(timestampMs, estimatedSpeed, events.size());
+                        Shot shot = buildHeuristicShot(timestampMs, estimatedSpeed, events.size(), fps);
                         shots.add(shot);
                         Event event = buildHeuristicEvent(timestampMs, motionScore, shot, runningScore, events.size(), fps);
                         events.add(event);
@@ -237,6 +262,15 @@ public class MatchProcessingService {
         match.setEvents(events);
         match.setShots(shots);
         match.setHighlights(highlights);
+
+        ProcessingSummary summary = new ProcessingSummary();
+        summary.setPrimarySource(invokedAsFallback ? "HEURISTIC_FALLBACK" : "HEURISTIC");
+        summary.setHeuristicFallbackUsed(invokedAsFallback);
+        summary.getSources().add("HEURISTIC");
+        if (invokedAsFallback) {
+            summary.getNotes().add("Heuristic pipeline executed because research model output was unavailable or empty.");
+        }
+        match.setProcessingSummary(summary);
     }
 
     private MatchStatistics buildStatisticsFromModel(ModelStatistics modelStatistics, List<Event> events, List<Shot> shots) {
@@ -272,6 +306,8 @@ public class MatchProcessingService {
         for (Event event : events) {
             Shot shot = new Shot();
             shot.setTimestampMs(event.getTimestampMs());
+            shot.setTimestampSeries(new ArrayList<>(event.getTimestampSeries()));
+            shot.setFrameSeries(new ArrayList<>(event.getFrameSeries()));
             shot.setPlayer(event.getPlayer() == null ? (index % 2) + 1 : event.getPlayer());
             shot.setShotType(resolveShotType(event.getMetadata() != null ? event.getMetadata().getShotType() : null));
             shot.setSpeed(event.getMetadata() != null && event.getMetadata().getShotSpeed() != null
@@ -279,6 +315,11 @@ public class MatchProcessingService {
                 : 30.0);
             shot.setAccuracy(85.0);
             shot.setResult(ShotResult.IN);
+            if (event.getMetadata() != null) {
+                shot.setDetections(cloneDetections(event.getMetadata().getDetections()));
+            } else {
+                shot.setDetections(List.of());
+            }
             shots.add(shot);
             index++;
         }
@@ -288,14 +329,18 @@ public class MatchProcessingService {
         return shots;
     }
 
-    private Shot buildHeuristicShot(long timestampMs, double estimatedSpeed, int index) {
+    private Shot buildHeuristicShot(long timestampMs, double estimatedSpeed, int index, double fps) {
         Shot shot = new Shot();
         shot.setTimestampMs(timestampMs);
+        shot.setTimestampSeries(deriveTimestampSeries(null, timestampMs, 2, 4, fps));
+        Integer primaryFrame = (int) Math.round((timestampMs / 1000.0) * fps);
+        shot.setFrameSeries(deriveFrameSeries(null, primaryFrame));
         shot.setPlayer(index % 2 == 0 ? 1 : 2);
         shot.setShotType(resolveShotType(null));
         shot.setSpeed(Math.round(estimatedSpeed * 10.0) / 10.0);
         shot.setAccuracy(Math.max(0.0, Math.min(100.0, 75.0 + (estimatedSpeed - 25.0))));
         shot.setResult(index % 6 == 0 ? ShotResult.OUT : ShotResult.IN);
+        shot.setDetections(List.of());
         return shot;
     }
 
@@ -303,6 +348,7 @@ public class MatchProcessingService {
         Event event = new Event();
         event.setId(UUID.randomUUID().toString());
         event.setTimestampMs(timestampMs);
+        event.setTimestampSeries(deriveTimestampSeries(null, timestampMs, modelProperties.getPreEventFrames(), modelProperties.getPostEventFrames(), fps));
         EventType eventType = pickEventType(index);
         event.setType(eventType);
         event.setTitle(resolveEventTitle(eventType));
@@ -314,11 +360,15 @@ public class MatchProcessingService {
         metadata.setShotSpeed(shot.getSpeed());
         metadata.setRallyLength(Math.max(4, (int) Math.round(motionScore / 5.0)));
         metadata.setShotType(shot.getShotType().name());
-        metadata.setFrameNumber((int) Math.round((timestampMs / 1000.0) * fps));
+        int frameNumber = (int) Math.round((timestampMs / 1000.0) * fps);
+        metadata.setFrameNumber(frameNumber);
+        event.setFrameSeries(deriveFrameSeries(null, frameNumber));
+        metadata.setFrameSeries(new ArrayList<>(event.getFrameSeries()));
         metadata.setBallTrajectory(List.of(List.of(0.0, 0.0), List.of(1.0, 1.0)));
         metadata.setEventWindow(buildEventWindow(modelProperties.getPreEventFrames(), modelProperties.getPostEventFrames(), fps));
         metadata.setConfidence(Math.min(1.0, motionScore / (processingProperties.getMotionThreshold() * 2)));
         metadata.setSource("HEURISTIC");
+        metadata.setDetections(List.of());
         if (eventType == EventType.SCORE) {
             ScoreState projected = incrementScore(new ScoreState(runningScore.getPlayer1(), runningScore.getPlayer2()), shot.getPlayer());
             metadata.setScoreAfter(projected);
@@ -331,6 +381,8 @@ public class MatchProcessingService {
         Event fallback = new Event();
         fallback.setId(UUID.randomUUID().toString());
         fallback.setTimestampMs(0L);
+        fallback.setTimestampSeries(deriveTimestampSeries(null, 0L, modelProperties.getPreEventFrames(), modelProperties.getPostEventFrames(), modelProperties.getFallbackFps()));
+        fallback.setFrameSeries(deriveFrameSeries(null, 0));
         fallback.setType(EventType.PLAY_OF_THE_GAME);
         fallback.setTitle("Kickoff Rally");
         fallback.setDescription("Auto-generated rally highlight");
@@ -342,12 +394,14 @@ public class MatchProcessingService {
         metadata.setShotSpeed(32.0);
         metadata.setShotType(ShotType.SERVE.name());
         metadata.setFrameNumber(0);
+        metadata.setFrameSeries(new ArrayList<>(fallback.getFrameSeries()));
         metadata.setBallTrajectory(List.of(List.of(0.0, 0.0), List.of(0.5, 0.8)));
         metadata.setEventWindow(new EventWindow(
             toMillis(modelProperties.getPreEventFrames(), modelProperties.getFallbackFps()),
             toMillis(modelProperties.getPostEventFrames(), modelProperties.getFallbackFps())));
         metadata.setConfidence(0.5);
         metadata.setSource("HEURISTIC");
+        metadata.setDetections(List.of());
         fallback.setMetadata(metadata);
         return fallback;
     }
@@ -355,11 +409,14 @@ public class MatchProcessingService {
     private Shot buildFallbackShot() {
         Shot shot = new Shot();
         shot.setTimestampMs(0L);
+        shot.setTimestampSeries(deriveTimestampSeries(null, 0L, 2, 4, modelProperties.getFallbackFps()));
+        shot.setFrameSeries(deriveFrameSeries(null, 0));
         shot.setPlayer(1);
         shot.setShotType(ShotType.SERVE);
         shot.setSpeed(28.0);
         shot.setAccuracy(80.0);
         shot.setResult(ShotResult.IN);
+        shot.setDetections(List.of());
         return shot;
     }
 
@@ -377,28 +434,150 @@ public class MatchProcessingService {
 
     private Highlights buildHighlights(List<Event> events) {
         Highlights highlights = new Highlights();
+        if (events.isEmpty()) {
+            return highlights;
+        }
         Event playOfGame = events.stream()
             .max(Comparator.comparingInt(Event::getImportance))
             .orElse(events.get(0));
-        highlights.setPlayOfTheGame(playOfGame.getId());
+        highlights.setPlayOfTheGame(createHighlightRef(playOfGame));
         events.stream()
             .filter(event -> event.getType() == EventType.RALLY_HIGHLIGHT)
             .sorted(Comparator.comparingInt(Event::getImportance).reversed())
             .limit(3)
-            .map(Event::getId)
+            .map(this::createHighlightRef)
+            .filter(Objects::nonNull)
             .forEach(highlights.getTopRallies()::add);
         events.stream()
             .filter(event -> event.getType() == EventType.FASTEST_SHOT)
             .sorted(Comparator.comparingInt(Event::getImportance).reversed())
             .limit(3)
-            .map(Event::getId)
+            .map(this::createHighlightRef)
+            .filter(Objects::nonNull)
             .forEach(highlights.getFastestShots()::add);
         events.stream()
             .filter(event -> event.getType() == EventType.SERVE_ACE)
             .limit(3)
-            .map(Event::getId)
+            .map(this::createHighlightRef)
+            .filter(Objects::nonNull)
             .forEach(highlights.getBestServes()::add);
         return highlights;
+    }
+    
+    private List<Long> deriveTimestampSeries(List<Double> rawSeries, long primary, Integer preFrames, Integer postFrames, double fps) {
+        List<Long> timeline = new ArrayList<>();
+        if (rawSeries != null) {
+            for (Double value : rawSeries) {
+                if (value != null) {
+                    timeline.add(Math.round(value));
+                }
+            }
+        }
+        if (timeline.isEmpty()) {
+            int pre = preFrames == null ? modelProperties.getPreEventFrames() : preFrames;
+            int post = postFrames == null ? modelProperties.getPostEventFrames() : postFrames;
+            long preOffset = toMillis(pre, fps);
+            long postOffset = toMillis(post, fps);
+            long start = Math.max(0L, primary - preOffset);
+            long end = primary + postOffset;
+            timeline.add(start);
+            timeline.add(primary);
+            timeline.add(end);
+        } else if (!timeline.contains(primary)) {
+            timeline.add(primary);
+        }
+        timeline.sort(Long::compareTo);
+        List<Long> deduped = new ArrayList<>();
+        for (Long value : timeline) {
+            if (deduped.isEmpty() || !deduped.get(deduped.size() - 1).equals(value)) {
+                deduped.add(value);
+            }
+        }
+        return List.copyOf(deduped);
+    }
+
+    private List<Integer> deriveFrameSeries(List<Integer> rawSeries, Number fallbackFrame) {
+        List<Integer> frames = new ArrayList<>();
+        if (rawSeries != null) {
+            for (Integer frame : rawSeries) {
+                if (frame != null) {
+                    frames.add(frame);
+                }
+            }
+        }
+        if (fallbackFrame != null) {
+            int fallback = fallbackFrame.intValue();
+            if (!frames.contains(fallback)) {
+                frames.add(fallback);
+            }
+        }
+        frames.removeIf(Objects::isNull);
+        frames.sort(Integer::compareTo);
+        List<Integer> deduped = new ArrayList<>();
+        for (Integer frame : frames) {
+            if (deduped.isEmpty() || !deduped.get(deduped.size() - 1).equals(frame)) {
+                deduped.add(frame);
+            }
+        }
+        return List.copyOf(deduped);
+    }
+
+    private List<Detection> convertDetections(List<ModelDetection> detections, Number fallbackFrame, Double fallbackConfidence) {
+        List<Detection> converted = new ArrayList<>();
+        if (detections != null) {
+            for (ModelDetection modelDetection : detections) {
+                if (modelDetection == null) {
+                    continue;
+                }
+                Detection detection = new Detection();
+                detection.setFrameNumber(modelDetection.getFrameNumber());
+                detection.setX(modelDetection.getX());
+                detection.setY(modelDetection.getY());
+                detection.setWidth(modelDetection.getWidth());
+                detection.setHeight(modelDetection.getHeight());
+                detection.setConfidence(modelDetection.getConfidence());
+                converted.add(detection);
+            }
+        }
+        if (converted.isEmpty() && fallbackFrame != null) {
+            Detection fallbackDetection = new Detection();
+            fallbackDetection.setFrameNumber(fallbackFrame.intValue());
+            fallbackDetection.setConfidence(fallbackConfidence);
+            converted.add(fallbackDetection);
+        }
+        return converted.isEmpty() ? List.of() : List.copyOf(converted);
+    }
+
+    private List<Detection> cloneDetections(List<Detection> detections) {
+        if (detections == null || detections.isEmpty()) {
+            return List.of();
+        }
+        List<Detection> clones = new ArrayList<>();
+        for (Detection detection : detections) {
+            if (detection == null) {
+                continue;
+            }
+            Detection clone = new Detection();
+            clone.setFrameNumber(detection.getFrameNumber());
+            clone.setX(detection.getX());
+            clone.setY(detection.getY());
+            clone.setWidth(detection.getWidth());
+            clone.setHeight(detection.getHeight());
+            clone.setConfidence(detection.getConfidence());
+            clones.add(clone);
+        }
+        return clones.isEmpty() ? List.of() : List.copyOf(clones);
+    }
+
+    private HighlightRef createHighlightRef(Event event) {
+        if (event == null) {
+            return null;
+        }
+        HighlightRef reference = new HighlightRef();
+        reference.setEventId(event.getId());
+        reference.setTimestampMs(event.getTimestampMs());
+        reference.setTimestampSeries(new ArrayList<>(event.getTimestampSeries()));
+        return reference;
     }
 
     private EventType pickEventType(int index) {

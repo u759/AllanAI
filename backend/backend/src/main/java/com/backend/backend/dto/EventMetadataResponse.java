@@ -7,8 +7,10 @@ public record EventMetadataResponse(Double shotSpeed,
                                     String shotType,
                                     List<List<Double>> ballTrajectory,
                                     Integer frameNumber,
+                                    List<Integer> frameSeries,
                                     ScoreStateResponse scoreAfter,
                                     EventWindowResponse eventWindow,
                                     Double confidence,
-                                    String source) {
+                                    String source,
+                                    List<DetectionResponse> detections) {
 }

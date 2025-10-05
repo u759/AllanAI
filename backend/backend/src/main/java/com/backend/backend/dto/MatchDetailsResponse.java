@@ -14,5 +14,6 @@ public record MatchDetailsResponse(String id,
                                    MatchStatisticsResponse statistics,
                                    List<ShotResponse> shots,
                                    List<EventResponse> events,
-                                   HighlightsResponse highlights) {
+                                   HighlightsResponse highlights,
+                                   ProcessingSummaryResponse processingSummary) {
 }
