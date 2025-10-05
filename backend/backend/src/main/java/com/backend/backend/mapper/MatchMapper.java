@@ -42,13 +42,30 @@ public final class MatchMapper {
     }
 
     public static MatchSummaryResponse toSummary(MatchDocument match) {
+        MatchStatisticsResponse statisticsResponse = toStatistics(match.getStatistics());
+        List<ShotResponse> shots = match.getShots() == null ? Collections.emptyList()
+            : match.getShots().stream().map(MatchMapper::toShot).toList();
+        List<EventResponse> events = match.getEvents() == null ? Collections.emptyList()
+            : match.getEvents().stream().map(MatchMapper::toEvent).toList();
+        HighlightsResponse highlights = toHighlights(match.getHighlights());
+        
         return new MatchSummaryResponse(
             match.getId(),
+            null, // userId - not yet implemented
             match.getCreatedAt(),
             match.getProcessedAt(),
             match.getStatus(),
             match.getDurationSeconds(),
-            match.getOriginalFilename());
+            match.getVideoPath(),
+            match.getOriginalFilename(),
+            null, // player1Name - not yet implemented
+            null, // player2Name - not yet implemented
+            null, // matchTitle - not yet implemented
+            null, // thumbnailPath - not yet implemented
+            statisticsResponse,
+            shots,
+            events,
+            highlights);
     }
 
     public static MatchDetailsResponse toDetails(MatchDocument match) {
