@@ -43,12 +43,12 @@ fun NavGraph(
     val authRepository = authViewModel.authRepository
     
     // Determine start destination based on auth state
-    val startDestination = Screen.Welcome.route
-//    val startDestination = if (authRepository.isLoggedIn()) {
-//        Screen.Welcome.route
-//    } else {
-//        Screen.SignIn.route
-//    }
+    // val startDestination = Screen.Welcome.route
+    val startDestination = if (authRepository.isLoggedIn()) {
+        Screen.Welcome.route
+    } else {
+        Screen.SignIn.route
+    }
     
     NavHost(
         navController = navController,
