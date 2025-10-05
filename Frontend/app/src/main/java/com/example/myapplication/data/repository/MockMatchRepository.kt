@@ -32,6 +32,7 @@ import javax.inject.Singleton
  * This class is marked as @Singleton so Hilt provides a single instance
  * throughout the app lifecycle.
  */
+@RequiresApi(Build.VERSION_CODES.O)
 @Singleton
 class MockMatchRepository @Inject constructor() : MatchRepository {
 
@@ -199,31 +200,36 @@ class MockMatchRepository @Inject constructor() : MatchRepository {
         }.start()
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     private fun generateSampleMatches() {
-        // Sample match 1 - Completed
+        // Sample match 1 - Completed (based on AIGuidelines data)
         val match1 = Match(
-            id = "1",
+            id = "0ee996ad-3f02-4ba9-bafd-465a6a6dcf10",
             createdAt = Instant.now().minusSeconds(7200), // 2 hours ago
             processedAt = Instant.now().minusSeconds(7000),
             status = MatchStatus.COMPLETE,
-            durationSeconds = 300,
-            originalFilename = "match_2024_10_04_morning.mp4",
+            durationSeconds = 30,
+            originalFilename = "test_2.mp4",
             videoPath = "/videos/match1.mp4",
             statistics = MatchStatistics(
-                player1Score = 11,
-                player2Score = 8,
-                totalRallies = 45,
-                avgRallyLength = 6.5,
-                maxBallSpeed = 52.3,
-                avgBallSpeed = 32.8
+                player1Score = 2,
+                player2Score = 0,
+                totalRallies = 1,
+                avgRallyLength = 2.5,
+                maxBallSpeed = 117.0,
+                avgBallSpeed = 79.3
             ),
             shots = generateSampleShots(),
             events = generateSampleEvents(),
             highlights = Highlights(
-                playOfTheGame = "event-1",
-                topRallies = listOf("event-1", "event-3"),
-                fastestShots = listOf("event-2"),
-                bestServes = listOf("event-4")
+                playOfTheGame = "d3f1aec3-20f8-4511-85f6-3b71263a6495",
+                topRallies = emptyList(),
+                fastestShots = listOf(
+                    "d3f1aec3-20f8-4511-85f6-3b71263a6495",
+                    "4c99b9af-dac8-4c3b-8445-1b83f4297070",
+                    "1e61435d-2308-4958-8feb-4979dd7416c9"
+                ),
+                bestServes = emptyList()
             )
         )
 
@@ -242,23 +248,26 @@ class MockMatchRepository @Inject constructor() : MatchRepository {
             createdAt = Instant.now().minusSeconds(86400), // 1 day ago
             processedAt = Instant.now().minusSeconds(86200),
             status = MatchStatus.COMPLETE,
-            durationSeconds = 420,
+            durationSeconds = 30,
             originalFilename = "match_yesterday.mp4",
             videoPath = "/videos/match3.mp4",
             statistics = MatchStatistics(
-                player1Score = 9,
-                player2Score = 11,
-                totalRallies = 52,
-                avgRallyLength = 7.2,
-                maxBallSpeed = 48.9,
-                avgBallSpeed = 30.5
+                player1Score = 2,
+                player2Score = 0,
+                totalRallies = 1,
+                avgRallyLength = 2.5,
+                maxBallSpeed = 117.0,
+                avgBallSpeed = 79.3
             ),
             shots = generateSampleShots(),
             events = generateSampleEvents(),
             highlights = Highlights(
-                playOfTheGame = "event-1",
-                topRallies = listOf("event-1"),
-                fastestShots = listOf("event-2"),
+                playOfTheGame = "d3f1aec3-20f8-4511-85f6-3b71263a6495",
+                topRallies = emptyList(),
+                fastestShots = listOf(
+                    "d3f1aec3-20f8-4511-85f6-3b71263a6495",
+                    "4c99b9af-dac8-4c3b-8445-1b83f4297070"
+                ),
                 bestServes = emptyList()
             )
         )
@@ -271,40 +280,70 @@ class MockMatchRepository @Inject constructor() : MatchRepository {
 
     private fun generateSampleStatistics(): MatchStatistics {
         return MatchStatistics(
-            player1Score = 11,
-            player2Score = 7,
-            totalRallies = 40,
-            avgRallyLength = 6.2,
-            maxBallSpeed = 50.5,
-            avgBallSpeed = 31.2
+            player1Score = 2,
+            player2Score = 0,
+            totalRallies = 1,
+            avgRallyLength = 2.5,
+            maxBallSpeed = 117.0,
+            avgBallSpeed = 79.3
         )
     }
 
     private fun generateSampleShots(): List<Shot> {
         return listOf(
             Shot(
-                timestampMs = 1500,
+                timestampMs = 0,
                 player = 1,
-                shotType = ShotType.SERVE,
-                speed = 35.2,
-                accuracy = 0.95,
-                result = ShotResult.IN
-            ),
-            Shot(
-                timestampMs = 2800,
-                player = 2,
                 shotType = ShotType.FOREHAND,
-                speed = 42.1,
-                accuracy = 0.88,
-                result = ShotResult.IN
+                speed = 30.0,
+                accuracy = 85.0,
+                result = ShotResult.IN,
+                detections = listOf(
+                    Detection(
+                        frameNumber = 0,
+                        x = 907.28,
+                        y = 436.77,
+                        width = 19.12,
+                        height = 21.29,
+                        confidence = 0.86
+                    )
+                )
             ),
             Shot(
-                timestampMs = 4200,
+                timestampMs = 8,
                 player = 1,
-                shotType = ShotType.BACKHAND,
-                speed = 38.7,
-                accuracy = 0.72,
-                result = ShotResult.OUT
+                shotType = ShotType.FOREHAND,
+                speed = 30.0,
+                accuracy = 85.0,
+                result = ShotResult.IN,
+                detections = listOf(
+                    Detection(
+                        frameNumber = 1,
+                        x = 890.10,
+                        y = 441.90,
+                        width = 19.22,
+                        height = 21.51,
+                        confidence = 0.88
+                    )
+                )
+            ),
+            Shot(
+                timestampMs = 17,
+                player = 1,
+                shotType = ShotType.FOREHAND,
+                speed = 30.0,
+                accuracy = 85.0,
+                result = ShotResult.IN,
+                detections = listOf(
+                    Detection(
+                        frameNumber = 2,
+                        x = 874.37,
+                        y = 447.91,
+                        width = 19.30,
+                        height = 21.58,
+                        confidence = 0.88
+                    )
+                )
             )
         )
     }
@@ -312,58 +351,99 @@ class MockMatchRepository @Inject constructor() : MatchRepository {
     private fun generateSampleEvents(): List<Event> {
         return listOf(
             Event(
-                id = "event-1",
-                timestampMs = 83500,
-                type = EventType.PLAY_OF_THE_GAME,
-                title = "Play of the Game",
-                description = "Epic 15-shot rally with incredible speed",
-                player = null,
-                importance = 10,
+                id = "56897489-dd37-4c0d-b811-5fde4c4845a4",
+                timestampMs = 508,
+                type = EventType.SCORE,
+                title = "Point Scored",
+                description = "Ball Bounce",
+                player = 1,
+                importance = 5,
                 metadata = EventMetadata(
-                    rallyLength = 15,
-                    shotSpeed = 45.2,
-                    frameNumber = 2505
+                    shotSpeed = 52.3,
+                    rallyLength = 1,
+                    shotType = "SMASH",
+                    ballTrajectory = listOf(
+                        listOf(569.16, 645.42),
+                        listOf(85.38, 653.30)
+                    ),
+                    frameNumber = 61,
+                    scoreAfter = ScoreState(1, 0),
+                    eventWindow = EventWindow(preMs = 33, postMs = 100),
+                    confidence = 0.84,
+                    source = "MODEL",
+                    detections = emptyList()
                 )
             ),
             Event(
-                id = "event-2",
-                timestampMs = 15200,
+                id = "d3f1aec3-20f8-4511-85f6-3b71263a6495",
+                timestampMs = 2708,
                 type = EventType.FASTEST_SHOT,
                 title = "Fastest Shot",
-                description = "Player 1 forehand smash",
+                description = "Fast Shot",
                 player = 1,
                 importance = 8,
                 metadata = EventMetadata(
-                    shotSpeed = 52.3,
+                    shotSpeed = 115.2,
+                    rallyLength = null,
                     shotType = "FOREHAND",
-                    frameNumber = 456
+                    ballTrajectory = listOf(
+                        listOf(75.58, 524.37),
+                        listOf(1408.18, 495.39)
+                    ),
+                    frameNumber = 325,
+                    scoreAfter = null,
+                    eventWindow = EventWindow(preMs = 33, postMs = 100),
+                    confidence = 0.40,
+                    source = "MODEL",
+                    detections = emptyList()
                 )
             ),
             Event(
-                id = "event-3",
-                timestampMs = 45000,
-                type = EventType.RALLY_HIGHLIGHT,
-                title = "Long Rally",
-                description = "Intense 12-shot exchange",
-                player = null,
-                importance = 7,
+                id = "4c99b9af-dac8-4c3b-8445-1b83f4297070",
+                timestampMs = 2717,
+                type = EventType.FASTEST_SHOT,
+                title = "Fastest Shot",
+                description = "Fast Shot",
+                player = 1,
+                importance = 8,
                 metadata = EventMetadata(
-                    rallyLength = 12,
-                    frameNumber = 1350
+                    shotSpeed = 117.0,
+                    rallyLength = null,
+                    shotType = "FOREHAND",
+                    ballTrajectory = listOf(
+                        listOf(54.41, 525.12),
+                        listOf(1407.97, 495.89)
+                    ),
+                    frameNumber = 326,
+                    scoreAfter = null,
+                    eventWindow = EventWindow(preMs = 33, postMs = 100),
+                    confidence = 0.56,
+                    source = "MODEL",
+                    detections = emptyList()
                 )
             ),
             Event(
-                id = "event-4",
-                timestampMs = 92000,
-                type = EventType.SCORE,
-                title = "Point Scored",
-                description = "Player 2 scores on backhand",
+                id = "1e61435d-2308-4958-8feb-4979dd7416c9",
+                timestampMs = 2758,
+                type = EventType.FASTEST_SHOT,
+                title = "Fastest Shot",
+                description = "Fast Shot",
                 player = 2,
-                importance = 5,
+                importance = 8,
                 metadata = EventMetadata(
-                    shotType = "BACKHAND",
-                    scoreAfter = ScoreState(8, 11),
-                    frameNumber = 2760
+                    shotSpeed = 87.9,
+                    rallyLength = null,
+                    shotType = "FOREHAND",
+                    ballTrajectory = listOf(
+                        listOf(1408.18, 495.39),
+                        listOf(390.47, 482.88)
+                    ),
+                    frameNumber = 331,
+                    scoreAfter = null,
+                    eventWindow = EventWindow(preMs = 33, postMs = 100),
+                    confidence = 0.79,
+                    source = "MODEL",
+                    detections = emptyList()
                 )
             )
         )
@@ -371,9 +451,13 @@ class MockMatchRepository @Inject constructor() : MatchRepository {
 
     private fun generateSampleHighlights(): Highlights {
         return Highlights(
-            playOfTheGame = "event-1",
-            topRallies = listOf("event-1", "event-3"),
-            fastestShots = listOf("event-2"),
+            playOfTheGame = "d3f1aec3-20f8-4511-85f6-3b71263a6495",
+            topRallies = emptyList(),
+            fastestShots = listOf(
+                "d3f1aec3-20f8-4511-85f6-3b71263a6495",
+                "4c99b9af-dac8-4c3b-8445-1b83f4297070",
+                "1e61435d-2308-4958-8feb-4979dd7416c9"
+            ),
             bestServes = emptyList()
         )
     }
