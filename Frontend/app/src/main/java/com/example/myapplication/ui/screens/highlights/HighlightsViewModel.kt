@@ -3,13 +3,11 @@ package com.example.myapplication.ui.screens.highlights
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.myapplication.R
 import com.example.myapplication.data.model.Event
 import com.example.myapplication.data.model.EventType
 import com.example.myapplication.data.model.Match
 import com.example.myapplication.data.model.MatchStatus
 import com.example.myapplication.data.repository.MatchRepository
-import com.example.myapplication.util.HighlightThumbnailGenerator
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -200,44 +198,15 @@ class HighlightsViewModel @Inject constructor(
     }
 
     /**
-     * Get thumbnail for a highlight event by extracting the first frame.
+     * Get thumbnail URL from match's thumbnail path.
      * 
-     * Generates a thumbnail from the video at the clip's start time.
-     * The clip starts 3 seconds before the event for context.
-     * Thumbnails are cached to avoid regeneration on subsequent loads.
+     * Uses the backend-generated thumbnail for the match.
+     * Event-specific thumbnails could be generated server-side in the future.
      */
     private fun getThumbnailUrl(match: Match, event: Event): String {
-        // Calculate clip start time (3 seconds before the event)
-        val preMs = 3000L
-        val startMs = maxOf(0, event.timestampMs - preMs)
-        
-        // Generate thumbnail from the first frame of the highlight clip
-        val thumbnailPath = HighlightThumbnailGenerator.generateThumbnail(
-            context = context,
-            videoResourceId = R.raw.test_2,
-            timestampMs = startMs,  // First frame of the 6-second clip
-            highlightId = event.id
-        )
-        
-        // Return file path if successful, otherwise fallback to placeholder
-        return thumbnailPath ?: getPlaceholderThumbnail(event.type)
-    }
-    
-    /**
-     * Fallback placeholder thumbnail if frame extraction fails.
-     */
-    private fun getPlaceholderThumbnail(eventType: EventType): String {
-        return when (eventType) {
-            EventType.PLAY_OF_THE_GAME, EventType.RALLY_HIGHLIGHT -> {
-                "https://lh3.googleusercontent.com/aida-public/AB6AXuA58uYUU3Kl5b6NormCVtZruihKIOljtFsMTGHHO_o6Fhmu_LK-1qJWvMkem0FA8m36Unh52J8FCYoX4zh74w7mwqzsvTTDDL7gPrFyxdMYxO93p73sviLQlbLw5fyFnwupIb6N9WOnuiVeepTfzG_AG2buTjscEXzm-L1Jhz4_1EmhKjn49i8tddrrnmph-OvE0bTTulZ6Mgh1t-1mgM3xJc88bmP4EM3aSlv6FhWgQG2McIVDGAlALOrXGggTcKolx7CPxrYqN-Lu"
-            }
-            EventType.FASTEST_SHOT, EventType.SERVE_ACE -> {
-                "https://lh3.googleusercontent.com/aida-public/AB6AXuCnc8ZOIEm4toCUsiJsPvpjHSRdoMdHI5OvBxyUoS5c4Z_YVoqk52tJHgxswQwzuNEubGyB_ZQJttkkqrWGnq_gHx8s36SDMy_2nOTz3-1JK2_7ptbg_B00xdFO8Sew0fUZN4vozQuQBviJYGBOuK3dfw42Zg1rWUl9-eIuPWDCi6U_dnM1Gs82LNrJXGu3FuYe_u9OmY0Jw0MofVdI498j3Tsw70K4PerH6o7Vc5hqpLmsQvTiCUHQbqEmxQQ8Cz-8x3sYmvgKq_0U"
-            }
-            else -> {
-                "https://lh3.googleusercontent.com/aida-public/AB6AXuCEN5R1Phl90yI9Mn33AQNkuFoXCS1W2lJZ36YfuQxf2worp_SsjWkJFZEBLpr4RopEyXVkYUK0LLQlCOaU9xk2ySdoa8aFNPu99inVhBG7SiHAKDWVUuPRrHgv1ST3-kIdd8ayCoIuSEQQ4tHSWqaAAPMLprC45Jp30L_JAJf1PumH9D5wVpn5biB38Wg_gcOh7S31X9J1Wu9uopydS6p7tf1MTAEGBeG8bPccRGicRapnD6eyxU1J-zsNtXN0G-faIOOgIk88YdzA"
-            }
-        }
+        // Use match thumbnail if available
+        // In the future, the backend could generate event-specific thumbnails
+        return match.thumbnailPath ?: ""
     }
 }
 

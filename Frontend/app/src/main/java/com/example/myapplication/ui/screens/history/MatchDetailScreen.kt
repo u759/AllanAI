@@ -12,6 +12,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -104,6 +105,7 @@ fun MatchDetailScreen(
                     onPlaybackStateChange = { viewModel.updatePlaybackState(it) },
                     getDetections = { viewModel.getDetectionsForPosition(state.match, currentPositionMs) },
                     getTrajectory = { viewModel.getTrajectoryForPosition(state.match, currentPositionMs) },
+                    viewModel = viewModel,
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(paddingValues)
@@ -165,6 +167,7 @@ private fun MatchDetailContent(
     onPlaybackStateChange: (Boolean) -> Unit,
     getDetections: () -> List<DetectionWithType>,
     getTrajectory: () -> List<List<Double>>?,
+    viewModel: MatchDetailViewModel,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -222,7 +225,11 @@ private fun MatchDetailContent(
         MatchSummarySection(match = match)
 
         // Performance Metrics
-        PerformanceMetricsSection(match = match)
+        PerformanceMetricsSection(
+            match = match,
+            currentPositionMs = currentPositionMs,
+            viewModel = viewModel
+        )
 
         // Shot Statistics
         if (match.shots.isNotEmpty()) {
@@ -333,12 +340,21 @@ private fun MatchDetailRow(label: String, value: String) {
 }
 
 @Composable
-private fun PerformanceMetricsSection(match: Match) {
+private fun PerformanceMetricsSection(
+    match: Match,
+    currentPositionMs: Long,
+    viewModel: MatchDetailViewModel
+) {
+    val liveStats by viewModel.liveStats.collectAsStateWithLifecycle()
+    val currentShot by viewModel.currentShot.collectAsStateWithLifecycle()
+    val currentScore by viewModel.currentScore.collectAsStateWithLifecycle()
+    val stats = match.statistics
+    
     Column(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         Text(
-            text = "Performance Metrics",
+            text = "Live Performance Metrics",
             style = MaterialTheme.typography.titleLarge.copy(
                 fontWeight = FontWeight.Bold,
                 fontSize = 20.sp
@@ -346,25 +362,174 @@ private fun PerformanceMetricsSection(match: Match) {
             color = Color.White
         )
         
-        // Statistics Cards
-        StatsCard(
-            title = "Max Ball Speed",
-            value = "${match.statistics?.maxBallSpeed ?: 0} km/h",
-            subtitle = "Fastest shot"
-        )
-
-        StatsCard(
-            title = "Avg Ball Speed",
-            value = "${match.statistics?.avgBallSpeed ?: 0} km/h",
-            subtitle = "Average speed"
-        )
-
-        StatsCard(
-            title = "Rally Stats",
-            value = "${match.statistics?.totalRallies ?: 0} rallies",
-            subtitle = "Avg length: ${match.statistics?.avgRallyLength ?: 0}"
-        )
+        // Live Score
+        currentScore?.let { score ->
+            StatsCard(
+                title = "Current Score",
+                value = "${score.player1} - ${score.player2}",
+                subtitle = "Player 1 vs Player 2"
+            )
+        }
+        
+        // Current Shot Details (Real-time)
+        if (currentShot != null) {
+            StatsCard(
+                title = "Current Shot",
+                value = "${String.format("%.1f", currentShot?.speed ?: 0.0)} km/h",
+                subtitle = "${currentShot?.shotType?.name ?: "Unknown"} • ${String.format("%.0f", currentShot?.accuracy ?: 0.0)}% accuracy • ${currentShot?.result?.name ?: "Unknown"}"
+            )
+        }
+        
+        // Rally Metrics (from model stats)
+        stats?.rallyMetrics?.let { rally ->
+            StatsCard(
+                title = "Rally Statistics",
+                value = "${rally.totalRallies ?: 0} rallies",
+                subtitle = "Avg: ${String.format("%.1f", rally.averageRallyLength ?: 0.0)} shots • Longest: ${rally.longestRallyLength ?: 0} shots"
+            )
+            
+            if (rally.averageRallyDurationSeconds != null) {
+                StatsCard(
+                    title = "Rally Duration",
+                    value = "${String.format("%.1f", rally.averageRallyDurationSeconds)}s avg",
+                    subtitle = "Longest: ${String.format("%.1f", rally.longestRallyDurationSeconds ?: 0.0)}s"
+                )
+            }
+        }
+        
+        // Speed Metrics (from model stats)
+        stats?.shotSpeedMetrics?.let { speed ->
+            StatsCard(
+                title = "Shot Speed Analysis",
+                value = "${String.format("%.1f", speed.fastestShotMph ?: 0.0)} mph",
+                subtitle = "Fastest shot recorded"
+            )
+            
+            StatsCard(
+                title = "Average Speed",
+                value = "${String.format("%.1f", speed.averageShotMph ?: 0.0)} mph",
+                subtitle = "Incoming: ${String.format("%.1f", speed.averageIncomingShotMph ?: 0.0)} • Outgoing: ${String.format("%.1f", speed.averageOutgoingShotMph ?: 0.0)} mph"
+            )
+        }
+        
+        // Serve Metrics (from model stats)
+        stats?.serveMetrics?.let { serve ->
+            StatsCard(
+                title = "Serve Performance",
+                value = "${String.format("%.1f", serve.successRate ?: 0.0)}%",
+                subtitle = "${serve.successfulServes ?: 0}/${serve.totalServes ?: 0} successful • ${serve.faults ?: 0} faults"
+            )
+            
+            if (serve.averageServeSpeed != null) {
+                StatsCard(
+                    title = "Serve Speed",
+                    value = "${String.format("%.1f", serve.averageServeSpeed)} avg",
+                    subtitle = "Fastest: ${String.format("%.1f", serve.fastestServeSpeed ?: 0.0)}"
+                )
+            }
+        }
+        
+        // Return Metrics (from model stats)
+        stats?.returnMetrics?.let { returns ->
+            StatsCard(
+                title = "Return Performance",
+                value = "${String.format("%.1f", returns.successRate ?: 0.0)}%",
+                subtitle = "${returns.successfulReturns ?: 0}/${returns.totalReturns ?: 0} successful returns"
+            )
+            
+            if (returns.averageReturnSpeed != null) {
+                StatsCard(
+                    title = "Return Speed",
+                    value = "${String.format("%.1f", returns.averageReturnSpeed)} avg",
+                    subtitle = "Average return shot speed"
+                )
+            }
+        }
+        
+        // Shot Type Breakdown
+        stats?.shotTypeBreakdown?.let { breakdown ->
+            if (breakdown.isNotEmpty()) {
+                Text(
+                    text = "Shot Type Breakdown",
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 18.sp
+                    ),
+                    color = Color.White,
+                    modifier = Modifier.padding(top = 8.dp)
+                )
+                
+                breakdown.forEach { shotType ->
+                    StatsCard(
+                        title = shotType.shotType,
+                        value = "${shotType.count} shots",
+                        subtitle = "Avg speed: ${String.format("%.1f", shotType.averageSpeed ?: 0.0)} • Accuracy: ${String.format("%.1f", shotType.averageAccuracy ?: 0.0)}%"
+                    )
+                }
+            }
+        }
+        
+        // Player Breakdown
+        stats?.playerBreakdown?.let { players ->
+            if (players.isNotEmpty()) {
+                Text(
+                    text = "Player Performance",
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 18.sp
+                    ),
+                    color = Color.White,
+                    modifier = Modifier.padding(top = 8.dp)
+                )
+                
+                players.forEach { player ->
+                    StatsCard(
+                        title = "Player ${player.player}",
+                        value = "${player.totalPointsWon ?: 0} points",
+                        subtitle = "${player.totalShots ?: 0} shots • ${String.format("%.1f", player.averageShotSpeed ?: 0.0)} avg speed • ${String.format("%.1f", player.averageAccuracy ?: 0.0)}% accuracy"
+                    )
+                }
+            }
+        }
+        
+        // Live Stats (Real-time up to current position)
+        liveStats?.let { live ->
+            Text(
+                text = "Live Statistics (Up to Current Time)",
+                style = MaterialTheme.typography.titleMedium.copy(
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 18.sp
+                ),
+                color = Color.White,
+                modifier = Modifier.padding(top = 8.dp)
+            )
+            
+            StatsCard(
+                title = "Shots Played",
+                value = "${live.totalShots} total",
+                subtitle = "Player 1: ${live.player1Shots} • Player 2: ${live.player2Shots}"
+            )
+            
+            StatsCard(
+                title = "Speed (So Far)",
+                value = "${String.format("%.1f", live.maxSpeed)} km/h max",
+                subtitle = "Average: ${String.format("%.1f", live.avgSpeed)} km/h"
+            )
+            
+            StatsCard(
+                title = "Rallies Completed",
+                value = "${live.ralliesCompleted}",
+                subtitle = "Up to ${formatTimestamp(currentPositionMs)}"
+            )
+        }
     }
+}
+
+private fun formatTimestamp(ms: Long): String {
+    val totalSeconds = ms / 1000
+    val minutes = totalSeconds / 60
+    val seconds = totalSeconds % 60
+    return String.format("%d:%02d", minutes, seconds)
 }
 
 @Composable

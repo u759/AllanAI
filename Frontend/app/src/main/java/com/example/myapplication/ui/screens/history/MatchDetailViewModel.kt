@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.myapplication.data.model.Detection
 import com.example.myapplication.data.model.Event
 import com.example.myapplication.data.model.Match
+import com.example.myapplication.data.model.ScoreState
 import com.example.myapplication.data.model.Shot
 import com.example.myapplication.data.repository.MatchRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -33,6 +34,18 @@ class MatchDetailViewModel @Inject constructor(
 
     private val _videoUrl = MutableStateFlow<String?>(null)
     val videoUrl: StateFlow<String?> = _videoUrl.asStateFlow()
+
+    private val _currentShot = MutableStateFlow<Shot?>(null)
+    val currentShot: StateFlow<Shot?> = _currentShot.asStateFlow()
+
+    private val _currentEvent = MutableStateFlow<Event?>(null)
+    val currentEvent: StateFlow<Event?> = _currentEvent.asStateFlow()
+
+    private val _currentScore = MutableStateFlow<ScoreState?>(null)
+    val currentScore: StateFlow<ScoreState?> = _currentScore.asStateFlow()
+
+    private val _liveStats = MutableStateFlow<LiveStats?>(null)
+    val liveStats: StateFlow<LiveStats?> = _liveStats.asStateFlow()
 
     /**
      * Load match details by ID.
@@ -70,10 +83,59 @@ class MatchDetailViewModel @Inject constructor(
     }
 
     /**
-     * Update current video playback position.
+     * Update current video playback position and sync real-time stats.
      */
     fun updatePosition(positionMs: Long) {
         _currentPositionMs.value = positionMs
+        
+        // Update real-time stats based on position
+        (_uiState.value as? MatchDetailUiState.Success)?.match?.let { match ->
+            updateRealTimeStats(match, positionMs)
+        }
+    }
+    
+    /**
+     * Update real-time stats based on current video position.
+     */
+    private fun updateRealTimeStats(match: Match, positionMs: Long) {
+        // Find current shot (within ±50ms window)
+        val shot = match.shots.firstOrNull { 
+            kotlin.math.abs(it.timestampMs - positionMs) <= 50 
+        }
+        _currentShot.value = shot
+        
+        // Find current event (within ±200ms window for better UX)
+        val event = match.events.firstOrNull {
+            kotlin.math.abs(it.timestampMs - positionMs) <= 200
+        }
+        _currentEvent.value = event
+        
+        // Update current score from momentum timeline
+        val scoreUpdate = match.statistics?.momentumTimeline?.samples
+            ?.filter { it.timestampMs <= positionMs }
+            ?.maxByOrNull { it.timestampMs }
+        _currentScore.value = scoreUpdate?.scoreAfter
+        
+        // Calculate live stats up to current position
+        val shotsUpToNow = match.shots.filter { it.timestampMs <= positionMs }
+        val eventsUpToNow = match.events.filter { it.timestampMs <= positionMs }
+        
+        if (shotsUpToNow.isNotEmpty()) {
+            val player1Shots = shotsUpToNow.filter { it.player == 1 }
+            val player2Shots = shotsUpToNow.filter { it.player == 2 }
+            
+            _liveStats.value = LiveStats(
+                totalShots = shotsUpToNow.size,
+                player1Shots = player1Shots.size,
+                player2Shots = player2Shots.size,
+                maxSpeed = shotsUpToNow.maxOfOrNull { it.speed } ?: 0.0,
+                avgSpeed = shotsUpToNow.map { it.speed }.average(),
+                ralliesCompleted = eventsUpToNow.count { 
+                    it.type == com.example.myapplication.data.model.EventType.RALLY_HIGHLIGHT
+                },
+                currentScore = _currentScore.value ?: ScoreState(0, 0)
+            )
+        }
     }
 
     /**
@@ -166,3 +228,16 @@ enum class DetectionType {
     BALL,      // Green - ball position from shots
     EVENT      // Yellow - event-specific detections
 }
+
+/**
+ * Live statistics calculated up to current video position.
+ */
+data class LiveStats(
+    val totalShots: Int,
+    val player1Shots: Int,
+    val player2Shots: Int,
+    val maxSpeed: Double,
+    val avgSpeed: Double,
+    val ralliesCompleted: Int,
+    val currentScore: ScoreState
+)

@@ -134,7 +134,12 @@ data class Shot(
 enum class ShotType {
     SERVE,
     FOREHAND,
-    BACKHAND
+    BACKHAND,
+    LOB,
+    DRIVE,
+    RALLY,
+    SMASH,
+    TOPSPIN
 }
 
 /**
