@@ -31,6 +31,9 @@ class MatchDetailViewModel @Inject constructor(
     private val _isPlaying = MutableStateFlow(false)
     val isPlaying: StateFlow<Boolean> = _isPlaying.asStateFlow()
 
+    private val _videoUrl = MutableStateFlow<String?>(null)
+    val videoUrl: StateFlow<String?> = _videoUrl.asStateFlow()
+
     /**
      * Load match details by ID.
      */
@@ -38,6 +41,7 @@ class MatchDetailViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.value = MatchDetailUiState.Loading
             try {
+                // Load match details
                 matchRepository.getMatchById(matchId).collect { match ->
                     if (match != null) {
                         _uiState.value = MatchDetailUiState.Success(match)
@@ -47,6 +51,20 @@ class MatchDetailViewModel @Inject constructor(
                 }
             } catch (e: Exception) {
                 _uiState.value = MatchDetailUiState.Error(e.message ?: "Failed to load match")
+            }
+        }
+
+        // Load video URL separately
+        viewModelScope.launch {
+            try {
+                matchRepository.getVideoUrl(matchId).onSuccess { url ->
+                    _videoUrl.value = url
+                }.onFailure { error ->
+                    // Log error but don't fail the whole screen
+                    android.util.Log.e("MatchDetailViewModel", "Failed to load video URL", error)
+                }
+            } catch (e: Exception) {
+                android.util.Log.e("MatchDetailViewModel", "Error loading video URL", e)
             }
         }
     }

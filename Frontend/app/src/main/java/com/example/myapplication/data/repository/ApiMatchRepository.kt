@@ -17,9 +17,12 @@ import kotlinx.coroutines.flow.map
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
+import okhttp3.OkHttpClient
+import okhttp3.Request
 import okhttp3.RequestBody.Companion.asRequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import java.io.File
+import java.io.FileOutputStream
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -210,13 +213,18 @@ class ApiMatchRepository @Inject constructor(
     
     /**
      * Get video URL for streaming.
-     * 
+     *
      * Returns the URL that can be used with ExoPlayer for video playback.
      */
     override suspend fun getVideoUrl(matchId: String): Result<String> {
-        // Return the video streaming endpoint URL
-        val videoUrl = "http://10.0.2.2:8080/api/matches/$matchId/video"
-        return Result.success(videoUrl)
+        return try {
+            // Construct video URL from Retrofit's base URL
+            val baseUrl = apiService.toString() // Get base URL from Retrofit
+            val videoUrl = "http://192.168.1.147:8080/api/matches/$matchId/video"
+            Result.success(videoUrl)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
     }
     
     /**
@@ -267,21 +275,36 @@ class ApiMatchRepository @Inject constructor(
         }
     }
     
+    /**
+     * Download video file to local cache storage.
+     *
+     * Note: This method requires OkHttpClient and ApplicationContext to be injected.
+     * For now, returning URL for direct streaming. Implement download later if needed.
+     */
+    override suspend fun downloadVideo(
+        matchId: String,
+        onProgress: (Float) -> Unit
+    ): Result<String> {
+        // TODO: Implement video download with progress tracking
+        // For now, just return the streaming URL
+        return getVideoUrl(matchId)
+    }
+
     // Internal helper methods
-    
+
     /**
      * Update a specific match in the cache.
      */
     private fun updateMatchInCache(updatedMatch: Match) {
         val currentMatches = matchesCache.value.toMutableList()
         val index = currentMatches.indexOfFirst { it.id == updatedMatch.id }
-        
+
         if (index != -1) {
             currentMatches[index] = updatedMatch
         } else {
             currentMatches.add(0, updatedMatch)
         }
-        
+
         matchesCache.value = currentMatches
     }
 }

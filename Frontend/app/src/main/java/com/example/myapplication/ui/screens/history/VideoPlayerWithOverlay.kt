@@ -35,7 +35,9 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
+import androidx.media3.datasource.DefaultHttpDataSource
 import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.media3.ui.PlayerView
 import com.example.myapplication.R
 import com.example.myapplication.data.model.Match
@@ -49,6 +51,8 @@ import androidx.core.net.toUri
 @Composable
 fun VideoPlayerWithOverlay(
     match: Match,
+    videoUrl: String?,
+    authToken: String?,
     currentPositionMs: Long,
     isPlaying: Boolean,
     onPositionChange: (Long) -> Unit,
@@ -60,8 +64,8 @@ fun VideoPlayerWithOverlay(
     val context = LocalContext.current
 
     // Create ExoPlayer
-    val exoPlayer = remember {
-        createExoPlayer(context).apply {
+    val exoPlayer = remember(videoUrl) {
+        createExoPlayer(context, videoUrl, authToken).apply {
             // Set up listener for position updates
             addListener(object : Player.Listener {
                 override fun onIsPlayingChanged(isPlaying: Boolean) {
@@ -159,14 +163,44 @@ fun VideoPlayerWithOverlay(
 }
 
 /**
- * Create and configure ExoPlayer instance.
+ * Create and configure ExoPlayer instance with authentication support.
  */
-private fun createExoPlayer(context: Context): ExoPlayer {
-    return ExoPlayer.Builder(context).build().apply {
-        val videoUri = "android.resource://${context.packageName}/${R.raw.test_2}".toUri()
-        setMediaItem(MediaItem.fromUri(videoUri))
-        prepare()
+@OptIn(UnstableApi::class)
+private fun createExoPlayer(context: Context, videoUrl: String?, authToken: String?): ExoPlayer {
+    // Create HTTP data source factory with auth headers
+    val dataSourceFactory = DefaultHttpDataSource.Factory().apply {
+        // Add authorization header if token exists
+        authToken?.let {
+            setDefaultRequestProperties(
+                mapOf("Authorization" to "Bearer $it")
+            )
+        }
+        // Set user agent
+        setUserAgent("AllanAI-Android/1.0")
+        // Set connection and read timeouts
+        setConnectTimeoutMs(30000)
+        setReadTimeoutMs(30000)
     }
+
+    // Create media source factory with custom data source
+    val mediaSourceFactory = DefaultMediaSourceFactory(context)
+        .setDataSourceFactory(dataSourceFactory)
+
+    return ExoPlayer.Builder(context)
+        .setMediaSourceFactory(mediaSourceFactory)
+        .build()
+        .apply {
+            if (!videoUrl.isNullOrEmpty()) {
+                // Use provided video URL from backend
+                setMediaItem(MediaItem.fromUri(videoUrl))
+                prepare()
+            } else {
+                // Fallback to local test video if no URL provided
+                val fallbackUri = "android.resource://${context.packageName}/${R.raw.test_2}".toUri()
+                setMediaItem(MediaItem.fromUri(fallbackUri))
+                prepare()
+            }
+        }
 }
 
 /**
