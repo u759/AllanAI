@@ -1,0 +1,258 @@
+package com.example.myapplication.data.repository
+
+import com.example.myapplication.data.api.AllanAIApiService
+import com.example.myapplication.data.api.mapper.toEvent
+import com.example.myapplication.data.api.mapper.toHighlights
+import com.example.myapplication.data.api.mapper.toMatch
+import com.example.myapplication.data.model.Event
+import com.example.myapplication.data.model.Highlights
+import com.example.myapplication.data.model.Match
+import com.example.myapplication.data.model.MatchStatus
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.map
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.MultipartBody
+import okhttp3.RequestBody.Companion.asRequestBody
+import java.io.File
+import javax.inject.Inject
+import javax.inject.Singleton
+
+/**
+ * Production implementation of MatchRepository using real backend API.
+ * 
+ * This repository communicates with the Spring Boot backend using Retrofit
+ * and follows the architecture guidelines:
+ * - Uses suspend functions for async operations
+ * - Returns Flow for reactive data
+ * - Returns Result for error handling
+ * - Maps API DTOs to domain models
+ * 
+ * @param apiService Retrofit API service for backend communication
+ */
+@Singleton
+class ApiMatchRepository @Inject constructor(
+    private val apiService: AllanAIApiService
+) : MatchRepository {
+    
+    // In-memory cache for matches (could be replaced with Room database later)
+    private val matchesCache = MutableStateFlow<List<Match>>(emptyList())
+    
+    /**
+     * Upload a video file to create a new match.
+     * 
+     * The video is sent as multipart/form-data to the backend.
+     * Backend will process it asynchronously and detect events, shots, etc.
+     */
+    override suspend fun uploadMatch(videoFile: File, filename: String): Result<Match> {
+        return try {
+            // Create multipart request body
+            val requestBody = videoFile.asRequestBody("video/mp4".toMediaType())
+            val multipartBody = MultipartBody.Part.createFormData(
+                "video",
+                filename,
+                requestBody
+            )
+            
+            // Upload to backend
+            val response = apiService.uploadMatch(multipartBody)
+            
+            // Create Match from response (minimal data, will be updated when processing completes)
+            val match = Match(
+                id = response.matchId,
+                createdAt = java.time.Instant.now(),
+                status = MatchStatus.valueOf(response.status)
+            )
+            
+            // Add to cache
+            val currentMatches = matchesCache.value.toMutableList()
+            currentMatches.add(0, match) // Add to beginning
+            matchesCache.value = currentMatches
+            
+            Result.success(match)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+    
+    /**
+     * Get all matches from the backend.
+     * 
+     * Returns a Flow that emits the list of matches from the cache.
+     * Call refreshMatch() from the ViewModel to update the cache.
+     */
+    override fun getAllMatches(): Flow<List<Match>> {
+        return matchesCache.asStateFlow()
+    }
+    
+    /**
+     * Manually refresh all matches from the API.
+     * Call this from the ViewModel when you need to update the match list.
+     */
+    suspend fun refreshAllMatches(): Result<Unit> {
+        return try {
+            val response = apiService.getMatches()
+            val matches = response.map { it.toMatch() }
+            matchesCache.value = matches
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+    
+    /**
+     * Get a specific match by ID.
+     */
+    override fun getMatchById(matchId: String): Flow<Match?> {
+        return matchesCache.map { matches ->
+            matches.find { it.id == matchId }
+        }
+    }
+    
+    /**
+     * Get matches filtered by status.
+     */
+    override fun getMatchesByStatus(status: MatchStatus): Flow<List<Match>> {
+        return matchesCache.map { matches ->
+            matches.filter { it.status == status }
+        }
+    }
+    
+    /**
+     * Get detailed statistics for a match.
+     * 
+     * Fetches complete match details including statistics, shots, and events.
+     */
+    override suspend fun getMatchStatistics(matchId: String): Result<Match> {
+        return try {
+            val response = apiService.getMatchDetails(matchId)
+            val match = response.toMatch()
+            
+            // Update cache
+            updateMatchInCache(match)
+            
+            Result.success(match)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+    
+    /**
+     * Get all events for a match.
+     */
+    override suspend fun getMatchEvents(matchId: String): Result<List<Event>> {
+        return try {
+            val response = apiService.getMatchEvents(matchId)
+            val events = response.map { it.toEvent() }
+            Result.success(events)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+    
+    /**
+     * Get a specific event by ID.
+     */
+    override suspend fun getEventById(matchId: String, eventId: String): Result<Event> {
+        return try {
+            val response = apiService.getMatchEvents(matchId)
+            val event = response.find { it.id == eventId }
+                ?.toEvent()
+                ?: throw Exception("Event not found: $eventId")
+            Result.success(event)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+    
+    /**
+     * Get highlights for a match.
+     */
+    override suspend fun getMatchHighlights(matchId: String): Result<Highlights> {
+        return try {
+            val response = apiService.getMatchHighlights(matchId)
+            val highlights = response.toHighlights()
+            Result.success(highlights)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+    
+    /**
+     * Get video URL for streaming.
+     * 
+     * Returns the URL that can be used with ExoPlayer for video playback.
+     */
+    override suspend fun getVideoUrl(matchId: String): Result<String> {
+        // Return the video streaming endpoint URL
+        val videoUrl = "http://10.0.2.2:8080/api/matches/$matchId/video"
+        return Result.success(videoUrl)
+    }
+    
+    /**
+     * Delete a match and its associated video.
+     */
+    override suspend fun deleteMatch(matchId: String): Result<Unit> {
+        return try {
+            apiService.deleteMatch(matchId)
+            
+            // Remove from cache
+            val currentMatches = matchesCache.value.toMutableList()
+            currentMatches.removeAll { it.id == matchId }
+            matchesCache.value = currentMatches
+            
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+    
+    /**
+     * Refresh match data from the server.
+     */
+    override suspend fun refreshMatch(matchId: String): Result<Match> {
+        return try {
+            val response = apiService.getMatchDetails(matchId)
+            val match = response.toMatch()
+            
+            // Update cache
+            updateMatchInCache(match)
+            
+            Result.success(match)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+    
+    /**
+     * Check processing status of a match.
+     */
+    override suspend fun getMatchStatus(matchId: String): Result<MatchStatus> {
+        return try {
+            val response = apiService.getMatchStatus(matchId)
+            val status = MatchStatus.valueOf(response.status)
+            Result.success(status)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+    
+    // Internal helper methods
+    
+    /**
+     * Update a specific match in the cache.
+     */
+    private fun updateMatchInCache(updatedMatch: Match) {
+        val currentMatches = matchesCache.value.toMutableList()
+        val index = currentMatches.indexOfFirst { it.id == updatedMatch.id }
+        
+        if (index != -1) {
+            currentMatches[index] = updatedMatch
+        } else {
+            currentMatches.add(0, updatedMatch)
+        }
+        
+        matchesCache.value = currentMatches
+    }
+}
