@@ -6,5 +6,11 @@ public enum EventType {
     RALLY_HIGHLIGHT,
     SERVE_ACE,
     MISS,
-    FASTEST_SHOT
+    FASTEST_SHOT,
+    SERVE,
+    RETURN,
+    RALLY,
+    POINT,
+    HIGHLIGHT,
+    OTHER
 }

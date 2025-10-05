@@ -127,6 +127,13 @@ public class MatchDocument {
         private Double avgRallyLength;
         private Double maxBallSpeed;
         private Double avgBallSpeed;
+        private RallyMetrics rallyMetrics = new RallyMetrics();
+        private ShotSpeedMetrics shotSpeedMetrics = new ShotSpeedMetrics();
+        private ServeMetrics serveMetrics = new ServeMetrics();
+        private ReturnMetrics returnMetrics = new ReturnMetrics();
+        private List<ShotTypeAggregate> shotTypeBreakdown = new ArrayList<>();
+        private List<PlayerBreakdown> playerBreakdown = new ArrayList<>();
+        private MomentumTimeline momentumTimeline = new MomentumTimeline();
 
         public Integer getPlayer1Score() {
             return player1Score;
@@ -174,6 +181,473 @@ public class MatchDocument {
 
         public void setAvgBallSpeed(Double avgBallSpeed) {
             this.avgBallSpeed = avgBallSpeed;
+        }
+
+        public RallyMetrics getRallyMetrics() {
+            return rallyMetrics;
+        }
+
+        public void setRallyMetrics(RallyMetrics rallyMetrics) {
+            this.rallyMetrics = rallyMetrics;
+        }
+
+        public ShotSpeedMetrics getShotSpeedMetrics() {
+            return shotSpeedMetrics;
+        }
+
+        public void setShotSpeedMetrics(ShotSpeedMetrics shotSpeedMetrics) {
+            this.shotSpeedMetrics = shotSpeedMetrics;
+        }
+
+        public ServeMetrics getServeMetrics() {
+            return serveMetrics;
+        }
+
+        public void setServeMetrics(ServeMetrics serveMetrics) {
+            this.serveMetrics = serveMetrics;
+        }
+
+        public ReturnMetrics getReturnMetrics() {
+            return returnMetrics;
+        }
+
+        public void setReturnMetrics(ReturnMetrics returnMetrics) {
+            this.returnMetrics = returnMetrics;
+        }
+
+        public List<ShotTypeAggregate> getShotTypeBreakdown() {
+            return shotTypeBreakdown;
+        }
+
+        public void setShotTypeBreakdown(List<ShotTypeAggregate> shotTypeBreakdown) {
+            this.shotTypeBreakdown = shotTypeBreakdown;
+        }
+
+        public List<PlayerBreakdown> getPlayerBreakdown() {
+            return playerBreakdown;
+        }
+
+        public void setPlayerBreakdown(List<PlayerBreakdown> playerBreakdown) {
+            this.playerBreakdown = playerBreakdown;
+        }
+
+        public MomentumTimeline getMomentumTimeline() {
+            return momentumTimeline;
+        }
+
+        public void setMomentumTimeline(MomentumTimeline momentumTimeline) {
+            this.momentumTimeline = momentumTimeline;
+        }
+    }
+
+    public static class RallyMetrics {
+        private Integer totalRallies;
+        private Double averageRallyLength;
+        private Integer longestRallyLength;
+        private Double averageRallyDurationSeconds;
+        private Double longestRallyDurationSeconds;
+        private Double averageRallyShotSpeed;
+
+        public Integer getTotalRallies() {
+            return totalRallies;
+        }
+
+        public void setTotalRallies(Integer totalRallies) {
+            this.totalRallies = totalRallies;
+        }
+
+        public Double getAverageRallyLength() {
+            return averageRallyLength;
+        }
+
+        public void setAverageRallyLength(Double averageRallyLength) {
+            this.averageRallyLength = averageRallyLength;
+        }
+
+        public Integer getLongestRallyLength() {
+            return longestRallyLength;
+        }
+
+        public void setLongestRallyLength(Integer longestRallyLength) {
+            this.longestRallyLength = longestRallyLength;
+        }
+
+        public Double getAverageRallyDurationSeconds() {
+            return averageRallyDurationSeconds;
+        }
+
+        public void setAverageRallyDurationSeconds(Double averageRallyDurationSeconds) {
+            this.averageRallyDurationSeconds = averageRallyDurationSeconds;
+        }
+
+        public Double getLongestRallyDurationSeconds() {
+            return longestRallyDurationSeconds;
+        }
+
+        public void setLongestRallyDurationSeconds(Double longestRallyDurationSeconds) {
+            this.longestRallyDurationSeconds = longestRallyDurationSeconds;
+        }
+
+        public Double getAverageRallyShotSpeed() {
+            return averageRallyShotSpeed;
+        }
+
+        public void setAverageRallyShotSpeed(Double averageRallyShotSpeed) {
+            this.averageRallyShotSpeed = averageRallyShotSpeed;
+        }
+    }
+
+    public static class ShotSpeedMetrics {
+        private Double fastestShotMph;
+        private Double averageShotMph;
+        private Double averageIncomingShotMph;
+        private Double averageOutgoingShotMph;
+
+        public Double getFastestShotMph() {
+            return fastestShotMph;
+        }
+
+        public void setFastestShotMph(Double fastestShotMph) {
+            this.fastestShotMph = fastestShotMph;
+        }
+
+        public Double getAverageShotMph() {
+            return averageShotMph;
+        }
+
+        public void setAverageShotMph(Double averageShotMph) {
+            this.averageShotMph = averageShotMph;
+        }
+
+        public Double getAverageIncomingShotMph() {
+            return averageIncomingShotMph;
+        }
+
+        public void setAverageIncomingShotMph(Double averageIncomingShotMph) {
+            this.averageIncomingShotMph = averageIncomingShotMph;
+        }
+
+        public Double getAverageOutgoingShotMph() {
+            return averageOutgoingShotMph;
+        }
+
+        public void setAverageOutgoingShotMph(Double averageOutgoingShotMph) {
+            this.averageOutgoingShotMph = averageOutgoingShotMph;
+        }
+    }
+
+    public static class ServeMetrics {
+        private Integer totalServes;
+        private Integer successfulServes;
+        private Integer faults;
+        private Double successRate;
+        private Double averageServeSpeed;
+        private Double fastestServeSpeed;
+
+        public Integer getTotalServes() {
+            return totalServes;
+        }
+
+        public void setTotalServes(Integer totalServes) {
+            this.totalServes = totalServes;
+        }
+
+        public Integer getSuccessfulServes() {
+            return successfulServes;
+        }
+
+        public void setSuccessfulServes(Integer successfulServes) {
+            this.successfulServes = successfulServes;
+        }
+
+        public Integer getFaults() {
+            return faults;
+        }
+
+        public void setFaults(Integer faults) {
+            this.faults = faults;
+        }
+
+        public Double getSuccessRate() {
+            return successRate;
+        }
+
+        public void setSuccessRate(Double successRate) {
+            this.successRate = successRate;
+        }
+
+        public Double getAverageServeSpeed() {
+            return averageServeSpeed;
+        }
+
+        public void setAverageServeSpeed(Double averageServeSpeed) {
+            this.averageServeSpeed = averageServeSpeed;
+        }
+
+        public Double getFastestServeSpeed() {
+            return fastestServeSpeed;
+        }
+
+        public void setFastestServeSpeed(Double fastestServeSpeed) {
+            this.fastestServeSpeed = fastestServeSpeed;
+        }
+    }
+
+    public static class ReturnMetrics {
+        private Integer totalReturns;
+        private Integer successfulReturns;
+        private Double successRate;
+        private Double averageReturnSpeed;
+
+        public Integer getTotalReturns() {
+            return totalReturns;
+        }
+
+        public void setTotalReturns(Integer totalReturns) {
+            this.totalReturns = totalReturns;
+        }
+
+        public Integer getSuccessfulReturns() {
+            return successfulReturns;
+        }
+
+        public void setSuccessfulReturns(Integer successfulReturns) {
+            this.successfulReturns = successfulReturns;
+        }
+
+        public Double getSuccessRate() {
+            return successRate;
+        }
+
+        public void setSuccessRate(Double successRate) {
+            this.successRate = successRate;
+        }
+
+        public Double getAverageReturnSpeed() {
+            return averageReturnSpeed;
+        }
+
+        public void setAverageReturnSpeed(Double averageReturnSpeed) {
+            this.averageReturnSpeed = averageReturnSpeed;
+        }
+    }
+
+    public static class ShotTypeAggregate {
+        private ShotType shotType;
+        private Integer count;
+        private Double averageSpeed;
+        private Double averageAccuracy;
+
+        public ShotType getShotType() {
+            return shotType;
+        }
+
+        public void setShotType(ShotType shotType) {
+            this.shotType = shotType;
+        }
+
+        public Integer getCount() {
+            return count;
+        }
+
+        public void setCount(Integer count) {
+            this.count = count;
+        }
+
+        public Double getAverageSpeed() {
+            return averageSpeed;
+        }
+
+        public void setAverageSpeed(Double averageSpeed) {
+            this.averageSpeed = averageSpeed;
+        }
+
+        public Double getAverageAccuracy() {
+            return averageAccuracy;
+        }
+
+        public void setAverageAccuracy(Double averageAccuracy) {
+            this.averageAccuracy = averageAccuracy;
+        }
+    }
+
+    public static class PlayerBreakdown {
+        private Integer player;
+        private Integer totalPointsWon;
+        private Integer totalShots;
+        private Integer totalServes;
+        private Integer successfulServes;
+        private Integer totalReturns;
+        private Integer successfulReturns;
+        private Integer winners;
+        private Integer errors;
+        private Double averageShotSpeed;
+        private Double averageAccuracy;
+        private Double pointWinRate;
+        private Double serveSuccessRate;
+        private Double returnSuccessRate;
+
+        public Integer getPlayer() {
+            return player;
+        }
+
+        public void setPlayer(Integer player) {
+            this.player = player;
+        }
+
+        public Integer getTotalPointsWon() {
+            return totalPointsWon;
+        }
+
+        public void setTotalPointsWon(Integer totalPointsWon) {
+            this.totalPointsWon = totalPointsWon;
+        }
+
+        public Integer getTotalShots() {
+            return totalShots;
+        }
+
+        public void setTotalShots(Integer totalShots) {
+            this.totalShots = totalShots;
+        }
+
+        public Integer getTotalServes() {
+            return totalServes;
+        }
+
+        public void setTotalServes(Integer totalServes) {
+            this.totalServes = totalServes;
+        }
+
+        public Integer getSuccessfulServes() {
+            return successfulServes;
+        }
+
+        public void setSuccessfulServes(Integer successfulServes) {
+            this.successfulServes = successfulServes;
+        }
+
+        public Integer getTotalReturns() {
+            return totalReturns;
+        }
+
+        public void setTotalReturns(Integer totalReturns) {
+            this.totalReturns = totalReturns;
+        }
+
+        public Integer getSuccessfulReturns() {
+            return successfulReturns;
+        }
+
+        public void setSuccessfulReturns(Integer successfulReturns) {
+            this.successfulReturns = successfulReturns;
+        }
+
+        public Integer getWinners() {
+            return winners;
+        }
+
+        public void setWinners(Integer winners) {
+            this.winners = winners;
+        }
+
+        public Integer getErrors() {
+            return errors;
+        }
+
+        public void setErrors(Integer errors) {
+            this.errors = errors;
+        }
+
+        public Double getAverageShotSpeed() {
+            return averageShotSpeed;
+        }
+
+        public void setAverageShotSpeed(Double averageShotSpeed) {
+            this.averageShotSpeed = averageShotSpeed;
+        }
+
+        public Double getAverageAccuracy() {
+            return averageAccuracy;
+        }
+
+        public void setAverageAccuracy(Double averageAccuracy) {
+            this.averageAccuracy = averageAccuracy;
+        }
+
+        public Double getPointWinRate() {
+            return pointWinRate;
+        }
+
+        public void setPointWinRate(Double pointWinRate) {
+            this.pointWinRate = pointWinRate;
+        }
+
+        public Double getServeSuccessRate() {
+            return serveSuccessRate;
+        }
+
+        public void setServeSuccessRate(Double serveSuccessRate) {
+            this.serveSuccessRate = serveSuccessRate;
+        }
+
+        public Double getReturnSuccessRate() {
+            return returnSuccessRate;
+        }
+
+        public void setReturnSuccessRate(Double returnSuccessRate) {
+            this.returnSuccessRate = returnSuccessRate;
+        }
+    }
+
+    public static class MomentumTimeline {
+        private List<MomentumSample> samples = new ArrayList<>();
+
+        public List<MomentumSample> getSamples() {
+            return samples;
+        }
+
+        public void setSamples(List<MomentumSample> samples) {
+            this.samples = samples;
+        }
+    }
+
+    public static class MomentumSample {
+        private Long timestampMs;
+        private Integer scoringPlayer;
+        private ScoreState scoreAfter;
+        private Integer lead;
+
+        public Long getTimestampMs() {
+            return timestampMs;
+        }
+
+        public void setTimestampMs(Long timestampMs) {
+            this.timestampMs = timestampMs;
+        }
+
+        public Integer getScoringPlayer() {
+            return scoringPlayer;
+        }
+
+        public void setScoringPlayer(Integer scoringPlayer) {
+            this.scoringPlayer = scoringPlayer;
+        }
+
+        public ScoreState getScoreAfter() {
+            return scoreAfter;
+        }
+
+        public void setScoreAfter(ScoreState scoreAfter) {
+            this.scoreAfter = scoreAfter;
+        }
+
+        public Integer getLead() {
+            return lead;
+        }
+
+        public void setLead(Integer lead) {
+            this.lead = lead;
         }
     }
 

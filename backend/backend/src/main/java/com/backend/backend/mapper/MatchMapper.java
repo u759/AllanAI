@@ -14,9 +14,16 @@ import com.backend.backend.dto.HighlightsResponse;
 import com.backend.backend.dto.MatchDetailsResponse;
 import com.backend.backend.dto.MatchStatisticsResponse;
 import com.backend.backend.dto.MatchSummaryResponse;
+import com.backend.backend.dto.MomentumSampleResponse;
+import com.backend.backend.dto.PlayerBreakdownResponse;
 import com.backend.backend.dto.ProcessingSummaryResponse;
+import com.backend.backend.dto.RallyMetricsResponse;
+import com.backend.backend.dto.ReturnMetricsResponse;
 import com.backend.backend.dto.ScoreStateResponse;
+import com.backend.backend.dto.ServeMetricsResponse;
 import com.backend.backend.dto.ShotResponse;
+import com.backend.backend.dto.ShotSpeedMetricsResponse;
+import com.backend.backend.dto.ShotTypeBreakdownItemResponse;
 import com.backend.backend.model.MatchDocument;
 import com.backend.backend.model.MatchDocument.Event;
 import com.backend.backend.model.MatchDocument.EventMetadata;
@@ -68,7 +75,20 @@ public final class MatchMapper {
 
     public static MatchStatisticsResponse toStatistics(MatchStatistics statistics) {
         if (statistics == null) {
-            return new MatchStatisticsResponse(0, 0, 0, 0.0, 0.0, 0.0);
+            return new MatchStatisticsResponse(
+                0,
+                0,
+                0,
+                0.0,
+                0.0,
+                0.0,
+                toRallyMetrics(null),
+                toShotSpeedMetrics(null),
+                toServeMetrics(null),
+                toReturnMetrics(null),
+                List.of(),
+                List.of(),
+                List.of());
         }
         return new MatchStatisticsResponse(
             statistics.getPlayer1Score(),
@@ -76,7 +96,14 @@ public final class MatchMapper {
             statistics.getTotalRallies(),
             statistics.getAvgRallyLength(),
             statistics.getMaxBallSpeed(),
-            statistics.getAvgBallSpeed());
+            statistics.getAvgBallSpeed(),
+            toRallyMetrics(statistics.getRallyMetrics()),
+            toShotSpeedMetrics(statistics.getShotSpeedMetrics()),
+            toServeMetrics(statistics.getServeMetrics()),
+            toReturnMetrics(statistics.getReturnMetrics()),
+            toShotTypeBreakdown(statistics.getShotTypeBreakdown()),
+            toPlayerBreakdown(statistics.getPlayerBreakdown()),
+            toMomentumTimeline(statistics.getMomentumTimeline()));
     }
 
     public static ShotResponse toShot(Shot shot) {
@@ -116,6 +143,8 @@ public final class MatchMapper {
                 null,
                 null,
                 null,
+                null,
+                null,
                 Collections.emptyList(),
                 null,
                 Collections.emptyList(),
@@ -133,6 +162,8 @@ public final class MatchMapper {
         EventWindowResponse eventWindow = toEventWindow(metadata.getEventWindow());
         return new EventMetadataResponse(
             metadata.getShotSpeed(),
+            metadata.getIncomingShotSpeed(),
+            metadata.getOutgoingShotSpeed(),
             metadata.getRallyLength(),
             metadata.getShotType(),
             ballTrajectory,
@@ -165,6 +196,103 @@ public final class MatchMapper {
             highlights.getTopRallies().stream().map(MatchMapper::toHighlightReference).toList(),
             highlights.getFastestShots().stream().map(MatchMapper::toHighlightReference).toList(),
             highlights.getBestServes().stream().map(MatchMapper::toHighlightReference).toList());
+    }
+
+    private static RallyMetricsResponse toRallyMetrics(MatchDocument.RallyMetrics metrics) {
+        if (metrics == null) {
+            return new RallyMetricsResponse(0, 0.0, 0, 0.0, 0.0, 0.0);
+        }
+        return new RallyMetricsResponse(
+            metrics.getTotalRallies(),
+            metrics.getAverageRallyLength(),
+            metrics.getLongestRallyLength(),
+            metrics.getAverageRallyDurationSeconds(),
+            metrics.getLongestRallyDurationSeconds(),
+            metrics.getAverageRallyShotSpeed());
+    }
+
+    private static ShotSpeedMetricsResponse toShotSpeedMetrics(MatchDocument.ShotSpeedMetrics metrics) {
+        if (metrics == null) {
+            return new ShotSpeedMetricsResponse(0.0, 0.0, 0.0, 0.0);
+        }
+        return new ShotSpeedMetricsResponse(
+            metrics.getFastestShotMph(),
+            metrics.getAverageShotMph(),
+            metrics.getAverageIncomingShotMph(),
+            metrics.getAverageOutgoingShotMph());
+    }
+
+    private static ServeMetricsResponse toServeMetrics(MatchDocument.ServeMetrics metrics) {
+        if (metrics == null) {
+            return new ServeMetricsResponse(0, 0, 0, 0.0, 0.0, 0.0);
+        }
+        return new ServeMetricsResponse(
+            metrics.getTotalServes(),
+            metrics.getSuccessfulServes(),
+            metrics.getFaults(),
+            metrics.getSuccessRate(),
+            metrics.getAverageServeSpeed(),
+            metrics.getFastestServeSpeed());
+    }
+
+    private static ReturnMetricsResponse toReturnMetrics(MatchDocument.ReturnMetrics metrics) {
+        if (metrics == null) {
+            return new ReturnMetricsResponse(0, 0, 0.0, 0.0);
+        }
+        return new ReturnMetricsResponse(
+            metrics.getTotalReturns(),
+            metrics.getSuccessfulReturns(),
+            metrics.getSuccessRate(),
+            metrics.getAverageReturnSpeed());
+    }
+
+    private static List<ShotTypeBreakdownItemResponse> toShotTypeBreakdown(List<MatchDocument.ShotTypeAggregate> aggregates) {
+        if (aggregates == null || aggregates.isEmpty()) {
+            return List.of();
+        }
+        return aggregates.stream()
+            .map(aggregate -> new ShotTypeBreakdownItemResponse(
+                aggregate.getShotType(),
+                aggregate.getCount(),
+                aggregate.getAverageSpeed(),
+                aggregate.getAverageAccuracy()))
+            .toList();
+    }
+
+    private static List<PlayerBreakdownResponse> toPlayerBreakdown(List<MatchDocument.PlayerBreakdown> breakdowns) {
+        if (breakdowns == null || breakdowns.isEmpty()) {
+            return List.of();
+        }
+        return breakdowns.stream()
+            .map(breakdown -> new PlayerBreakdownResponse(
+                breakdown.getPlayer(),
+                breakdown.getTotalPointsWon(),
+                breakdown.getTotalShots(),
+                breakdown.getTotalServes(),
+                breakdown.getSuccessfulServes(),
+                breakdown.getTotalReturns(),
+                breakdown.getSuccessfulReturns(),
+                breakdown.getWinners(),
+                breakdown.getErrors(),
+                breakdown.getAverageShotSpeed(),
+                breakdown.getAverageAccuracy(),
+                breakdown.getPointWinRate(),
+                breakdown.getServeSuccessRate(),
+                breakdown.getReturnSuccessRate()))
+            .toList();
+    }
+
+    private static List<MomentumSampleResponse> toMomentumTimeline(MatchDocument.MomentumTimeline timeline) {
+        if (timeline == null || timeline.getSamples() == null || timeline.getSamples().isEmpty()) {
+            return List.of();
+        }
+        return timeline.getSamples().stream()
+            .map(sample -> new MomentumSampleResponse(
+                sample.getTimestampMs(),
+                sample.getScoringPlayer(),
+                sample.getScoreAfter() == null ? null : toScoreState(sample.getScoreAfter()),
+                sample.getLead()))
+            .toList();
     }
 
     private static ProcessingSummaryResponse toProcessingSummary(ProcessingSummary summary) {

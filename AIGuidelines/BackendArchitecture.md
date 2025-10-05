@@ -615,6 +615,17 @@ public class StatisticsService {
                 .build();
     }
 }
+
+> **Updated implementation note:** the production `MatchStatisticsResponse` emitted by the Spring Boot service now bundles a richer set of aggregates beyond the basic score and speed fields shown above. The payload adds:
+>
+> - `rallyMetrics`: total rally count, average/longest rally length, estimated durations, and average rally shot speed.
+> - `shotSpeedMetrics`: fastest shot observed plus average outgoing and incoming speeds measured per rally event.
+> - `serveMetrics` and `returnMetrics`: counts, success rates, and speed profiles for serves vs. non-serve returns.
+> - `shotTypeBreakdown`: per-`ShotType` volume with averaged speed/accuracy values to quickly identify play-style bias.
+> - `playerBreakdown`: player-specific summaries covering points won, winners/errors, serve/return success rates, and shot quality.
+> - `momentumTimeline`: chronological score snapshots (timestamp, scorer, and lead) for lightweight momentum visualisations.
+>
+> These composites are stored inside `MatchDocument.MatchStatistics` and mapped 1:1 to the API DTOs, so downstream consumers can surface advanced dashboards without recomputing raw model signals.
 ```
 
 **FileStorageService.java**:
