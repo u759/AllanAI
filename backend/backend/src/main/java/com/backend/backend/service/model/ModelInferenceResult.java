@@ -80,7 +80,35 @@ public class ModelInferenceResult {
         private Integer postEventFrames;
         private Integer frameNumber;
         private List<List<Double>> ballTrajectory;
-    private List<ModelDetection> detections;
+        private List<ModelDetection> detections;
+
+        private Boolean isScoring; // Is this event a scoring event?
+        private Integer scoringSide; // Which side scored (1 or 2)
+        private Double duration; // Rally duration in seconds
+
+        public Boolean getIsScoring() {
+            return isScoring;
+        }
+        
+        public void setIsScoring(Boolean isScoring) {
+            this.isScoring = isScoring;
+        }
+
+        public Integer getScoringSide() {
+            return scoringSide;
+        }
+
+        public void setScoringSide(Integer scoringSide) {
+            this.scoringSide = scoringSide;
+        }
+
+        public Double getDuration() {
+            return duration;
+        }
+
+        public void setDuration(Double duration) {
+            this.duration = duration;
+        }
 
         public Long getFrame() {
             return frame;
