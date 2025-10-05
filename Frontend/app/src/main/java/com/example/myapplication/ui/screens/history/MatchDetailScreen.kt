@@ -24,7 +24,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
+import com.example.myapplication.data.model.EventType
 import com.example.myapplication.data.model.Match
+import com.example.myapplication.data.model.ShotResult
+import com.example.myapplication.data.model.ShotType
 import com.example.myapplication.ui.theme.MyApplicationTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -220,6 +223,21 @@ private fun MatchDetailContent(
 
         // Performance Metrics
         PerformanceMetricsSection(match = match)
+
+        // Shot Statistics
+        if (match.shots.isNotEmpty()) {
+            ShotStatisticsSection(match = match)
+        }
+
+        // Events Summary
+        if (match.events.isNotEmpty()) {
+            EventsSummarySection(match = match)
+        }
+
+        // Player Comparison
+        if (match.shots.isNotEmpty()) {
+            PlayerComparisonSection(match = match)
+        }
     }
 }
 
@@ -506,6 +524,304 @@ private fun RowScope.BottomNavItem(
                 fontSize = 12.sp
             ),
             color = if (selected) MaterialTheme.colorScheme.primary else Color(0xFF71717A)
+        )
+    }
+}
+
+/**
+ * Shot Statistics Section - Displays detailed shot metrics
+ */
+@Composable
+private fun ShotStatisticsSection(match: Match) {
+    Column(
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Text(
+            text = "Shot Statistics",
+            style = MaterialTheme.typography.titleLarge.copy(
+                fontWeight = FontWeight.Bold,
+                fontSize = 20.sp
+            ),
+            color = Color.White
+        )
+
+        // Calculate shot metrics
+        val totalShots = match.shots.size
+        val serves = match.shots.count { it.shotType == ShotType.SERVE }
+        val forehands = match.shots.count { it.shotType == ShotType.FOREHAND }
+        val backhands = match.shots.count { it.shotType == ShotType.BACKHAND }
+        val successfulShots = match.shots.count { it.result == ShotResult.IN }
+        val successRate = if (totalShots > 0) (successfulShots.toDouble() / totalShots * 100) else 0.0
+
+        MetricCard {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text(
+                    text = "Shot Breakdown",
+                    style = MaterialTheme.typography.bodyLarge.copy(
+                        fontWeight = FontWeight.Bold
+                    ),
+                    color = Color.White
+                )
+
+                ShotTypeRow("Serves", serves, totalShots)
+                ShotTypeRow("Forehands", forehands, totalShots)
+                ShotTypeRow("Backhands", backhands, totalShots)
+
+                HorizontalDivider(color = Color(0x1FFFFFFF), thickness = 1.dp)
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = "Success Rate",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color(0xFF9CA3AF)
+                    )
+                    Text(
+                        text = "${successRate.toInt()}%",
+                        style = MaterialTheme.typography.bodyMedium.copy(
+                            fontWeight = FontWeight.Bold
+                        ),
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ShotTypeRow(label: String, count: Int, total: Int) {
+    val percentage = if (total > 0) (count.toDouble() / total * 100).toInt() else 0
+
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodyMedium,
+            color = Color(0xFF9CA3AF)
+        )
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "$count",
+                style = MaterialTheme.typography.bodyMedium.copy(
+                    fontWeight = FontWeight.Bold
+                ),
+                color = Color.White
+            )
+            Text(
+                text = "($percentage%)",
+                style = MaterialTheme.typography.bodySmall,
+                color = Color(0xFF9CA3AF)
+            )
+        }
+    }
+}
+
+/**
+ * Events Summary Section - Displays event counts and types
+ */
+@Composable
+private fun EventsSummarySection(match: Match) {
+    Column(
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Text(
+            text = "Events",
+            style = MaterialTheme.typography.titleLarge.copy(
+                fontWeight = FontWeight.Bold,
+                fontSize = 20.sp
+            ),
+            color = Color.White
+        )
+
+        val eventCounts = match.events.groupingBy { it.type }.eachCount()
+
+        MetricCard {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                eventCounts.forEach { (type, count) ->
+                    EventTypeRow(type = type, count = count)
+                }
+
+                if (eventCounts.isEmpty()) {
+                    Text(
+                        text = "No events detected",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color(0xFF9CA3AF),
+                        modifier = Modifier.padding(vertical = 8.dp)
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun EventTypeRow(type: EventType, count: Int) {
+    val (emoji, label, color) = when (type) {
+        EventType.PLAY_OF_THE_GAME -> Triple("⭐", "Play of the Game", Color(0xFFFFD700))
+        EventType.SCORE -> Triple("🎯", "Score", Color(0xFF4CAF50))
+        EventType.MISS -> Triple("❌", "Miss", Color(0xFFF44336))
+        EventType.RALLY_HIGHLIGHT -> Triple("🏆", "Rally Highlight", Color(0xFFFF9800))
+        EventType.SERVE_ACE -> Triple("⚡", "Serve Ace", Color(0xFF9C27B0))
+        EventType.FASTEST_SHOT -> Triple("🚀", "Fastest Shot", Color(0xFFE91E63))
+    }
+
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = emoji,
+                style = MaterialTheme.typography.bodyLarge
+            )
+            Text(
+                text = label,
+                style = MaterialTheme.typography.bodyMedium,
+                color = Color.White
+            )
+        }
+        Text(
+            text = "$count",
+            style = MaterialTheme.typography.bodyMedium.copy(
+                fontWeight = FontWeight.Bold
+            ),
+            color = color
+        )
+    }
+}
+
+/**
+ * Player Comparison Section - Compares player performance
+ */
+@Composable
+private fun PlayerComparisonSection(match: Match) {
+    Column(
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Text(
+            text = "Player Comparison",
+            style = MaterialTheme.typography.titleLarge.copy(
+                fontWeight = FontWeight.Bold,
+                fontSize = 20.sp
+            ),
+            color = Color.White
+        )
+
+        // Calculate player stats
+        val player1Shots = match.shots.filter { it.player == 1 }
+        val player2Shots = match.shots.filter { it.player == 2 }
+
+        val player1AvgSpeed = if (player1Shots.isNotEmpty())
+            player1Shots.map { it.speed }.average() else 0.0
+        val player2AvgSpeed = if (player2Shots.isNotEmpty())
+            player2Shots.map { it.speed }.average() else 0.0
+
+        val player1SuccessRate = if (player1Shots.isNotEmpty())
+            (player1Shots.count { it.result == ShotResult.IN }.toDouble() / player1Shots.size * 100)
+            else 0.0
+        val player2SuccessRate = if (player2Shots.isNotEmpty())
+            (player2Shots.count { it.result == ShotResult.IN }.toDouble() / player2Shots.size * 100)
+            else 0.0
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            PlayerStatsCard(
+                playerName = match.player1Name ?: "Player 1",
+                shots = player1Shots.size,
+                avgSpeed = player1AvgSpeed,
+                successRate = player1SuccessRate,
+                score = match.statistics?.player1Score ?: 0,
+                modifier = Modifier.weight(1f)
+            )
+
+            PlayerStatsCard(
+                playerName = match.player2Name ?: "Player 2",
+                shots = player2Shots.size,
+                avgSpeed = player2AvgSpeed,
+                successRate = player2SuccessRate,
+                score = match.statistics?.player2Score ?: 0,
+                modifier = Modifier.weight(1f)
+            )
+        }
+    }
+}
+
+@Composable
+private fun PlayerStatsCard(
+    playerName: String,
+    shots: Int,
+    avgSpeed: Double,
+    successRate: Double,
+    score: Int,
+    modifier: Modifier = Modifier
+) {
+    MetricCard() {
+        Column(
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = playerName,
+                style = MaterialTheme.typography.titleMedium.copy(
+                    fontWeight = FontWeight.Bold
+                ),
+                color = Color.White,
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+            )
+
+            Text(
+                text = "$score",
+                style = MaterialTheme.typography.displayLarge.copy(
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 48.sp
+                ),
+                color = MaterialTheme.colorScheme.primary
+            )
+
+            Column(
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                PlayerStatRow("Shots", "$shots")
+                PlayerStatRow("Avg Speed", "${avgSpeed.toInt()} km/h")
+                PlayerStatRow("Success", "${successRate.toInt()}%")
+            }
+        }
+    }
+}
+
+@Composable
+private fun PlayerStatRow(label: String, value: String) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodySmall,
+            color = Color(0xFF9CA3AF)
+        )
+        Text(
+            text = value,
+            style = MaterialTheme.typography.bodySmall.copy(
+                fontWeight = FontWeight.Medium
+            ),
+            color = Color.White
         )
     }
 }
