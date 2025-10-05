@@ -1,7 +1,9 @@
 package com.backend.backend.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.stereotype.Component;
 
+@Component
 @ConfigurationProperties(prefix = "allanai.security.jwt")
 public class JwtProperties {
 
