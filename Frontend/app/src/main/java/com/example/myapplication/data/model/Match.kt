@@ -46,7 +46,73 @@ data class MatchStatistics(
     val totalRallies: Int,
     val avgRallyLength: Double,
     val maxBallSpeed: Double,
-    val avgBallSpeed: Double
+    val avgBallSpeed: Double,
+    val rallyMetrics: RallyMetrics? = null,
+    val shotSpeedMetrics: ShotSpeedMetrics? = null,
+    val serveMetrics: ServeMetrics? = null,
+    val returnMetrics: ReturnMetrics? = null,
+    val shotTypeBreakdown: List<ShotTypeAggregate>? = null,
+    val playerBreakdown: List<PlayerBreakdown>? = null,
+    val momentumTimeline: MomentumTimeline? = null
+)
+
+data class RallyMetrics(
+    val totalRallies: Int? = null,
+    val averageRallyLength: Double? = null,
+    val longestRallyLength: Int? = null,
+    val averageRallyDurationSeconds: Double? = null,
+    val longestRallyDurationSeconds: Double? = null,
+    val averageRallyShotSpeed: Double? = null
+)
+
+data class ShotSpeedMetrics(
+    val fastestShotMph: Double? = null,
+    val averageShotMph: Double? = null,
+    val averageIncomingShotMph: Double? = null,
+    val averageOutgoingShotMph: Double? = null
+)
+
+data class ServeMetrics(
+    val totalServes: Int? = null,
+    val successfulServes: Int? = null,
+    val faults: Int? = null,
+    val successRate: Double? = null,
+    val averageServeSpeed: Double? = null,
+    val fastestServeSpeed: Double? = null
+)
+
+data class ReturnMetrics(
+    val totalReturns: Int? = null,
+    val successfulReturns: Int? = null,
+    val successRate: Double? = null,
+    val averageReturnSpeed: Double? = null
+)
+
+data class ShotTypeAggregate(
+    val shotType: String,
+    val count: Int,
+    val averageSpeed: Double? = null,
+    val averageAccuracy: Double? = null
+)
+
+data class PlayerBreakdown(
+    val player: Int,
+    val totalShots: Int? = null,
+    val totalPointsWon: Int? = null,
+    val averageShotSpeed: Double? = null,
+    val averageAccuracy: Double? = null,
+    val serveSuccessRate: Double? = null,
+    val returnSuccessRate: Double? = null
+)
+
+data class MomentumTimeline(
+    val samples: List<MomentumSample>? = null
+)
+
+data class MomentumSample(
+    val timestampMs: Long,
+    val scoringPlayer: Int? = null,
+    val scoreAfter: ScoreState
 )
 
 /**

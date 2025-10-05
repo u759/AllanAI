@@ -9,8 +9,16 @@ import com.example.myapplication.data.api.dto.HighlightsResponse
 import com.example.myapplication.data.api.dto.MatchDetailsResponse
 import com.example.myapplication.data.api.dto.MatchStatisticsResponse
 import com.example.myapplication.data.api.dto.MatchSummaryResponse
+import com.example.myapplication.data.api.dto.MomentumSampleResponse
+import com.example.myapplication.data.api.dto.MomentumTimelineResponse
+import com.example.myapplication.data.api.dto.PlayerBreakdownResponse
+import com.example.myapplication.data.api.dto.RallyMetricsResponse
+import com.example.myapplication.data.api.dto.ReturnMetricsResponse
 import com.example.myapplication.data.api.dto.ScoreStateResponse
+import com.example.myapplication.data.api.dto.ServeMetricsResponse
 import com.example.myapplication.data.api.dto.ShotResponse
+import com.example.myapplication.data.api.dto.ShotSpeedMetricsResponse
+import com.example.myapplication.data.api.dto.ShotTypeAggregateResponse
 import com.example.myapplication.data.model.Detection
 import com.example.myapplication.data.model.Event
 import com.example.myapplication.data.model.EventMetadata
@@ -20,10 +28,18 @@ import com.example.myapplication.data.model.Highlights
 import com.example.myapplication.data.model.Match
 import com.example.myapplication.data.model.MatchStatistics
 import com.example.myapplication.data.model.MatchStatus
+import com.example.myapplication.data.model.MomentumSample
+import com.example.myapplication.data.model.MomentumTimeline
+import com.example.myapplication.data.model.PlayerBreakdown
+import com.example.myapplication.data.model.RallyMetrics
+import com.example.myapplication.data.model.ReturnMetrics
 import com.example.myapplication.data.model.ScoreState
+import com.example.myapplication.data.model.ServeMetrics
 import com.example.myapplication.data.model.Shot
 import com.example.myapplication.data.model.ShotResult
+import com.example.myapplication.data.model.ShotSpeedMetrics
 import com.example.myapplication.data.model.ShotType
+import com.example.myapplication.data.model.ShotTypeAggregate
 import java.time.Instant
 
 /**
@@ -84,7 +100,14 @@ fun MatchStatisticsResponse.toMatchStatistics(): MatchStatistics {
         totalRallies = this.totalRallies,
         avgRallyLength = this.avgRallyLength,
         maxBallSpeed = this.maxBallSpeed,
-        avgBallSpeed = this.avgBallSpeed
+        avgBallSpeed = this.avgBallSpeed,
+        rallyMetrics = this.rallyMetrics?.toRallyMetrics(),
+        shotSpeedMetrics = this.shotSpeedMetrics?.toShotSpeedMetrics(),
+        serveMetrics = this.serveMetrics?.toServeMetrics(),
+        returnMetrics = this.returnMetrics?.toReturnMetrics(),
+        shotTypeBreakdown = this.shotTypeBreakdown?.map { it.toShotTypeAggregate() },
+        playerBreakdown = this.playerBreakdown?.map { it.toPlayerBreakdown() },
+        momentumTimeline = this.momentumTimeline?.toMomentumTimeline()
     )
 }
 
@@ -229,4 +252,103 @@ private fun parseEventType(type: String): EventType {
     } catch (e: IllegalArgumentException) {
         EventType.SCORE
     }
+}
+
+/**
+ * Convert RallyMetricsResponse to RallyMetrics domain model
+ */
+fun RallyMetricsResponse.toRallyMetrics(): RallyMetrics {
+    return RallyMetrics(
+        totalRallies = this.totalRallies,
+        averageRallyLength = this.averageRallyLength,
+        longestRallyLength = this.longestRallyLength,
+        averageRallyDurationSeconds = this.averageRallyDurationSeconds,
+        longestRallyDurationSeconds = this.longestRallyDurationSeconds,
+        averageRallyShotSpeed = this.averageRallyShotSpeed
+    )
+}
+
+/**
+ * Convert ShotSpeedMetricsResponse to ShotSpeedMetrics domain model
+ */
+fun ShotSpeedMetricsResponse.toShotSpeedMetrics(): ShotSpeedMetrics {
+    return ShotSpeedMetrics(
+        fastestShotMph = this.fastestShotMph,
+        averageShotMph = this.averageShotMph,
+        averageIncomingShotMph = this.averageIncomingShotMph,
+        averageOutgoingShotMph = this.averageOutgoingShotMph
+    )
+}
+
+/**
+ * Convert ServeMetricsResponse to ServeMetrics domain model
+ */
+fun ServeMetricsResponse.toServeMetrics(): ServeMetrics {
+    return ServeMetrics(
+        totalServes = this.totalServes,
+        successfulServes = this.successfulServes,
+        faults = this.faults,
+        successRate = this.successRate,
+        averageServeSpeed = this.averageServeSpeed,
+        fastestServeSpeed = this.fastestServeSpeed
+    )
+}
+
+/**
+ * Convert ReturnMetricsResponse to ReturnMetrics domain model
+ */
+fun ReturnMetricsResponse.toReturnMetrics(): ReturnMetrics {
+    return ReturnMetrics(
+        totalReturns = this.totalReturns,
+        successfulReturns = this.successfulReturns,
+        successRate = this.successRate,
+        averageReturnSpeed = this.averageReturnSpeed
+    )
+}
+
+/**
+ * Convert ShotTypeAggregateResponse to ShotTypeAggregate domain model
+ */
+fun ShotTypeAggregateResponse.toShotTypeAggregate(): ShotTypeAggregate {
+    return ShotTypeAggregate(
+        shotType = this.shotType,
+        count = this.count,
+        averageSpeed = this.averageSpeed,
+        averageAccuracy = this.averageAccuracy
+    )
+}
+
+/**
+ * Convert PlayerBreakdownResponse to PlayerBreakdown domain model
+ */
+fun PlayerBreakdownResponse.toPlayerBreakdown(): PlayerBreakdown {
+    return PlayerBreakdown(
+        player = this.player,
+        totalShots = this.totalShots,
+        totalPointsWon = this.totalPointsWon,
+        averageShotSpeed = this.averageShotSpeed,
+        averageAccuracy = this.averageAccuracy,
+        serveSuccessRate = this.serveSuccessRate,
+        returnSuccessRate = this.returnSuccessRate
+    )
+}
+
+/**
+ * Convert MomentumTimelineResponse to MomentumTimeline domain model
+ */
+fun MomentumTimelineResponse.toMomentumTimeline(): MomentumTimeline {
+    return MomentumTimeline(
+        samples = this.samples?.map { it.toMomentumSample() }
+    )
+}
+
+/**
+ * Convert MomentumSampleResponse to MomentumSample domain model
+ */
+fun MomentumSampleResponse.toMomentumSample(): MomentumSample {
+    return MomentumSample(
+        timestampMs = this.timestampMs,
+        scoringPlayer = this.scoringPlayer,
+        scoreAfter = this.scoreAfter.toScoreState()
+    )
 }

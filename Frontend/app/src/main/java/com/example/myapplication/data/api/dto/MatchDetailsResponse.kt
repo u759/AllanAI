@@ -28,7 +28,73 @@ data class MatchStatisticsResponse(
     val totalRallies: Int,
     val avgRallyLength: Double,
     val maxBallSpeed: Double,
-    val avgBallSpeed: Double
+    val avgBallSpeed: Double,
+    val rallyMetrics: RallyMetricsResponse? = null,
+    val shotSpeedMetrics: ShotSpeedMetricsResponse? = null,
+    val serveMetrics: ServeMetricsResponse? = null,
+    val returnMetrics: ReturnMetricsResponse? = null,
+    val shotTypeBreakdown: List<ShotTypeAggregateResponse>? = null,
+    val playerBreakdown: List<PlayerBreakdownResponse>? = null,
+    val momentumTimeline: MomentumTimelineResponse? = null
+)
+
+data class RallyMetricsResponse(
+    val totalRallies: Int? = null,
+    val averageRallyLength: Double? = null,
+    val longestRallyLength: Int? = null,
+    val averageRallyDurationSeconds: Double? = null,
+    val longestRallyDurationSeconds: Double? = null,
+    val averageRallyShotSpeed: Double? = null
+)
+
+data class ShotSpeedMetricsResponse(
+    val fastestShotMph: Double? = null,
+    val averageShotMph: Double? = null,
+    val averageIncomingShotMph: Double? = null,
+    val averageOutgoingShotMph: Double? = null
+)
+
+data class ServeMetricsResponse(
+    val totalServes: Int? = null,
+    val successfulServes: Int? = null,
+    val faults: Int? = null,
+    val successRate: Double? = null,
+    val averageServeSpeed: Double? = null,
+    val fastestServeSpeed: Double? = null
+)
+
+data class ReturnMetricsResponse(
+    val totalReturns: Int? = null,
+    val successfulReturns: Int? = null,
+    val successRate: Double? = null,
+    val averageReturnSpeed: Double? = null
+)
+
+data class ShotTypeAggregateResponse(
+    val shotType: String,
+    val count: Int,
+    val averageSpeed: Double? = null,
+    val averageAccuracy: Double? = null
+)
+
+data class PlayerBreakdownResponse(
+    val player: Int,
+    val totalShots: Int? = null,
+    val totalPointsWon: Int? = null,
+    val averageShotSpeed: Double? = null,
+    val averageAccuracy: Double? = null,
+    val serveSuccessRate: Double? = null,
+    val returnSuccessRate: Double? = null
+)
+
+data class MomentumTimelineResponse(
+    val samples: List<MomentumSampleResponse>? = null
+)
+
+data class MomentumSampleResponse(
+    val timestampMs: Long,
+    val scoringPlayer: Int? = null,
+    val scoreAfter: ScoreStateResponse
 )
 
 data class ShotResponse(
