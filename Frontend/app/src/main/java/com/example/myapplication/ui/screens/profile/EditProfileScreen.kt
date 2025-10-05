@@ -25,11 +25,14 @@ import com.example.myapplication.ui.theme.MyApplicationTheme
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditProfileScreen(
+    initialUsername: String = "",
+    initialEmail: String = "",
     onNavigateBack: () -> Unit = {},
-    onSaveChanges: (String, String) -> Unit = { _, _ -> }
+    onSaveChanges: (String, String) -> com.example.myapplication.data.local.ProfileUpdateResult = { _, _ -> com.example.myapplication.data.local.ProfileUpdateResult.Success }
 ) {
-    var fullName by remember { mutableStateOf("Alex Doe") }
-    var email by remember { mutableStateOf("alex.doe@example.com") }
+    var fullName by remember { mutableStateOf(initialUsername) }
+    var email by remember { mutableStateOf(initialEmail) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
 
     Scaffold(
         topBar = {
@@ -40,9 +43,26 @@ fun EditProfileScreen(
         EditProfileContent(
             fullName = fullName,
             email = email,
+            errorMessage = errorMessage,
             onFullNameChange = { fullName = it },
             onEmailChange = { email = it },
-            onSaveClick = { onSaveChanges(fullName, email) },
+            onSaveClick = {
+                val result = onSaveChanges(fullName, email)
+                when (result) {
+                    is com.example.myapplication.data.local.ProfileUpdateResult.Success -> {
+                        errorMessage = null
+                    }
+                    is com.example.myapplication.data.local.ProfileUpdateResult.UsernameTaken -> {
+                        errorMessage = "Username is already taken"
+                    }
+                    is com.example.myapplication.data.local.ProfileUpdateResult.EmailTaken -> {
+                        errorMessage = "Email is already registered"
+                    }
+                    is com.example.myapplication.data.local.ProfileUpdateResult.NotLoggedIn -> {
+                        errorMessage = "You must be logged in"
+                    }
+                }
+            },
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
@@ -91,6 +111,7 @@ private fun EditProfileTopBar(
 private fun EditProfileContent(
     fullName: String,
     email: String,
+    errorMessage: String?,
     onFullNameChange: (String) -> Unit,
     onEmailChange: (String) -> Unit,
     onSaveClick: () -> Unit,
@@ -185,6 +206,25 @@ private fun EditProfileContent(
         }
         
         Spacer(modifier = Modifier.height(32.dp))
+        
+        // Error message
+        if (errorMessage != null) {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = Color(0xFFEF4444).copy(alpha = 0.1f)
+                ),
+                shape = RoundedCornerShape(8.dp)
+            ) {
+                Text(
+                    text = errorMessage,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color(0xFFEF4444),
+                    modifier = Modifier.padding(12.dp)
+                )
+            }
+            Spacer(modifier = Modifier.height(16.dp))
+        }
         
         // Save button
         Button(

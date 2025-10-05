@@ -22,7 +22,7 @@ import com.example.myapplication.ui.theme.MyApplicationTheme
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SignUpScreen(
-    onSignUpClick: (String, String, String, String) -> Unit = { _, _, _, _ -> },
+    onSignUpClick: (String, String, String, String) -> com.example.myapplication.data.local.SignUpResult = { _, _, _, _ -> com.example.myapplication.data.local.SignUpResult.Success },
     onSignInClick: () -> Unit = {},
     onNavigateToUpload: () -> Unit = {},
     onNavigateToHistory: () -> Unit = {},
@@ -33,6 +33,7 @@ fun SignUpScreen(
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
     
     Scaffold(
         topBar = {
@@ -54,12 +55,41 @@ fun SignUpScreen(
             email = email,
             password = password,
             confirmPassword = confirmPassword,
+            errorMessage = errorMessage,
             onUsernameChange = { username = it },
             onEmailChange = { email = it },
             onPasswordChange = { password = it },
             onConfirmPasswordChange = { confirmPassword = it },
             onSignUpClick = {
-                onSignUpClick(username, email, password, confirmPassword)
+                // Validate inputs
+                when {
+                    username.isBlank() -> {
+                        errorMessage = "Username cannot be empty"
+                    }
+                    email.isBlank() -> {
+                        errorMessage = "Email cannot be empty"
+                    }
+                    password.isBlank() -> {
+                        errorMessage = "Password cannot be empty"
+                    }
+                    password != confirmPassword -> {
+                        errorMessage = "Passwords do not match"
+                    }
+                    else -> {
+                        val result = onSignUpClick(username, email, password, confirmPassword)
+                        when (result) {
+                            is com.example.myapplication.data.local.SignUpResult.Success -> {
+                                errorMessage = null
+                            }
+                            is com.example.myapplication.data.local.SignUpResult.UsernameTaken -> {
+                                errorMessage = "Username is already taken"
+                            }
+                            is com.example.myapplication.data.local.SignUpResult.EmailTaken -> {
+                                errorMessage = "Email is already registered"
+                            }
+                        }
+                    }
+                }
             },
             onSignInClick = onSignInClick,
             modifier = Modifier
@@ -97,6 +127,7 @@ private fun SignUpContent(
     email: String,
     password: String,
     confirmPassword: String,
+    errorMessage: String?,
     onUsernameChange: (String) -> Unit,
     onEmailChange: (String) -> Unit,
     onPasswordChange: (String) -> Unit,
@@ -241,6 +272,25 @@ private fun SignUpContent(
         }
         
         Spacer(modifier = Modifier.height(32.dp))
+        
+        // Error message
+        if (errorMessage != null) {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = Color(0xFFEF4444).copy(alpha = 0.1f)
+                ),
+                shape = RoundedCornerShape(8.dp)
+            ) {
+                Text(
+                    text = errorMessage,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color(0xFFEF4444),
+                    modifier = Modifier.padding(12.dp)
+                )
+            }
+            Spacer(modifier = Modifier.height(16.dp))
+        }
         
         // Sign Up button
         Button(

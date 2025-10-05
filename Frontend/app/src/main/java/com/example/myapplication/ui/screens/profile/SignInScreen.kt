@@ -22,7 +22,7 @@ import com.example.myapplication.ui.theme.MyApplicationTheme
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SignInScreen(
-    onSignInClick: (String, String) -> Unit = { _, _ -> },
+    onSignInClick: (String, String) -> Boolean = { _, _ -> false },
     onSignUpClick: () -> Unit = {},
     onForgotPasswordClick: () -> Unit = {},
     onNavigateToUpload: () -> Unit = {},
@@ -32,6 +32,7 @@ fun SignInScreen(
 ) {
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
     
     Scaffold(
         bottomBar = {
@@ -48,10 +49,16 @@ fun SignInScreen(
         SignInContent(
             username = username,
             password = password,
+            errorMessage = errorMessage,
             onUsernameChange = { username = it },
             onPasswordChange = { password = it },
             onSignInClick = {
-                onSignInClick(username, password)
+                val success = onSignInClick(username, password)
+                if (!success) {
+                    errorMessage = "Invalid username or password"
+                } else {
+                    errorMessage = null
+                }
             },
             onSignUpClick = onSignUpClick,
             onForgotPasswordClick = onForgotPasswordClick,
@@ -66,6 +73,7 @@ fun SignInScreen(
 private fun SignInContent(
     username: String,
     password: String,
+    errorMessage: String?,
     onUsernameChange: (String) -> Unit,
     onPasswordChange: (String) -> Unit,
     onSignInClick: () -> Unit,
@@ -206,6 +214,27 @@ private fun SignInContent(
         }
         
         Spacer(modifier = Modifier.height(16.dp))
+        
+        // Error message
+        if (errorMessage != null) {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .widthIn(max = 400.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = Color(0xFFEF4444).copy(alpha = 0.1f)
+                ),
+                shape = RoundedCornerShape(8.dp)
+            ) {
+                Text(
+                    text = errorMessage,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color(0xFFEF4444),
+                    modifier = Modifier.padding(12.dp)
+                )
+            }
+            Spacer(modifier = Modifier.height(16.dp))
+        }
         
         // Sign In button
         Button(

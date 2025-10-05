@@ -27,6 +27,8 @@ import com.example.myapplication.ui.theme.MyApplicationTheme
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileScreen(
+    username: String = "User",
+    email: String = "",
     onNavigateBack: () -> Unit = {},
     onEditProfile: () -> Unit = {},
     onChangePassword: () -> Unit = {},
@@ -42,6 +44,8 @@ fun ProfileScreen(
         containerColor = MaterialTheme.colorScheme.background
     ) { paddingValues ->
         ProfileContent(
+            username = username,
+            email = email,
             onEditProfile = onEditProfile,
             onChangePassword = onChangePassword,
             onLogout = onLogout,
@@ -91,6 +95,8 @@ private fun ProfileTopBar(
 
 @Composable
 private fun ProfileContent(
+    username: String,
+    email: String,
     onEditProfile: () -> Unit,
     onChangePassword: () -> Unit,
     onLogout: () -> Unit,
@@ -103,7 +109,10 @@ private fun ProfileContent(
         verticalArrangement = Arrangement.spacedBy(32.dp)
     ) {
         // Profile header
-        ProfileHeader()
+        ProfileHeader(
+            username = username,
+            email = email
+        )
         
         // Account section
         SettingsSection(
@@ -145,7 +154,10 @@ private fun ProfileContent(
 }
 
 @Composable
-private fun ProfileHeader() {
+private fun ProfileHeader(
+    username: String,
+    email: String
+) {
     Column(
         modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -167,7 +179,7 @@ private fun ProfileHeader() {
             verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
             Text(
-                text = "Alex Doe",
+                text = username,
                 style = MaterialTheme.typography.headlineSmall.copy(
                     fontWeight = FontWeight.Bold,
                     fontSize = 24.sp
@@ -175,7 +187,7 @@ private fun ProfileHeader() {
                 color = Color.White
             )
             Text(
-                text = "alex.doe@example.com",
+                text = email,
                 style = MaterialTheme.typography.bodyMedium,
                 color = Color(0xFF9CA3AF)
             )

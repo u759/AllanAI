@@ -22,11 +22,12 @@ import com.example.myapplication.ui.theme.MyApplicationTheme
 @Composable
 fun ChangePasswordScreen(
     onNavigateBack: () -> Unit = {},
-    onUpdatePassword: (String, String, String) -> Unit = { _, _, _ -> }
+    onUpdatePassword: (String, String, String) -> com.example.myapplication.data.local.PasswordChangeResult = { _, _, _ -> com.example.myapplication.data.local.PasswordChangeResult.Success }
 ) {
     var currentPassword by remember { mutableStateOf("") }
     var newPassword by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
     
     var currentPasswordVisible by remember { mutableStateOf(false) }
     var newPasswordVisible by remember { mutableStateOf(false) }
@@ -42,6 +43,7 @@ fun ChangePasswordScreen(
             currentPassword = currentPassword,
             newPassword = newPassword,
             confirmPassword = confirmPassword,
+            errorMessage = errorMessage,
             currentPasswordVisible = currentPasswordVisible,
             newPasswordVisible = newPasswordVisible,
             confirmPasswordVisible = confirmPasswordVisible,
@@ -51,8 +53,33 @@ fun ChangePasswordScreen(
             onCurrentPasswordVisibilityToggle = { currentPasswordVisible = !currentPasswordVisible },
             onNewPasswordVisibilityToggle = { newPasswordVisible = !newPasswordVisible },
             onConfirmPasswordVisibilityToggle = { confirmPasswordVisible = !confirmPasswordVisible },
-            onUpdateClick = { 
-                onUpdatePassword(currentPassword, newPassword, confirmPassword)
+            onUpdateClick = {
+                // Validate inputs
+                when {
+                    currentPassword.isBlank() -> {
+                        errorMessage = "Current password cannot be empty"
+                    }
+                    newPassword.isBlank() -> {
+                        errorMessage = "New password cannot be empty"
+                    }
+                    newPassword != confirmPassword -> {
+                        errorMessage = "Passwords do not match"
+                    }
+                    else -> {
+                        val result = onUpdatePassword(currentPassword, newPassword, confirmPassword)
+                        when (result) {
+                            is com.example.myapplication.data.local.PasswordChangeResult.Success -> {
+                                errorMessage = null
+                            }
+                            is com.example.myapplication.data.local.PasswordChangeResult.WrongCurrentPassword -> {
+                                errorMessage = "Current password is incorrect"
+                            }
+                            is com.example.myapplication.data.local.PasswordChangeResult.NotLoggedIn -> {
+                                errorMessage = "You must be logged in"
+                            }
+                        }
+                    }
+                }
             },
             modifier = Modifier
                 .fillMaxSize()
@@ -103,6 +130,7 @@ private fun ChangePasswordContent(
     currentPassword: String,
     newPassword: String,
     confirmPassword: String,
+    errorMessage: String?,
     currentPasswordVisible: Boolean,
     newPasswordVisible: Boolean,
     confirmPasswordVisible: Boolean,
@@ -156,6 +184,25 @@ private fun ChangePasswordContent(
         }
         
         Spacer(modifier = Modifier.height(32.dp))
+        
+        // Error message
+        if (errorMessage != null) {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = Color(0xFFEF4444).copy(alpha = 0.1f)
+                ),
+                shape = RoundedCornerShape(8.dp)
+            ) {
+                Text(
+                    text = errorMessage,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color(0xFFEF4444),
+                    modifier = Modifier.padding(12.dp)
+                )
+            }
+            Spacer(modifier = Modifier.height(16.dp))
+        }
         
         // Update button
         Button(

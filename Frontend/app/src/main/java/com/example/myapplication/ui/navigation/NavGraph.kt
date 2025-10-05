@@ -26,7 +26,8 @@ import com.example.myapplication.ui.screens.upload.WelcomeUpload
 @Composable
 fun NavGraph(
     navController: NavHostController,
-    startDestination: String = Screen.Welcome.route
+    authManager: com.example.myapplication.data.local.AuthManager,
+    startDestination: String = if (authManager.isLoggedIn()) Screen.Welcome.route else Screen.SignIn.route
 ) {
     NavHost(
         navController = navController,
@@ -36,10 +37,13 @@ fun NavGraph(
         composable(route = Screen.SignIn.route) {
             SignInScreen(
                 onSignInClick = { username, password ->
-                    // TODO: Implement authentication logic with ViewModel
-                    navController.navigate(Screen.Welcome.route) {
-                        popUpTo(Screen.SignIn.route) { inclusive = true }
+                    val success = authManager.signIn(username, password)
+                    if (success) {
+                        navController.navigate(Screen.Welcome.route) {
+                            popUpTo(Screen.SignIn.route) { inclusive = true }
+                        }
                     }
+                    success
                 },
                 onSignUpClick = {
                     navController.navigate(Screen.SignUp.route)
@@ -68,10 +72,15 @@ fun NavGraph(
         composable(route = Screen.SignUp.route) {
             SignUpScreen(
                 onSignUpClick = { username, email, password, confirmPassword ->
-                    // TODO: Implement registration logic with ViewModel
-                    navController.navigate(Screen.Welcome.route) {
-                        popUpTo(Screen.SignUp.route) { inclusive = true }
+                    val result = authManager.signUp(username, email, password)
+                    if (result is com.example.myapplication.data.local.SignUpResult.Success) {
+                        // Auto-login after successful signup
+                        authManager.signIn(username, password)
+                        navController.navigate(Screen.Welcome.route) {
+                            popUpTo(Screen.SignUp.route) { inclusive = true }
+                        }
                     }
+                    result
                 },
                 onSignInClick = {
                     navController.navigateUp()
@@ -217,6 +226,8 @@ fun NavGraph(
         // Profile Screen
         composable(route = Screen.Profile.route) {
             ProfileScreen(
+                username = authManager.getCurrentUsername() ?: "User",
+                email = authManager.getCurrentUserEmail() ?: "",
                 onNavigateBack = {
                     navController.navigateUp()
                 },
@@ -227,7 +238,8 @@ fun NavGraph(
                     navController.navigate(Screen.ChangePassword.route)
                 },
                 onLogout = {
-                    navController.navigate(Screen.Welcome.route) {
+                    authManager.logout()
+                    navController.navigate(Screen.SignIn.route) {
                         popUpTo(0) { inclusive = true }
                     }
                 },
@@ -248,12 +260,17 @@ fun NavGraph(
         // Edit Profile Screen
         composable(route = Screen.EditProfile.route) {
             EditProfileScreen(
+                initialUsername = authManager.getCurrentUsername() ?: "",
+                initialEmail = authManager.getCurrentUserEmail() ?: "",
                 onNavigateBack = {
                     navController.navigateUp()
                 },
                 onSaveChanges = { fullName, email ->
-                    // TODO: Implement save changes logic with ViewModel
-                    navController.navigateUp()
+                    val result = authManager.updateProfile(fullName, email)
+                    if (result is com.example.myapplication.data.local.ProfileUpdateResult.Success) {
+                        navController.navigateUp()
+                    }
+                    result
                 }
             )
         }
@@ -265,8 +282,11 @@ fun NavGraph(
                     navController.navigateUp()
                 },
                 onUpdatePassword = { currentPassword, newPassword, confirmPassword ->
-                    // TODO: Implement password update logic with ViewModel
-                    navController.navigateUp()
+                    val result = authManager.changePassword(currentPassword, newPassword)
+                    if (result is com.example.myapplication.data.local.PasswordChangeResult.Success) {
+                        navController.navigateUp()
+                    }
+                    result
                 }
             )
         }
