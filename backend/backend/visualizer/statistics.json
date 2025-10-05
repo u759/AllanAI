@@ -1,107 +1,122 @@
 {
     "player1Score": 5,
-    "player2Score": 5,
-    "totalRallies": 2,
-    "avgRallyLength": 0.0,
-    "maxBallSpeed": 12.1,
-    "avgBallSpeed": 8.5,
+    "player2Score": 3,
+    "totalRallies": 1,
+    "avgRallyLength": 15.1,
+    "maxBallSpeed": 12.4,
+    "avgBallSpeed": 8.4,
     "rallyMetrics": {
-        "totalRallies": 2,
-        "averageRallyLength": 0.0,
-        "longestRallyLength": 2,
+        "totalRallies": 458,
+        "averageRallyLength": 15.1,
+        "longestRallyLength": 19,
         "averageRallyDurationSeconds": 0.1,
         "longestRallyDurationSeconds": 0.1,
-        "averageRallyShotSpeed": 8.5
+        "averageRallyShotSpeed": 8.4
     },
     "shotSpeedMetrics": {
         "fastestShotMph": 49.9,
-        "averageShotMph": 7.9,
-        "averageIncomingShotMph": 8.5,
-        "averageOutgoingShotMph": 8.5
+        "averageShotMph": 10.5,
+        "averageIncomingShotMph": 8.4,
+        "averageOutgoingShotMph": 8.0
     },
     "serveMetrics": {
-        "totalServes": 0,
-        "successfulServes": 0,
+        "totalServes": 5,
+        "successfulServes": 5,
         "faults": 0,
-        "successRate": 0.0,
-        "averageServeSpeed": 0.0,
-        "fastestServeSpeed": 0.0
+        "successRate": 100.0,
+        "averageServeSpeed": 7.4,
+        "fastestServeSpeed": 10.7
     },
     "returnMetrics": {
-        "totalReturns": 1740,
-        "successfulReturns": 1737,
-        "successRate": 99.8,
-        "averageReturnSpeed": 7.9
+        "totalReturns": 135,
+        "successfulReturns": 134,
+        "successRate": 99.3,
+        "averageReturnSpeed": 10.6
     },
     "shotTypeBreakdown": [
         {
             "shotType": "DRIVE",
             "count": 7,
-            "averageSpeed": 25.9,
-            "averageAccuracy": 62.9
+            "averageSpeed": 27.6,
+            "averageAccuracy": 64.4
         },
         {
             "shotType": "LOB",
-            "count": 59,
-            "averageSpeed": 5.3,
-            "averageAccuracy": 83.7
+            "count": 12,
+            "averageSpeed": 7.1,
+            "averageAccuracy": 84.2
         },
         {
             "shotType": "RALLY",
-            "count": 1584,
-            "averageSpeed": 8.0,
-            "averageAccuracy": 84.6
+            "count": 73,
+            "averageSpeed": 9.1,
+            "averageAccuracy": 84.9
+        },
+        {
+            "shotType": "SERVE",
+            "count": 5,
+            "averageSpeed": 7.4,
+            "averageAccuracy": 54.9
         },
         {
             "shotType": "SMASH",
             "count": 6,
-            "averageSpeed": 18.4,
-            "averageAccuracy": 69.9
+            "averageSpeed": 33.0,
+            "averageAccuracy": 89.1
         },
         {
             "shotType": "TOPSPIN",
-            "count": 84,
-            "averageSpeed": 5.7,
-            "averageAccuracy": 81.7
+            "count": 37,
+            "averageSpeed": 8.0,
+            "averageAccuracy": 82.7
         }
     ],
     "playerBreakdown": [
         {
             "player": 1,
-            "totalPointsWon": 18,
-            "totalShots": 923,
-            "totalServes": 0,
-            "successfulServes": 0,
-            "totalReturns": 923,
-            "successfulReturns": 921,
-            "winners": 18,
+            "totalPointsWon": 4,
+            "totalShots": 67,
+            "totalServes": 2,
+            "successfulServes": 2,
+            "totalReturns": 65,
+            "successfulReturns": 65,
+            "winners": 4,
             "errors": 0,
-            "averageShotSpeed": 8.8,
-            "averageAccuracy": 85.2,
-            "pointWinRate": 52.9,
-            "serveSuccessRate": 0.0,
-            "returnSuccessRate": 99.8
+            "averageShotSpeed": 11.8,
+            "averageAccuracy": 85.7,
+            "pointWinRate": 50.0,
+            "serveSuccessRate": 100.0,
+            "returnSuccessRate": 100.0
         },
         {
             "player": 2,
-            "totalPointsWon": 14,
-            "totalShots": 817,
-            "totalServes": 0,
-            "successfulServes": 0,
-            "totalReturns": 817,
-            "successfulReturns": 816,
-            "winners": 14,
+            "totalPointsWon": 3,
+            "totalShots": 73,
+            "totalServes": 3,
+            "successfulServes": 3,
+            "totalReturns": 70,
+            "successfulReturns": 69,
+            "winners": 3,
             "errors": 0,
-            "averageShotSpeed": 6.8,
-            "averageAccuracy": 83.2,
-            "pointWinRate": 41.2,
-            "serveSuccessRate": 0.0,
-            "returnSuccessRate": 99.9
+            "averageShotSpeed": 9.3,
+            "averageAccuracy": 79.2,
+            "pointWinRate": 37.5,
+            "serveSuccessRate": 100.0,
+            "returnSuccessRate": 98.6
         }
     ],
     "momentumTimeline": [
         {
-            "timestampMs": 933,
+            "timestampMs": 0,
+            "scoringPlayer": null,
+            "scoreAfter": {
+                "player1": 0,
+                "player2": 0
+            },
+            "lead": 0
+        },
+        {
+            "timestampMs": 18450,
             "scoringPlayer": 2,
             "scoreAfter": {
                 "player1": 0,
@@ -110,7 +125,7 @@
             "lead": -1
         },
         {
-            "timestampMs": 1492,
+            "timestampMs": 18850,
             "scoringPlayer": 1,
             "scoreAfter": {
                 "player1": 1,
@@ -119,292 +134,49 @@
             "lead": 0
         },
         {
-            "timestampMs": 1983,
-            "scoringPlayer": 2,
+            "timestampMs": 21442,
+            "scoringPlayer": 1,
             "scoreAfter": {
-                "player1": 1,
-                "player2": 2
+                "player1": 2,
+                "player2": 1
             },
-            "lead": -1
+            "lead": 1
         },
         {
-            "timestampMs": 2450,
-            "scoringPlayer": 1,
+            "timestampMs": 21825,
+            "scoringPlayer": 2,
             "scoreAfter": {
                 "player1": 2,
                 "player2": 2
             },
             "lead": 0
-        },
-        {
-            "timestampMs": 2983,
-            "scoringPlayer": 2,
-            "scoreAfter": {
-                "player1": 2,
-                "player2": 3
-            },
-            "lead": -1
-        },
-        {
-            "timestampMs": 3342,
-            "scoringPlayer": 1,
-            "scoreAfter": {
-                "player1": 3,
-                "player2": 3
-            },
-            "lead": 0
-        },
-        {
-            "timestampMs": 3900,
-            "scoringPlayer": 2,
-            "scoreAfter": {
-                "player1": 3,
-                "player2": 4
-            },
-            "lead": -1
-        },
-        {
-            "timestampMs": 4267,
-            "scoringPlayer": 1,
-            "scoreAfter": {
-                "player1": 4,
-                "player2": 4
-            },
-            "lead": 0
-        },
-        {
-            "timestampMs": 4642,
-            "scoringPlayer": 1,
-            "scoreAfter": {
-                "player1": 5,
-                "player2": 4
-            },
-            "lead": 1
-        },
-        {
-            "timestampMs": 4858,
-            "scoringPlayer": 2,
-            "scoreAfter": {
-                "player1": 5,
-                "player2": 5
-            },
-            "lead": 0
-        },
-        {
-            "timestampMs": 5300,
-            "scoringPlayer": 1,
-            "scoreAfter": {
-                "player1": 6,
-                "player2": 5
-            },
-            "lead": 1
-        },
-        {
-            "timestampMs": 6175,
-            "scoringPlayer": 1,
-            "scoreAfter": {
-                "player1": 7,
-                "player2": 5
-            },
-            "lead": 2
-        },
-        {
-            "timestampMs": 6692,
-            "scoringPlayer": 2,
-            "scoreAfter": {
-                "player1": 7,
-                "player2": 6
-            },
-            "lead": 1
-        },
-        {
-            "timestampMs": 7142,
-            "scoringPlayer": 1,
-            "scoreAfter": {
-                "player1": 8,
-                "player2": 6
-            },
-            "lead": 2
-        },
-        {
-            "timestampMs": 7642,
-            "scoringPlayer": 2,
-            "scoreAfter": {
-                "player1": 8,
-                "player2": 7
-            },
-            "lead": 1
-        },
-        {
-            "timestampMs": 8075,
-            "scoringPlayer": 1,
-            "scoreAfter": {
-                "player1": 9,
-                "player2": 7
-            },
-            "lead": 2
-        },
-        {
-            "timestampMs": 8600,
-            "scoringPlayer": 2,
-            "scoreAfter": {
-                "player1": 9,
-                "player2": 8
-            },
-            "lead": 1
-        },
-        {
-            "timestampMs": 8983,
-            "scoringPlayer": 1,
-            "scoreAfter": {
-                "player1": 10,
-                "player2": 8
-            },
-            "lead": 2
-        },
-        {
-            "timestampMs": 0,
-            "scoringPlayer": null,
-            "scoreAfter": {
-                "player1": 10,
-                "player2": 8
-            },
-            "lead": 2
-        },
-        {
-            "timestampMs": 18450,
-            "scoringPlayer": 2,
-            "scoreAfter": {
-                "player1": 10,
-                "player2": 9
-            },
-            "lead": 1
-        },
-        {
-            "timestampMs": 19267,
-            "scoringPlayer": 2,
-            "scoreAfter": {
-                "player1": 10,
-                "player2": 10
-            },
-            "lead": 0
-        },
-        {
-            "timestampMs": 19767,
-            "scoringPlayer": 1,
-            "scoreAfter": {
-                "player1": 11,
-                "player2": 10
-            },
-            "lead": 1
-        },
-        {
-            "timestampMs": 20150,
-            "scoringPlayer": 2,
-            "scoreAfter": {
-                "player1": 11,
-                "player2": 11
-            },
-            "lead": 0
-        },
-        {
-            "timestampMs": 20600,
-            "scoringPlayer": 1,
-            "scoreAfter": {
-                "player1": 12,
-                "player2": 11
-            },
-            "lead": 1
-        },
-        {
-            "timestampMs": 21450,
-            "scoringPlayer": 1,
-            "scoreAfter": {
-                "player1": 13,
-                "player2": 11
-            },
-            "lead": 2
-        },
-        {
-            "timestampMs": 22275,
-            "scoringPlayer": 1,
-            "scoreAfter": {
-                "player1": 14,
-                "player2": 11
-            },
-            "lead": 3
-        },
-        {
-            "timestampMs": 22692,
-            "scoringPlayer": 2,
-            "scoreAfter": {
-                "player1": 14,
-                "player2": 12
-            },
-            "lead": 2
-        },
-        {
-            "timestampMs": 23233,
-            "scoringPlayer": 1,
-            "scoreAfter": {
-                "player1": 15,
-                "player2": 12
-            },
-            "lead": 3
         },
         {
             "timestampMs": 23967,
             "scoringPlayer": 2,
             "scoreAfter": {
-                "player1": 15,
-                "player2": 13
+                "player1": 2,
+                "player2": 3
             },
-            "lead": 2
-        },
-        {
-            "timestampMs": 0,
-            "scoringPlayer": null,
-            "scoreAfter": {
-                "player1": 15,
-                "player2": 13
-            },
-            "lead": 2
-        },
-        {
-            "timestampMs": 26892,
-            "scoringPlayer": 1,
-            "scoreAfter": {
-                "player1": 16,
-                "player2": 13
-            },
-            "lead": 3
+            "lead": -1
         },
         {
             "timestampMs": 27817,
             "scoringPlayer": 1,
             "scoreAfter": {
-                "player1": 17,
-                "player2": 13
+                "player1": 3,
+                "player2": 3
             },
-            "lead": 4
-        },
-        {
-            "timestampMs": 28242,
-            "scoringPlayer": 2,
-            "scoreAfter": {
-                "player1": 17,
-                "player2": 14
-            },
-            "lead": 3
+            "lead": 0
         },
         {
             "timestampMs": 29533,
             "scoringPlayer": 1,
             "scoreAfter": {
-                "player1": 18,
-                "player2": 14
+                "player1": 4,
+                "player2": 3
             },
-            "lead": 4
+            "lead": 1
         }
     ]
 }

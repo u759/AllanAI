@@ -13,7 +13,6 @@ public record MatchDetailsResponse(String id,
                                    String originalFilename,
                                    MatchStatisticsResponse statistics,
                                    List<ShotResponse> shots,
-                                   List<EventResponse> events,
                                    HighlightsResponse highlights,
                                    ProcessingSummaryResponse processingSummary) {
 }

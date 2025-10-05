@@ -10,12 +10,17 @@ import java.time.Instant
  */
 data class Match(
     val id: String,
+    val userId: String? = null,
     val createdAt: Instant,
     val processedAt: Instant? = null,
     val status: MatchStatus,
     val durationSeconds: Int? = null,
     val videoPath: String? = null,
     val originalFilename: String? = null,
+    val player1Name: String? = null,
+    val player2Name: String? = null,
+    val matchTitle: String? = null,
+    val thumbnailPath: String? = null,
     val statistics: MatchStatistics? = null,
     val shots: List<Shot> = emptyList(),
     val events: List<Event> = emptyList(),

@@ -1,14 +1,42 @@
 {
     "playOfTheGame": {
-        "eventId": "8ff9ec4d-3e94-41a9-871b-d6ef0f33b669",
-        "timestampMs": 533,
+        "eventId": "74c6e9c0-c847-4bb1-b963-66918405ec36",
+        "timestampMs": 4858,
         "timestampSeries": [
-            500,
-            533,
-            633
+            4825,
+            4858,
+            4958
         ]
     },
-    "topRallies": [],
+    "topRallies": [
+        {
+            "eventId": "74c6e9c0-c847-4bb1-b963-66918405ec36",
+            "timestampMs": 4858,
+            "timestampSeries": [
+                4825,
+                4858,
+                4958
+            ]
+        },
+        {
+            "eventId": "c49e4e52-a783-464e-8a84-1bdbe3c000c1",
+            "timestampMs": 4867,
+            "timestampSeries": [
+                4834,
+                4867,
+                4967
+            ]
+        },
+        {
+            "eventId": "b43463a0-430a-4685-bf97-7bb6d956c574",
+            "timestampMs": 4892,
+            "timestampSeries": [
+                4859,
+                4892,
+                4992
+            ]
+        }
+    ],
     "fastestShots": [],
     "bestServes": []
 }

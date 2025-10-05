@@ -55,8 +55,6 @@ public final class MatchMapper {
         MatchStatisticsResponse statisticsResponse = toStatistics(match.getStatistics());
         List<ShotResponse> shots = match.getShots() == null ? Collections.emptyList()
             : match.getShots().stream().map(MatchMapper::toShot).toList();
-        List<EventResponse> events = match.getEvents() == null ? Collections.emptyList()
-            : match.getEvents().stream().map(MatchMapper::toEvent).toList();
         HighlightsResponse highlights = toHighlights(match.getHighlights());
         ProcessingSummaryResponse processingSummary = toProcessingSummary(match.getProcessingSummary());
         return new MatchDetailsResponse(
@@ -68,7 +66,6 @@ public final class MatchMapper {
             match.getOriginalFilename(),
             statisticsResponse,
             shots,
-            events,
             highlights,
             processingSummary);
     }
