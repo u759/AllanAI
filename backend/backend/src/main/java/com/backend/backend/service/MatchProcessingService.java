@@ -32,12 +32,16 @@ import org.springframework.stereotype.Service;
 import java.nio.file.Path;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.EnumMap;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.TreeSet;
 import java.util.UUID;
 import java.util.function.ToDoubleFunction;
 import java.util.stream.Collectors;
@@ -46,6 +50,8 @@ import java.util.stream.Collectors;
 public class MatchProcessingService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MatchProcessingService.class);
+    private static final long SHOT_MERGE_WINDOW_MS = 180L;
+    private static final long EVENT_ALIGNMENT_WINDOW_MS = 250L;
 
     private final MatchService matchService;
     private final VideoStorageService videoStorageService;
@@ -104,19 +110,21 @@ public class MatchProcessingService {
         double fps = result.getFps() == null || result.getFps() <= 0 ? videoMetadata.fps() : result.getFps();
 
         List<Shot> shots = new ArrayList<>();
-        for (ModelShot modelShot : result.getShots()) {
-            Shot shot = new Shot();
-            long timestamp = resolveTimestamp(modelShot.getFrame(), null, fps);
-            shot.setTimestampMs(timestamp);
-            shot.setTimestampSeries(deriveTimestampSeries(modelShot.getTimestampSeries(), timestamp, modelProperties.getPreEventFrames(), modelProperties.getPostEventFrames(), fps));
-            shot.setFrameSeries(deriveFrameSeries(modelShot.getFrameSeries(), modelShot.getFrame()));
-            shot.setPlayer(modelShot.getPlayer() == null ? 1 : modelShot.getPlayer());
-            shot.setShotType(resolveShotType(modelShot.getShotType()));
-            shot.setSpeed(safeDouble(modelShot.getSpeed(), 0.0));
-            shot.setAccuracy(safeDouble(modelShot.getAccuracy(), 80.0));
-            shot.setResult(resolveShotResult(modelShot.getResult()));
-            shot.setDetections(convertDetections(modelShot.getDetections(), modelShot.getFrame(), modelShot.getConfidence()));
-            shots.add(shot);
+        if (result.getShots() != null) {
+            for (ModelShot modelShot : result.getShots()) {
+                Shot shot = new Shot();
+                long timestamp = resolveTimestamp(modelShot.getFrame(), null, fps);
+                shot.setTimestampMs(timestamp);
+                shot.setTimestampSeries(deriveTimestampSeries(modelShot.getTimestampSeries(), timestamp, modelProperties.getPreEventFrames(), modelProperties.getPostEventFrames(), fps));
+                shot.setFrameSeries(deriveFrameSeries(modelShot.getFrameSeries(), modelShot.getFrame()));
+                shot.setPlayer(modelShot.getPlayer() == null ? 1 : modelShot.getPlayer());
+                shot.setShotType(resolveShotType(modelShot.getShotType()));
+                shot.setSpeed(safeDouble(modelShot.getSpeed(), 0.0));
+                shot.setAccuracy(safeDouble(modelShot.getAccuracy(), 80.0));
+                shot.setResult(resolveShotResult(modelShot.getResult()));
+                shot.setDetections(convertDetections(modelShot.getDetections(), modelShot.getFrame(), modelShot.getConfidence()));
+                shots.add(shot);
+            }
         }
 
         List<Event> events = new ArrayList<>();
@@ -165,8 +173,23 @@ public class MatchProcessingService {
             synthesizedShots = true;
         }
 
-    MatchStatistics statistics = buildStatisticsFromModel(result.getStatistics(), events, shots);
-    augmentStatistics(statistics, events, shots);
+        int rawShotCount = shots.size();
+        List<Shot> condensedShots = condenseShots(shots);
+        shots = new ArrayList<>(condensedShots);
+        if (shots.isEmpty()) {
+            LOGGER.warn("Condensed shot stream empty; synthesizing fallback shots from events");
+            shots = synthesizeShotsFromEvents(events, fps);
+            synthesizedShots = true;
+        }
+        if (!shots.isEmpty()) {
+            annotateShotsWithEvents(shots, events);
+        }
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("Condensed raw shot stream from {} samples to {} discrete shots", rawShotCount, shots.size());
+        }
+
+        MatchStatistics statistics = buildStatisticsFromModel(result.getStatistics(), events, shots);
+        augmentStatistics(statistics, events, shots);
         Highlights highlights = buildHighlights(events);
 
         match.setStatistics(statistics);
@@ -419,6 +442,220 @@ public class MatchProcessingService {
         timeline.setSamples(List.copyOf(momentumSamples));
     }
 
+    private List<Shot> condenseShots(List<Shot> shots) {
+        if (shots == null || shots.isEmpty()) {
+            return List.of();
+        }
+        List<Shot> sorted = new ArrayList<>();
+        for (Shot shot : shots) {
+            if (shot != null) {
+                sorted.add(shot);
+            }
+        }
+        if (sorted.isEmpty()) {
+            return List.of();
+        }
+        sorted.sort(Comparator.comparingLong(Shot::getTimestampMs));
+        List<Shot> condensed = new ArrayList<>();
+        Shot current = null;
+        for (Shot original : sorted) {
+            Shot candidate = copyShot(original);
+            if (current == null) {
+                condensed.add(candidate);
+                current = candidate;
+                continue;
+            }
+            long delta = Math.abs(candidate.getTimestampMs() - current.getTimestampMs());
+            boolean samePlayer = candidate.getPlayer() == current.getPlayer();
+            if (samePlayer && delta <= SHOT_MERGE_WINDOW_MS) {
+                mergeShotInto(current, candidate);
+            } else {
+                condensed.add(candidate);
+                current = candidate;
+            }
+        }
+        return condensed;
+    }
+
+    private Shot copyShot(Shot shot) {
+        Shot copy = new Shot();
+        copy.setTimestampMs(shot.getTimestampMs());
+        List<Long> timestamps = shot.getTimestampSeries() == null ? Collections.emptyList() : shot.getTimestampSeries();
+        copy.setTimestampSeries(new ArrayList<>(timestamps));
+        List<Integer> frames = shot.getFrameSeries() == null ? Collections.emptyList() : shot.getFrameSeries();
+        copy.setFrameSeries(new ArrayList<>(frames));
+        if (!copy.getTimestampSeries().contains(shot.getTimestampMs())) {
+            copy.getTimestampSeries().add(shot.getTimestampMs());
+        }
+        copy.getTimestampSeries().sort(Long::compareTo);
+        copy.setPlayer(shot.getPlayer());
+        copy.setShotType(shot.getShotType());
+        copy.setSpeed(shot.getSpeed());
+        copy.setAccuracy(shot.getAccuracy());
+        copy.setResult(shot.getResult());
+        copy.setDetections(new ArrayList<>(cloneDetections(shot.getDetections())));
+        return copy;
+    }
+
+    private void mergeShotInto(Shot target, Shot addition) {
+        if (addition.getTimestampMs() < target.getTimestampMs()) {
+            target.setTimestampMs(addition.getTimestampMs());
+        }
+        mergeTimestamps(target.getTimestampSeries(), addition.getTimestampSeries(), addition.getTimestampMs());
+        mergeFrames(target.getFrameSeries(), addition.getFrameSeries());
+        target.setSpeed(Math.max(target.getSpeed(), addition.getSpeed()));
+        target.setAccuracy(Math.max(target.getAccuracy(), addition.getAccuracy()));
+        if (addition.getShotType() != null && (target.getShotType() == null || target.getShotType() == ShotType.RALLY)) {
+            target.setShotType(addition.getShotType());
+        }
+        if (addition.getResult() != null) {
+            if (target.getResult() == null || target.getResult() == ShotResult.OUT && addition.getResult() == ShotResult.IN) {
+                target.setResult(addition.getResult());
+            }
+        }
+        target.setDetections(mergeDetections(target.getDetections(), addition.getDetections()));
+    }
+
+    private void annotateShotsWithEvents(List<Shot> shots, List<Event> events) {
+        if (shots == null || shots.isEmpty() || events == null || events.isEmpty()) {
+            return;
+        }
+        for (Event event : events) {
+            Integer player = event.getPlayer();
+            if (player == null || player <= 0) {
+                continue;
+            }
+            Shot nearest = findNearestShot(shots, player, event.getTimestampMs(), EVENT_ALIGNMENT_WINDOW_MS);
+            if (nearest == null) {
+                continue;
+            }
+            if (nearest.getPlayer() != player) {
+                nearest.setPlayer(player);
+            }
+            mergeTimestamps(nearest.getTimestampSeries(), event.getTimestampSeries(), event.getTimestampMs());
+            mergeFrames(nearest.getFrameSeries(), event.getFrameSeries());
+            EventMetadata metadata = event.getMetadata();
+            if (metadata != null) {
+                if (metadata.getShotSpeed() != null) {
+                    nearest.setSpeed(roundToOne(metadata.getShotSpeed()));
+                }
+                if (metadata.getConfidence() != null) {
+                    nearest.setAccuracy(roundToOne(metadata.getConfidence() * 100.0));
+                }
+                if (metadata.getShotType() != null && !metadata.getShotType().isBlank()) {
+                    nearest.setShotType(resolveShotType(metadata.getShotType()));
+                }
+                nearest.setDetections(mergeDetections(nearest.getDetections(), metadata.getDetections()));
+            }
+            switch (event.getType()) {
+                case SERVE, SERVE_ACE -> {
+                    nearest.setShotType(ShotType.SERVE);
+                    nearest.setResult(ShotResult.IN);
+                }
+                case RETURN -> nearest.setShotType(ShotType.RALLY);
+                case MISS -> nearest.setResult(ShotResult.OUT);
+                case SCORE, FASTEST_SHOT, RALLY_HIGHLIGHT -> {
+                    if (nearest.getResult() == null || nearest.getResult() == ShotResult.OUT) {
+                        nearest.setResult(ShotResult.IN);
+                    }
+                }
+                default -> {
+                    if (nearest.getResult() == null) {
+                        nearest.setResult(ShotResult.IN);
+                    }
+                }
+            }
+            if (nearest.getResult() == null) {
+                nearest.setResult(ShotResult.IN);
+            }
+        }
+    }
+
+    private Shot findNearestShot(List<Shot> shots, int player, long timestampMs, long windowMs) {
+        Shot closest = null;
+        long bestDistance = Long.MAX_VALUE;
+        for (Shot shot : shots) {
+            if (shot == null) {
+                continue;
+            }
+            if (shot.getPlayer() == player) {
+                long distance = Math.abs(shot.getTimestampMs() - timestampMs);
+                if (distance <= windowMs && distance < bestDistance) {
+                    closest = shot;
+                    bestDistance = distance;
+                }
+            }
+        }
+        if (closest != null) {
+            return closest;
+        }
+        for (Shot shot : shots) {
+            if (shot == null) {
+                continue;
+            }
+            long distance = Math.abs(shot.getTimestampMs() - timestampMs);
+            if (distance <= windowMs && distance < bestDistance) {
+                closest = shot;
+                bestDistance = distance;
+            }
+        }
+        return closest;
+    }
+
+    private void mergeTimestamps(List<Long> target, List<Long> additions, Long candidate) {
+        if (target == null) {
+            return;
+        }
+        TreeSet<Long> merged = new TreeSet<>(target);
+        if (additions != null) {
+            merged.addAll(additions);
+        }
+        if (candidate != null) {
+            merged.add(candidate);
+        }
+        target.clear();
+        target.addAll(merged);
+    }
+
+    private void mergeFrames(List<Integer> target, List<Integer> additions) {
+        if (target == null) {
+            return;
+        }
+        LinkedHashSet<Integer> merged = new LinkedHashSet<>(target);
+        if (additions != null) {
+            merged.addAll(additions);
+        }
+        target.clear();
+        target.addAll(merged);
+    }
+
+    private List<Detection> mergeDetections(List<Detection> base, List<Detection> additions) {
+        List<Detection> merged = new ArrayList<>();
+        if (base != null) {
+            merged.addAll(cloneDetections(base));
+        }
+        if (additions != null) {
+            merged.addAll(cloneDetections(additions));
+        }
+        if (merged.isEmpty()) {
+            return List.of();
+        }
+        LinkedHashMap<Integer, Detection> byFrame = new LinkedHashMap<>();
+        int syntheticKey = -1;
+        for (Detection detection : merged) {
+            if (detection == null) {
+                continue;
+            }
+            Integer frameNumber = detection.getFrameNumber();
+            int key = frameNumber != null ? frameNumber : syntheticKey--;
+            Detection existing = byFrame.get(key);
+            if (existing == null || (detection.getConfidence() != null && (existing.getConfidence() == null || detection.getConfidence() > existing.getConfidence()))) {
+                byFrame.put(key, detection);
+            }
+        }
+        return new ArrayList<>(byFrame.values());
+    }
+
     private List<Shot> synthesizeShotsFromEvents(List<Event> events, double fps) {
         List<Shot> shots = new ArrayList<>();
         int index = 0;
@@ -655,11 +892,46 @@ public class MatchProcessingService {
     }
 
     private EventType resolveEventType(ModelEvent modelEvent) {
-        if (modelEvent.getType() != null) {
-            try {
-                return EventType.valueOf(modelEvent.getType().toUpperCase(Locale.US));
-            } catch (IllegalArgumentException ignored) {
-                // fall through
+        if (modelEvent.getType() != null && !modelEvent.getType().isBlank()) {
+            String normalized = modelEvent.getType().trim().toUpperCase(Locale.US);
+            switch (normalized) {
+                case "SCORE" -> {
+                    return EventType.SCORE;
+                }
+                case "SERVE" -> {
+                    return EventType.SERVE;
+                }
+                case "SERVE_ACE" -> {
+                    return EventType.SERVE_ACE;
+                }
+                case "FASTEST_SHOT", "SMASH" -> {
+                    return EventType.FASTEST_SHOT;
+                }
+                case "MISS", "FAULT" -> {
+                    return EventType.MISS;
+                }
+                case "RETURN" -> {
+                    return EventType.RETURN;
+                }
+                case "RALLY", "HIGHLIGHT" -> {
+                    return EventType.RALLY;
+                }
+                case "RALLY_HIGHLIGHT" -> {
+                    return EventType.RALLY_HIGHLIGHT;
+                }
+                case "POINT" -> {
+                    return EventType.POINT;
+                }
+                case "BOUNCE" -> {
+                    return EventType.RALLY;
+                }
+                default -> {
+                    try {
+                        return EventType.valueOf(normalized);
+                    } catch (IllegalArgumentException ignored) {
+                        // fall through to label-based heuristics
+                    }
+                }
             }
         }
         if (modelEvent.getLabel() != null) {
@@ -670,17 +942,26 @@ public class MatchProcessingService {
             if (label.contains("ace")) {
                 return EventType.SERVE_ACE;
             }
-            if (label.contains("fast")) {
+            if (label.contains("fast") || label.contains("smash")) {
                 return EventType.FASTEST_SHOT;
             }
-            if (label.contains("miss") || label.contains("error")) {
+            if (label.contains("miss") || label.contains("error") || label.contains("fault")) {
                 return EventType.MISS;
+            }
+            if (label.contains("return")) {
+                return EventType.RETURN;
+            }
+            if (label.contains("serve")) {
+                return EventType.SERVE;
+            }
+            if (label.contains("bounce")) {
+                return EventType.RALLY;
             }
             if (label.contains("rally") || label.contains("highlight")) {
                 return EventType.RALLY_HIGHLIGHT;
             }
-            if (label.contains("bounce") || label.contains("point")) {
-                return EventType.SCORE;
+            if (label.contains("point")) {
+                return EventType.POINT;
             }
         }
         return EventType.PLAY_OF_THE_GAME;
