@@ -1,13 +1,19 @@
 package com.example.myapplication.data.repository
 
+import android.content.Context
 import android.os.Build
 import androidx.annotation.RequiresApi
+import com.example.myapplication.R
 import com.example.myapplication.data.model.*
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
 import java.io.File
+import java.io.InputStreamReader
 import java.time.Instant
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
@@ -34,7 +40,9 @@ import javax.inject.Singleton
  */
 @RequiresApi(Build.VERSION_CODES.O)
 @Singleton
-class MockMatchRepository @Inject constructor() : MatchRepository {
+class MockMatchRepository @Inject constructor(
+    @ApplicationContext private val context: Context
+) : MatchRepository {
 
     // Thread-safe storage
     private val matches = ConcurrentHashMap<String, Match>()
@@ -42,6 +50,9 @@ class MockMatchRepository @Inject constructor() : MatchRepository {
 
     // Simulate network delay
     private val networkDelayMs = 500L
+
+    // Gson for JSON parsing
+    private val gson = Gson()
 
     init {
         // Initialize with sample data
@@ -289,63 +300,79 @@ class MockMatchRepository @Inject constructor() : MatchRepository {
         )
     }
 
+    /**
+     * Load all shots from the match_data.json file.
+     * Returns all 1,740 shots with detection data from the actual match.
+     */
     private fun generateSampleShots(): List<Shot> {
-        return listOf(
-            Shot(
-                timestampMs = 0,
-                player = 1,
-                shotType = ShotType.FOREHAND,
-                speed = 30.0,
-                accuracy = 85.0,
-                result = ShotResult.IN,
-                detections = listOf(
-                    Detection(
-                        frameNumber = 0,
-                        x = 907.28,
-                        y = 436.77,
-                        width = 19.12,
-                        height = 21.29,
-                        confidence = 0.86
+        return try {
+            // Load JSON from raw resources
+            val inputStream = context.resources.openRawResource(R.raw.match_data)
+            val reader = InputStreamReader(inputStream)
+
+            // Parse JSON structure
+            val jsonObject = gson.fromJson(reader, com.google.gson.JsonObject::class.java)
+            val shotsArray = jsonObject.getAsJsonArray("shots")
+
+            // Convert to Shot objects
+            val shots = mutableListOf<Shot>()
+            for (shotElement in shotsArray) {
+                val shotObj = shotElement.asJsonObject
+
+                // Parse detections
+                val detectionsArray = shotObj.getAsJsonArray("detections")
+                val detections = mutableListOf<Detection>()
+
+                for (detectionElement in detectionsArray) {
+                    val detObj = detectionElement.asJsonObject
+                    detections.add(
+                        Detection(
+                            frameNumber = detObj.get("frameNumber").asInt,
+                            x = detObj.get("x")?.asDouble ?: 0.0,
+                            y = detObj.get("y")?.asDouble ?: 0.0,
+                            width = detObj.get("width")?.asDouble ?: 0.0,
+                            height = detObj.get("height")?.asDouble ?: 0.0,
+                            confidence = detObj.get("confidence").asDouble
+                        )
+                    )
+                }
+
+                shots.add(
+                    Shot(
+                        timestampMs = shotObj.get("timestampMs").asLong,
+                        player = shotObj.get("player").asInt,
+                        shotType = parseShotType(shotObj.get("shotType").asString),
+                        speed = shotObj.get("speed").asDouble,
+                        accuracy = shotObj.get("accuracy").asDouble,
+                        result = parseShotResult(shotObj.get("result").asString),
+                        detections = detections
                     )
                 )
-            ),
-            Shot(
-                timestampMs = 8,
-                player = 1,
-                shotType = ShotType.FOREHAND,
-                speed = 30.0,
-                accuracy = 85.0,
-                result = ShotResult.IN,
-                detections = listOf(
-                    Detection(
-                        frameNumber = 1,
-                        x = 890.10,
-                        y = 441.90,
-                        width = 19.22,
-                        height = 21.51,
-                        confidence = 0.88
-                    )
-                )
-            ),
-            Shot(
-                timestampMs = 17,
-                player = 1,
-                shotType = ShotType.FOREHAND,
-                speed = 30.0,
-                accuracy = 85.0,
-                result = ShotResult.IN,
-                detections = listOf(
-                    Detection(
-                        frameNumber = 2,
-                        x = 874.37,
-                        y = 447.91,
-                        width = 19.30,
-                        height = 21.58,
-                        confidence = 0.88
-                    )
-                )
-            )
-        )
+            }
+
+            reader.close()
+            shots
+        } catch (e: Exception) {
+            e.printStackTrace()
+            // Fallback to empty list if loading fails
+            emptyList()
+        }
+    }
+
+    private fun parseShotType(type: String): ShotType {
+        return try {
+            ShotType.valueOf(type)
+        } catch (e: Exception) {
+            ShotType.FOREHAND
+        }
+    }
+
+    private fun parseShotResult(result: String): ShotResult {
+        return try {
+            ShotResult.valueOf(result)
+        } catch (e: Exception) {
+            ShotResult.IN
+        }
     }
 
     private fun generateSampleEvents(): List<Event> {
