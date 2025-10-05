@@ -1,6 +1,6 @@
 [
     {
-        "id": "ddbd030c-9fd6-4fda-b98b-351c3a7f4a08",
+        "id": "8ff9ec4d-3e94-41a9-871b-d6ef0f33b669",
         "timestampMs": 533,
         "timestampSeries": [
             500,
@@ -10,15 +10,17 @@
         "frameSeries": [
             64
         ],
-        "type": "PLAY_OF_THE_GAME",
-        "title": "Play of the Game",
+        "type": "SERVE",
+        "title": "Serve Ace",
         "description": "Serve",
         "player": 1,
         "importance": 5,
         "metadata": {
             "shotSpeed": 6.8,
+            "incomingShotSpeed": 6.8,
+            "outgoingShotSpeed": 3.0,
             "rallyLength": null,
-            "shotType": "FOREHAND",
+            "shotType": "RALLY",
             "ballTrajectory": [],
             "frameNumber": 64,
             "frameSeries": [
@@ -44,7 +46,7 @@
         }
     },
     {
-        "id": "2422eb1e-3680-4d74-887c-95ee391b04b9",
+        "id": "13eb24b3-d9d2-4bb7-b393-713d6d315ddd",
         "timestampMs": 933,
         "timestampSeries": [
             900,
@@ -61,8 +63,10 @@
         "importance": 5,
         "metadata": {
             "shotSpeed": 4.8,
+            "incomingShotSpeed": 4.8,
+            "outgoingShotSpeed": 4.9,
             "rallyLength": null,
-            "shotType": "FOREHAND",
+            "shotType": "TOPSPIN",
             "ballTrajectory": [],
             "frameNumber": 112,
             "frameSeries": [
@@ -91,7 +95,7 @@
         }
     },
     {
-        "id": "79836efc-913b-4733-a4cf-e476c088ec30",
+        "id": "7141c776-747b-47a7-a136-4091a73518fc",
         "timestampMs": 1492,
         "timestampSeries": [
             1459,
@@ -108,8 +112,10 @@
         "importance": 5,
         "metadata": {
             "shotSpeed": 7.9,
+            "incomingShotSpeed": 7.9,
+            "outgoingShotSpeed": 7.2,
             "rallyLength": null,
-            "shotType": "FOREHAND",
+            "shotType": "RALLY",
             "ballTrajectory": [],
             "frameNumber": 179,
             "frameSeries": [
@@ -138,7 +144,7 @@
         }
     },
     {
-        "id": "79d89a96-1931-49f6-af18-8f042fe014f5",
+        "id": "2a5068c4-ff04-4a5a-a52e-120425f0580a",
         "timestampMs": 1983,
         "timestampSeries": [
             1950,
@@ -155,8 +161,10 @@
         "importance": 5,
         "metadata": {
             "shotSpeed": 9.5,
+            "incomingShotSpeed": 9.5,
+            "outgoingShotSpeed": 9.6,
             "rallyLength": null,
-            "shotType": "FOREHAND",
+            "shotType": "TOPSPIN",
             "ballTrajectory": [],
             "frameNumber": 238,
             "frameSeries": [
@@ -185,7 +193,7 @@
         }
     },
     {
-        "id": "46a5c110-d3f3-421e-b10b-e28d7d9dff62",
+        "id": "1fa33aa8-c852-49fc-be6a-5f66b6ddea3f",
         "timestampMs": 2450,
         "timestampSeries": [
             2417,
@@ -202,8 +210,10 @@
         "importance": 5,
         "metadata": {
             "shotSpeed": 8.2,
+            "incomingShotSpeed": 8.2,
+            "outgoingShotSpeed": 7.8,
             "rallyLength": null,
-            "shotType": "FOREHAND",
+            "shotType": "RALLY",
             "ballTrajectory": [],
             "frameNumber": 294,
             "frameSeries": [
@@ -232,7 +242,7 @@
         }
     },
     {
-        "id": "0b411e9c-6820-4700-9130-b825dc7ae2e1",
+        "id": "cb28d6c2-ded9-40d2-8479-05362236d659",
         "timestampMs": 2983,
         "timestampSeries": [
             2950,
@@ -249,8 +259,10 @@
         "importance": 5,
         "metadata": {
             "shotSpeed": 9.2,
+            "incomingShotSpeed": 9.2,
+            "outgoingShotSpeed": 8.6,
             "rallyLength": null,
-            "shotType": "FOREHAND",
+            "shotType": "TOPSPIN",
             "ballTrajectory": [],
             "frameNumber": 358,
             "frameSeries": [
@@ -279,7 +291,7 @@
         }
     },
     {
-        "id": "27777c44-60be-4e7a-9913-3758a3296b57",
+        "id": "1bf2a0fc-bc72-4740-ad26-fd432b55191a",
         "timestampMs": 3342,
         "timestampSeries": [
             3309,
@@ -296,8 +308,10 @@
         "importance": 5,
         "metadata": {
             "shotSpeed": 8.9,
+            "incomingShotSpeed": 8.9,
+            "outgoingShotSpeed": 7.8,
             "rallyLength": null,
-            "shotType": "FOREHAND",
+            "shotType": "RALLY",
             "ballTrajectory": [],
             "frameNumber": 401,
             "frameSeries": [
@@ -326,7 +340,7 @@
         }
     },
     {
-        "id": "f1db06ae-fb67-4830-bf6a-7374162eb213",
+        "id": "af2c88e2-55de-407e-b9a6-719908a469f3",
         "timestampMs": 3900,
         "timestampSeries": [
             3867,
@@ -343,8 +357,10 @@
         "importance": 5,
         "metadata": {
             "shotSpeed": 8.7,
+            "incomingShotSpeed": 8.7,
+            "outgoingShotSpeed": 9.3,
             "rallyLength": null,
-            "shotType": "FOREHAND",
+            "shotType": "TOPSPIN",
             "ballTrajectory": [],
             "frameNumber": 468,
             "frameSeries": [
@@ -373,7 +389,7 @@
         }
     },
     {
-        "id": "3c0436ee-8ef2-45c3-afeb-76c77223681a",
+        "id": "34c35a3f-325a-4a02-9655-bf385486ab34",
         "timestampMs": 4267,
         "timestampSeries": [
             4234,
@@ -390,8 +406,10 @@
         "importance": 5,
         "metadata": {
             "shotSpeed": 9.0,
+            "incomingShotSpeed": 9.0,
+            "outgoingShotSpeed": 7.8,
             "rallyLength": null,
-            "shotType": "FOREHAND",
+            "shotType": "RALLY",
             "ballTrajectory": [],
             "frameNumber": 512,
             "frameSeries": [
@@ -420,7 +438,7 @@
         }
     },
     {
-        "id": "0c12f875-aa24-4100-9adf-9325a3880408",
+        "id": "6a1bcb6b-28d7-4d72-88da-9dbca3ab4cb8",
         "timestampMs": 4642,
         "timestampSeries": [
             4609,
@@ -437,8 +455,10 @@
         "importance": 5,
         "metadata": {
             "shotSpeed": 7.1,
+            "incomingShotSpeed": 7.1,
+            "outgoingShotSpeed": 19.3,
             "rallyLength": null,
-            "shotType": "FOREHAND",
+            "shotType": "RALLY",
             "ballTrajectory": [],
             "frameNumber": 557,
             "frameSeries": [
@@ -467,7 +487,7 @@
         }
     },
     {
-        "id": "b9ff2650-589c-4701-af07-edeb365e2981",
+        "id": "92563a6c-3dfd-4208-bb97-da955e0bec69",
         "timestampMs": 4858,
         "timestampSeries": [
             4825,
@@ -484,8 +504,10 @@
         "importance": 5,
         "metadata": {
             "shotSpeed": 8.9,
+            "incomingShotSpeed": 8.9,
+            "outgoingShotSpeed": 8.1,
             "rallyLength": null,
-            "shotType": "FOREHAND",
+            "shotType": "TOPSPIN",
             "ballTrajectory": [],
             "frameNumber": 583,
             "frameSeries": [
@@ -514,7 +536,7 @@
         }
     },
     {
-        "id": "7d0b8f68-897e-42cd-9e16-b7877cd0a748",
+        "id": "fa4064da-1e5b-4110-a68f-ca47d916cb14",
         "timestampMs": 5300,
         "timestampSeries": [
             5267,
@@ -531,8 +553,10 @@
         "importance": 5,
         "metadata": {
             "shotSpeed": 9.2,
+            "incomingShotSpeed": 9.2,
+            "outgoingShotSpeed": 8.4,
             "rallyLength": null,
-            "shotType": "FOREHAND",
+            "shotType": "RALLY",
             "ballTrajectory": [],
             "frameNumber": 636,
             "frameSeries": [
@@ -561,7 +585,7 @@
         }
     },
     {
-        "id": "6c6e026d-2f13-4517-8d4d-07cfb9af6faf",
+        "id": "20365fe3-7e9f-4c74-9372-c525536e3732",
         "timestampMs": 5792,
         "timestampSeries": [
             5759,
@@ -571,15 +595,17 @@
         "frameSeries": [
             695
         ],
-        "type": "PLAY_OF_THE_GAME",
-        "title": "Play of the Game",
+        "type": "SERVE",
+        "title": "Serve Ace",
         "description": "Serve",
         "player": 2,
         "importance": 5,
         "metadata": {
             "shotSpeed": 10.0,
+            "incomingShotSpeed": 10.0,
+            "outgoingShotSpeed": 8.5,
             "rallyLength": null,
-            "shotType": "FOREHAND",
+            "shotType": "RALLY",
             "ballTrajectory": [],
             "frameNumber": 695,
             "frameSeries": [
@@ -605,7 +631,7 @@
         }
     },
     {
-        "id": "12bb92ad-3569-4306-8112-ea89631b036b",
+        "id": "4f11a2c2-16fb-4dab-8f9a-944f8a6fc4fe",
         "timestampMs": 6175,
         "timestampSeries": [
             6142,
@@ -622,8 +648,10 @@
         "importance": 5,
         "metadata": {
             "shotSpeed": 9.1,
+            "incomingShotSpeed": 9.1,
+            "outgoingShotSpeed": 8.6,
             "rallyLength": null,
-            "shotType": "FOREHAND",
+            "shotType": "RALLY",
             "ballTrajectory": [],
             "frameNumber": 741,
             "frameSeries": [
@@ -652,7 +680,7 @@
         }
     },
     {
-        "id": "537bfc95-92f1-4101-a1b0-3a15f20f606e",
+        "id": "d8ee6b77-2889-4608-b0e7-1e4df28d3eb5",
         "timestampMs": 6692,
         "timestampSeries": [
             6659,
@@ -669,8 +697,10 @@
         "importance": 5,
         "metadata": {
             "shotSpeed": 10.0,
+            "incomingShotSpeed": 10.0,
+            "outgoingShotSpeed": 9.2,
             "rallyLength": null,
-            "shotType": "FOREHAND",
+            "shotType": "RALLY",
             "ballTrajectory": [],
             "frameNumber": 803,
             "frameSeries": [
@@ -699,7 +729,7 @@
         }
     },
     {
-        "id": "1951d17c-5ae2-4f10-abb5-707e0b1a2aeb",
+        "id": "0e92d906-b372-4f78-be52-2cd97ce8a871",
         "timestampMs": 7142,
         "timestampSeries": [
             7109,
@@ -716,8 +746,10 @@
         "importance": 5,
         "metadata": {
             "shotSpeed": 9.2,
+            "incomingShotSpeed": 9.2,
+            "outgoingShotSpeed": 10.2,
             "rallyLength": null,
-            "shotType": "FOREHAND",
+            "shotType": "RALLY",
             "ballTrajectory": [],
             "frameNumber": 857,
             "frameSeries": [
@@ -746,7 +778,7 @@
         }
     },
     {
-        "id": "3ce98bba-bdab-435a-8a38-8468b9049ced",
+        "id": "5c5b6fc0-24a5-4a14-804b-f53f6bc7e8c5",
         "timestampMs": 7642,
         "timestampSeries": [
             7609,
@@ -763,8 +795,10 @@
         "importance": 5,
         "metadata": {
             "shotSpeed": 8.9,
+            "incomingShotSpeed": 8.9,
+            "outgoingShotSpeed": 9.9,
             "rallyLength": null,
-            "shotType": "FOREHAND",
+            "shotType": "RALLY",
             "ballTrajectory": [],
             "frameNumber": 917,
             "frameSeries": [
@@ -793,7 +827,7 @@
         }
     },
     {
-        "id": "01da7f40-f28a-4f6d-acfb-611f72b5bb8d",
+        "id": "18c63856-4558-4797-b2d8-13a6bac91ddb",
         "timestampMs": 8075,
         "timestampSeries": [
             8042,
@@ -810,8 +844,10 @@
         "importance": 5,
         "metadata": {
             "shotSpeed": 9.4,
+            "incomingShotSpeed": 9.4,
+            "outgoingShotSpeed": 9.8,
             "rallyLength": null,
-            "shotType": "FOREHAND",
+            "shotType": "RALLY",
             "ballTrajectory": [],
             "frameNumber": 969,
             "frameSeries": [
@@ -840,7 +876,7 @@
         }
     },
     {
-        "id": "d30f4dfa-4a49-4e7f-a77b-1d4ec89799dd",
+        "id": "8bfd374a-0705-4ef0-bda0-e61cec104c66",
         "timestampMs": 8600,
         "timestampSeries": [
             8567,
@@ -857,8 +893,10 @@
         "importance": 5,
         "metadata": {
             "shotSpeed": 9.8,
+            "incomingShotSpeed": 9.8,
+            "outgoingShotSpeed": 8.9,
             "rallyLength": null,
-            "shotType": "FOREHAND",
+            "shotType": "TOPSPIN",
             "ballTrajectory": [],
             "frameNumber": 1032,
             "frameSeries": [
@@ -887,7 +925,7 @@
         }
     },
     {
-        "id": "c38e82d6-6a8f-4154-883c-51d5ae6a151f",
+        "id": "c8899fa2-854f-4b6d-b35a-eb9809f231ea",
         "timestampMs": 8983,
         "timestampSeries": [
             8950,
@@ -904,8 +942,10 @@
         "importance": 5,
         "metadata": {
             "shotSpeed": 10.9,
+            "incomingShotSpeed": 10.9,
+            "outgoingShotSpeed": 12.0,
             "rallyLength": null,
-            "shotType": "FOREHAND",
+            "shotType": "RALLY",
             "ballTrajectory": [],
             "frameNumber": 1078,
             "frameSeries": [
@@ -934,7 +974,7 @@
         }
     },
     {
-        "id": "a89f709c-8328-48d1-b8d2-3724feca9d95",
+        "id": "0b1983f1-3c1f-47a6-9978-d55acb843b6f",
         "timestampMs": 0,
         "timestampSeries": [
             0,
@@ -948,6 +988,8 @@
         "importance": 5,
         "metadata": {
             "shotSpeed": null,
+            "incomingShotSpeed": null,
+            "outgoingShotSpeed": null,
             "rallyLength": null,
             "shotType": "FOREHAND",
             "ballTrajectory": [],
@@ -967,7 +1009,7 @@
         }
     },
     {
-        "id": "15507579-1962-45b4-8810-f2205e4e42cc",
+        "id": "ecb05241-0587-434f-a971-3a978242538b",
         "timestampMs": 18450,
         "timestampSeries": [
             18417,
@@ -984,8 +1026,10 @@
         "importance": 5,
         "metadata": {
             "shotSpeed": 6.5,
+            "incomingShotSpeed": 6.5,
+            "outgoingShotSpeed": 4.6,
             "rallyLength": null,
-            "shotType": "FOREHAND",
+            "shotType": "RALLY",
             "ballTrajectory": [],
             "frameNumber": 2214,
             "frameSeries": [
@@ -1014,7 +1058,7 @@
         }
     },
     {
-        "id": "a594908e-5f56-4cf5-a71e-cdcac515163a",
+        "id": "f17b0de3-42dc-46ad-a998-6cd06beeda6d",
         "timestampMs": 18850,
         "timestampSeries": [
             18817,
@@ -1024,15 +1068,17 @@
         "frameSeries": [
             2262
         ],
-        "type": "PLAY_OF_THE_GAME",
-        "title": "Play of the Game",
+        "type": "SERVE",
+        "title": "Serve Ace",
         "description": "Serve",
         "player": 1,
         "importance": 5,
         "metadata": {
             "shotSpeed": 4.9,
+            "incomingShotSpeed": 4.9,
+            "outgoingShotSpeed": 5.4,
             "rallyLength": null,
-            "shotType": "FOREHAND",
+            "shotType": "RALLY",
             "ballTrajectory": [],
             "frameNumber": 2262,
             "frameSeries": [
@@ -1058,7 +1104,7 @@
         }
     },
     {
-        "id": "e6c5968b-03c9-4067-81f8-6146f244f97d",
+        "id": "838c9e2e-fb4b-4590-a277-988dfe5b7391",
         "timestampMs": 19267,
         "timestampSeries": [
             19234,
@@ -1075,8 +1121,10 @@
         "importance": 5,
         "metadata": {
             "shotSpeed": 6.7,
+            "incomingShotSpeed": 6.7,
+            "outgoingShotSpeed": 5.8,
             "rallyLength": null,
-            "shotType": "FOREHAND",
+            "shotType": "TOPSPIN",
             "ballTrajectory": [],
             "frameNumber": 2312,
             "frameSeries": [
@@ -1105,7 +1153,7 @@
         }
     },
     {
-        "id": "5b7a75f9-90e2-4ea4-800a-1ed91f02ebee",
+        "id": "8fb1b6eb-226d-4d1d-aebd-556a31940e8c",
         "timestampMs": 19767,
         "timestampSeries": [
             19734,
@@ -1122,8 +1170,10 @@
         "importance": 5,
         "metadata": {
             "shotSpeed": 10.5,
+            "incomingShotSpeed": 10.5,
+            "outgoingShotSpeed": 11.6,
             "rallyLength": null,
-            "shotType": "FOREHAND",
+            "shotType": "RALLY",
             "ballTrajectory": [],
             "frameNumber": 2372,
             "frameSeries": [
@@ -1152,7 +1202,7 @@
         }
     },
     {
-        "id": "5f7a3dac-164b-4598-abbe-43d83c008c96",
+        "id": "a163030a-3085-4e0e-ab1d-f54cd2960e2f",
         "timestampMs": 20150,
         "timestampSeries": [
             20117,
@@ -1169,8 +1219,10 @@
         "importance": 5,
         "metadata": {
             "shotSpeed": 7.2,
+            "incomingShotSpeed": 7.2,
+            "outgoingShotSpeed": 6.5,
             "rallyLength": null,
-            "shotType": "FOREHAND",
+            "shotType": "TOPSPIN",
             "ballTrajectory": [],
             "frameNumber": 2418,
             "frameSeries": [
@@ -1199,7 +1251,7 @@
         }
     },
     {
-        "id": "18ccdaf5-0e0d-4e6e-9742-b939f11288c0",
+        "id": "46c0fbdb-ccfb-451c-b075-680ae9fceebc",
         "timestampMs": 20600,
         "timestampSeries": [
             20567,
@@ -1216,8 +1268,10 @@
         "importance": 5,
         "metadata": {
             "shotSpeed": 11.0,
+            "incomingShotSpeed": 11.0,
+            "outgoingShotSpeed": 12.3,
             "rallyLength": null,
-            "shotType": "FOREHAND",
+            "shotType": "RALLY",
             "ballTrajectory": [],
             "frameNumber": 2472,
             "frameSeries": [
@@ -1246,7 +1300,7 @@
         }
     },
     {
-        "id": "c63d13bb-b447-40d4-8f35-7e405f39067b",
+        "id": "f06c2727-413d-455f-a050-e99ad9371b66",
         "timestampMs": 21450,
         "timestampSeries": [
             21417,
@@ -1263,8 +1317,10 @@
         "importance": 5,
         "metadata": {
             "shotSpeed": 11.3,
+            "incomingShotSpeed": 11.3,
+            "outgoingShotSpeed": 13.1,
             "rallyLength": null,
-            "shotType": "FOREHAND",
+            "shotType": "RALLY",
             "ballTrajectory": [],
             "frameNumber": 2574,
             "frameSeries": [
@@ -1293,7 +1349,7 @@
         }
     },
     {
-        "id": "9b7d8b74-71b6-48c8-bd1a-bf3e6a16f3bb",
+        "id": "a73201f9-a37d-4e0a-9569-e15fbf313b24",
         "timestampMs": 21825,
         "timestampSeries": [
             21792,
@@ -1303,15 +1359,17 @@
         "frameSeries": [
             2619
         ],
-        "type": "PLAY_OF_THE_GAME",
-        "title": "Play of the Game",
+        "type": "SERVE",
+        "title": "Serve Ace",
         "description": "Serve",
         "player": 2,
         "importance": 5,
         "metadata": {
             "shotSpeed": 7.3,
+            "incomingShotSpeed": 7.3,
+            "outgoingShotSpeed": 6.5,
             "rallyLength": null,
-            "shotType": "FOREHAND",
+            "shotType": "TOPSPIN",
             "ballTrajectory": [],
             "frameNumber": 2619,
             "frameSeries": [
@@ -1337,7 +1395,7 @@
         }
     },
     {
-        "id": "02e1b224-b817-410f-acca-4fba9a9a0797",
+        "id": "795a64e9-45f9-4529-ae77-61c7eee25e12",
         "timestampMs": 22275,
         "timestampSeries": [
             22242,
@@ -1354,8 +1412,10 @@
         "importance": 5,
         "metadata": {
             "shotSpeed": 10.7,
+            "incomingShotSpeed": 10.7,
+            "outgoingShotSpeed": 12.5,
             "rallyLength": null,
-            "shotType": "FOREHAND",
+            "shotType": "RALLY",
             "ballTrajectory": [],
             "frameNumber": 2673,
             "frameSeries": [
@@ -1384,7 +1444,7 @@
         }
     },
     {
-        "id": "182a4cfb-8be3-413e-9656-18047bd0cd18",
+        "id": "4b818da3-3f76-4845-b11a-1c3f14d4e527",
         "timestampMs": 22692,
         "timestampSeries": [
             22659,
@@ -1401,8 +1461,10 @@
         "importance": 5,
         "metadata": {
             "shotSpeed": 6.8,
+            "incomingShotSpeed": 6.8,
+            "outgoingShotSpeed": 6.5,
             "rallyLength": null,
-            "shotType": "FOREHAND",
+            "shotType": "TOPSPIN",
             "ballTrajectory": [],
             "frameNumber": 2723,
             "frameSeries": [
@@ -1431,7 +1493,7 @@
         }
     },
     {
-        "id": "43e64eaa-e386-41d0-bb7d-42c701f8aa18",
+        "id": "523428ab-d7b9-4de3-bcfc-444f67fadec0",
         "timestampMs": 23233,
         "timestampSeries": [
             23200,
@@ -1448,8 +1510,10 @@
         "importance": 5,
         "metadata": {
             "shotSpeed": 12.1,
+            "incomingShotSpeed": 12.1,
+            "outgoingShotSpeed": 1.8,
             "rallyLength": null,
-            "shotType": "FOREHAND",
+            "shotType": "TOPSPIN",
             "ballTrajectory": [],
             "frameNumber": 2788,
             "frameSeries": [
@@ -1478,7 +1542,7 @@
         }
     },
     {
-        "id": "564ae8d1-8fac-4d0f-8a00-48aea1c7d118",
+        "id": "2211631b-ea9b-4f9c-b191-7f306f8da018",
         "timestampMs": 23967,
         "timestampSeries": [
             23934,
@@ -1495,8 +1559,10 @@
         "importance": 5,
         "metadata": {
             "shotSpeed": 3.7,
+            "incomingShotSpeed": 3.7,
+            "outgoingShotSpeed": 3.8,
             "rallyLength": null,
-            "shotType": "FOREHAND",
+            "shotType": "TOPSPIN",
             "ballTrajectory": [],
             "frameNumber": 2876,
             "frameSeries": [
@@ -1525,7 +1591,7 @@
         }
     },
     {
-        "id": "a83b673f-4293-4fc2-a261-463de0f970fd",
+        "id": "ce042767-0b0a-4ba3-8b88-9c289de84cc3",
         "timestampMs": 0,
         "timestampSeries": [
             0,
@@ -1539,6 +1605,8 @@
         "importance": 5,
         "metadata": {
             "shotSpeed": null,
+            "incomingShotSpeed": null,
+            "outgoingShotSpeed": null,
             "rallyLength": null,
             "shotType": "FOREHAND",
             "ballTrajectory": [],
@@ -1558,7 +1626,7 @@
         }
     },
     {
-        "id": "b34feb5d-0512-47e8-8224-87c1e6b245ad",
+        "id": "71f16c72-e2fc-4143-9eed-8bc68d84a613",
         "timestampMs": 26492,
         "timestampSeries": [
             26459,
@@ -1568,15 +1636,17 @@
         "frameSeries": [
             3179
         ],
-        "type": "PLAY_OF_THE_GAME",
-        "title": "Play of the Game",
+        "type": "SERVE",
+        "title": "Serve Ace",
         "description": "Serve",
         "player": 2,
         "importance": 5,
         "metadata": {
             "shotSpeed": 6.4,
+            "incomingShotSpeed": 6.4,
+            "outgoingShotSpeed": 4.9,
             "rallyLength": null,
-            "shotType": "FOREHAND",
+            "shotType": "TOPSPIN",
             "ballTrajectory": [],
             "frameNumber": 3179,
             "frameSeries": [
@@ -1602,7 +1672,7 @@
         }
     },
     {
-        "id": "60b431dc-ba41-4822-a375-cc781cf79336",
+        "id": "895023dc-8cba-4c08-b43a-5b3d4b965005",
         "timestampMs": 26892,
         "timestampSeries": [
             26859,
@@ -1619,8 +1689,10 @@
         "importance": 5,
         "metadata": {
             "shotSpeed": 5.2,
+            "incomingShotSpeed": 5.2,
+            "outgoingShotSpeed": 5.5,
             "rallyLength": null,
-            "shotType": "FOREHAND",
+            "shotType": "RALLY",
             "ballTrajectory": [],
             "frameNumber": 3227,
             "frameSeries": [
@@ -1649,7 +1721,7 @@
         }
     },
     {
-        "id": "7ffbbfa2-f5de-41ce-9e5f-10f5d7a9a39e",
+        "id": "21ef1ac6-f466-40c1-b11e-552bf33bb2e5",
         "timestampMs": 27817,
         "timestampSeries": [
             27784,
@@ -1666,8 +1738,10 @@
         "importance": 5,
         "metadata": {
             "shotSpeed": 10.4,
+            "incomingShotSpeed": 10.4,
+            "outgoingShotSpeed": 11.5,
             "rallyLength": null,
-            "shotType": "FOREHAND",
+            "shotType": "RALLY",
             "ballTrajectory": [],
             "frameNumber": 3338,
             "frameSeries": [
@@ -1696,7 +1770,7 @@
         }
     },
     {
-        "id": "e0435155-b5aa-4eac-9f7c-6d0f97696917",
+        "id": "7fadcb62-c332-4574-b266-f82363ad5474",
         "timestampMs": 28242,
         "timestampSeries": [
             28209,
@@ -1713,8 +1787,10 @@
         "importance": 5,
         "metadata": {
             "shotSpeed": 6.5,
+            "incomingShotSpeed": 6.5,
+            "outgoingShotSpeed": 6.6,
             "rallyLength": null,
-            "shotType": "FOREHAND",
+            "shotType": "TOPSPIN",
             "ballTrajectory": [],
             "frameNumber": 3389,
             "frameSeries": [
@@ -1743,7 +1819,7 @@
         }
     },
     {
-        "id": "28782c80-9570-4ca7-b331-7c34af05e523",
+        "id": "faa7c67e-c25a-4a11-9731-d48db1c8fad1",
         "timestampMs": 28700,
         "timestampSeries": [
             28667,
@@ -1753,15 +1829,17 @@
         "frameSeries": [
             3444
         ],
-        "type": "PLAY_OF_THE_GAME",
-        "title": "Play of the Game",
+        "type": "SERVE",
+        "title": "Serve Ace",
         "description": "Serve",
         "player": 1,
         "importance": 5,
         "metadata": {
             "shotSpeed": 10.7,
+            "incomingShotSpeed": 10.7,
+            "outgoingShotSpeed": 12.6,
             "rallyLength": null,
-            "shotType": "FOREHAND",
+            "shotType": "RALLY",
             "ballTrajectory": [],
             "frameNumber": 3444,
             "frameSeries": [
@@ -1787,7 +1865,7 @@
         }
     },
     {
-        "id": "324cf8d2-8e55-4fa9-8dc1-e2ccd3b1619e",
+        "id": "cef80707-d23c-4af6-8228-cba532bc3e19",
         "timestampMs": 29533,
         "timestampSeries": [
             29500,
@@ -1804,8 +1882,10 @@
         "importance": 5,
         "metadata": {
             "shotSpeed": 10.3,
+            "incomingShotSpeed": 10.3,
+            "outgoingShotSpeed": 11.3,
             "rallyLength": null,
-            "shotType": "FOREHAND",
+            "shotType": "RALLY",
             "ballTrajectory": [],
             "frameNumber": 3544,
             "frameSeries": [

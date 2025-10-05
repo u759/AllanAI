@@ -5,5 +5,9 @@ public enum ShotType {
     FOREHAND,
     BACKHAND,
     SMASH,
-    DEFENSIVE
+    DEFENSIVE,
+    RALLY,
+    DRIVE,
+    TOPSPIN,
+    LOB
 }

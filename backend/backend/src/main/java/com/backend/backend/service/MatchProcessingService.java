@@ -33,10 +33,14 @@ import java.nio.file.Path;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.EnumMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.function.ToDoubleFunction;
+import java.util.stream.Collectors;
 
 @Service
 public class MatchProcessingService {
@@ -161,7 +165,8 @@ public class MatchProcessingService {
             synthesizedShots = true;
         }
 
-        MatchStatistics statistics = buildStatisticsFromModel(result.getStatistics(), events, shots);
+    MatchStatistics statistics = buildStatisticsFromModel(result.getStatistics(), events, shots);
+    augmentStatistics(statistics, events, shots);
         Highlights highlights = buildHighlights(events);
 
         match.setStatistics(statistics);
@@ -207,6 +212,213 @@ public class MatchProcessingService {
         return statistics;
     }
 
+    private void augmentStatistics(MatchStatistics statistics, List<Event> events, List<Shot> shots) {
+        if (statistics == null) {
+            return;
+        }
+
+        int totalScoreEvents = (int) events.stream()
+            .filter(event -> event.getType() == EventType.SCORE)
+            .count();
+        if (statistics.getPlayer1Score() == null || statistics.getPlayer2Score() == null) {
+            int player1Score = (int) events.stream()
+                .filter(event -> event.getType() == EventType.SCORE && Objects.equals(event.getPlayer(), 1))
+                .count();
+            int player2Score = (int) events.stream()
+                .filter(event -> event.getType() == EventType.SCORE && Objects.equals(event.getPlayer(), 2))
+                .count();
+            statistics.setPlayer1Score(player1Score);
+            statistics.setPlayer2Score(player2Score);
+        }
+
+    MatchDocument.RallyMetrics rallyMetrics = statistics.getRallyMetrics();
+        if (rallyMetrics == null) {
+            rallyMetrics = new MatchDocument.RallyMetrics();
+            statistics.setRallyMetrics(rallyMetrics);
+        }
+        List<Integer> rallyLengths = events.stream()
+            .map(Event::getMetadata)
+            .filter(Objects::nonNull)
+            .map(EventMetadata::getRallyLength)
+            .filter(Objects::nonNull)
+            .toList();
+        if (statistics.getTotalRallies() == null) {
+            statistics.setTotalRallies(rallyLengths.isEmpty() ? events.size() : rallyLengths.size());
+        }
+        List<Long> rallyDurationsMs = events.stream()
+            .map(this::extractDurationMs)
+            .filter(Objects::nonNull)
+            .toList();
+        List<Double> rallyShotSpeeds = events.stream()
+            .map(Event::getMetadata)
+            .filter(Objects::nonNull)
+            .map(EventMetadata::getShotSpeed)
+            .filter(Objects::nonNull)
+            .toList();
+        rallyMetrics.setTotalRallies(rallyLengths.isEmpty() ? statistics.getTotalRallies() : rallyLengths.size());
+        double computedAverageRallyLength = rallyLengths.isEmpty() ? (statistics.getAvgRallyLength() == null ? 0.0 : statistics.getAvgRallyLength())
+            : roundToOne(rallyLengths.stream().mapToDouble(Integer::doubleValue).average().orElse(0.0));
+        rallyMetrics.setAverageRallyLength(computedAverageRallyLength);
+        if (statistics.getAvgRallyLength() == null && !rallyLengths.isEmpty()) {
+            statistics.setAvgRallyLength(computedAverageRallyLength);
+        }
+        rallyMetrics.setLongestRallyLength(rallyLengths.stream().mapToInt(Integer::intValue).max().orElse(statistics.getTotalRallies() == null ? 0 : statistics.getTotalRallies()));
+        rallyMetrics.setAverageRallyDurationSeconds(rallyDurationsMs.isEmpty() ? null : roundToOne(rallyDurationsMs.stream().mapToLong(Long::longValue).average().orElse(0.0) / 1000.0));
+        rallyMetrics.setLongestRallyDurationSeconds(rallyDurationsMs.isEmpty() ? null : roundToOne(rallyDurationsMs.stream().mapToLong(Long::longValue).max().orElse(0L) / 1000.0));
+        rallyMetrics.setAverageRallyShotSpeed(rallyShotSpeeds.isEmpty() ? null : roundToOne(rallyShotSpeeds.stream().mapToDouble(Double::doubleValue).average().orElse(0.0)));
+
+    MatchDocument.ShotSpeedMetrics shotSpeedMetrics = statistics.getShotSpeedMetrics();
+        if (shotSpeedMetrics == null) {
+            shotSpeedMetrics = new MatchDocument.ShotSpeedMetrics();
+            statistics.setShotSpeedMetrics(shotSpeedMetrics);
+        }
+        shotSpeedMetrics.setFastestShotMph(roundToOne(maxSpeed(shots)));
+        shotSpeedMetrics.setAverageShotMph(roundToOne(averageSpeed(shots)));
+        List<Double> incomingSpeeds = events.stream()
+            .map(Event::getMetadata)
+            .filter(Objects::nonNull)
+            .map(EventMetadata::getIncomingShotSpeed)
+            .filter(Objects::nonNull)
+            .toList();
+        List<Double> outgoingSpeeds = events.stream()
+            .map(Event::getMetadata)
+            .filter(Objects::nonNull)
+            .map(EventMetadata::getOutgoingShotSpeed)
+            .filter(Objects::nonNull)
+            .toList();
+        shotSpeedMetrics.setAverageIncomingShotMph(incomingSpeeds.isEmpty() ? null : roundToOne(incomingSpeeds.stream().mapToDouble(Double::doubleValue).average().orElse(0.0)));
+        shotSpeedMetrics.setAverageOutgoingShotMph(outgoingSpeeds.isEmpty() ? null : roundToOne(outgoingSpeeds.stream().mapToDouble(Double::doubleValue).average().orElse(0.0)));
+        if ((statistics.getAvgBallSpeed() == null || statistics.getAvgBallSpeed() == 0.0) && !shots.isEmpty()) {
+            statistics.setAvgBallSpeed(roundToOne(averageOfShots(shots, Shot::getSpeed)));
+        }
+        if ((statistics.getMaxBallSpeed() == null || statistics.getMaxBallSpeed() == 0.0) && !shots.isEmpty()) {
+            statistics.setMaxBallSpeed(roundToOne(maxOfShots(shots, Shot::getSpeed)));
+        }
+
+    MatchDocument.ServeMetrics serveMetrics = statistics.getServeMetrics();
+        if (serveMetrics == null) {
+            serveMetrics = new MatchDocument.ServeMetrics();
+            statistics.setServeMetrics(serveMetrics);
+        }
+        List<Shot> serveShots = shots.stream()
+            .filter(shot -> shot.getShotType() == ShotType.SERVE)
+            .toList();
+        int totalServes = serveShots.size();
+        int successfulServes = (int) serveShots.stream()
+            .filter(shot -> shot.getResult() == ShotResult.IN)
+            .count();
+        serveMetrics.setTotalServes(totalServes);
+        serveMetrics.setSuccessfulServes(successfulServes);
+        serveMetrics.setFaults(totalServes - successfulServes);
+        serveMetrics.setSuccessRate(percent(successfulServes, totalServes));
+        serveMetrics.setAverageServeSpeed(roundToOne(averageOfShots(serveShots, Shot::getSpeed)));
+        serveMetrics.setFastestServeSpeed(roundToOne(maxOfShots(serveShots, Shot::getSpeed)));
+
+        MatchDocument.ReturnMetrics returnMetrics = statistics.getReturnMetrics();
+        if (returnMetrics == null) {
+            returnMetrics = new MatchDocument.ReturnMetrics();
+            statistics.setReturnMetrics(returnMetrics);
+        }
+        List<Shot> returnShots = shots.stream()
+            .filter(shot -> shot.getShotType() != null && shot.getShotType() != ShotType.SERVE)
+            .toList();
+        int totalReturns = returnShots.size();
+        int successfulReturns = (int) returnShots.stream()
+            .filter(shot -> shot.getResult() == ShotResult.IN)
+            .count();
+        returnMetrics.setTotalReturns(totalReturns);
+        returnMetrics.setSuccessfulReturns(successfulReturns);
+        returnMetrics.setSuccessRate(percent(successfulReturns, totalReturns));
+        returnMetrics.setAverageReturnSpeed(roundToOne(averageOfShots(returnShots, Shot::getSpeed)));
+
+        Map<ShotType, List<Shot>> shotsByType = shots.stream()
+            .filter(shot -> shot.getShotType() != null)
+            .collect(Collectors.groupingBy(Shot::getShotType, () -> new EnumMap<>(ShotType.class), Collectors.toList()));
+        List<MatchDocument.ShotTypeAggregate> shotBreakdown = new ArrayList<>();
+        for (Map.Entry<ShotType, List<Shot>> entry : shotsByType.entrySet()) {
+            List<Shot> typedShots = entry.getValue();
+            MatchDocument.ShotTypeAggregate aggregate = new MatchDocument.ShotTypeAggregate();
+            aggregate.setShotType(entry.getKey());
+            aggregate.setCount(typedShots.size());
+            aggregate.setAverageSpeed(roundToOne(averageOfShots(typedShots, Shot::getSpeed)));
+            aggregate.setAverageAccuracy(roundToOne(averageOfShots(typedShots, Shot::getAccuracy)));
+            shotBreakdown.add(aggregate);
+        }
+        shotBreakdown.sort(Comparator.comparing(aggregate -> aggregate.getShotType().name()));
+        statistics.setShotTypeBreakdown(List.copyOf(shotBreakdown));
+
+        List<MatchDocument.PlayerBreakdown> playerBreakdowns = new ArrayList<>();
+        for (int player = 1; player <= 2; player++) {
+            final int playerNumber = player;
+            List<Shot> playerShots = shots.stream()
+                .filter(shot -> shot.getPlayer() == playerNumber)
+                .toList();
+            List<Shot> playerServes = playerShots.stream()
+                .filter(shot -> shot.getShotType() == ShotType.SERVE)
+                .toList();
+            List<Shot> playerReturns = playerShots.stream()
+                .filter(shot -> shot.getShotType() != ShotType.SERVE)
+                .toList();
+            int pointsWon = (int) events.stream()
+                .filter(event -> event.getType() == EventType.SCORE && Objects.equals(event.getPlayer(), playerNumber))
+                .count();
+            int errors = (int) events.stream()
+                .filter(event -> event.getType() == EventType.MISS && Objects.equals(event.getPlayer(), playerNumber))
+                .count();
+            int successfulPlayerServes = (int) playerServes.stream()
+                .filter(shot -> shot.getResult() == ShotResult.IN)
+                .count();
+            int successfulPlayerReturns = (int) playerReturns.stream()
+                .filter(shot -> shot.getResult() == ShotResult.IN)
+                .count();
+            MatchDocument.PlayerBreakdown breakdown = new MatchDocument.PlayerBreakdown();
+            breakdown.setPlayer(playerNumber);
+            breakdown.setTotalPointsWon(pointsWon);
+            breakdown.setTotalShots(playerShots.size());
+            breakdown.setTotalServes(playerServes.size());
+            breakdown.setSuccessfulServes(successfulPlayerServes);
+            breakdown.setTotalReturns(playerReturns.size());
+            breakdown.setSuccessfulReturns(successfulPlayerReturns);
+            breakdown.setWinners(pointsWon);
+            breakdown.setErrors(errors);
+            breakdown.setAverageShotSpeed(roundToOne(averageOfShots(playerShots, Shot::getSpeed)));
+            breakdown.setAverageAccuracy(roundToOne(averageOfShots(playerShots, Shot::getAccuracy)));
+            breakdown.setPointWinRate(totalScoreEvents == 0 ? 0.0 : roundToOne((pointsWon / (double) totalScoreEvents) * 100.0));
+            breakdown.setServeSuccessRate(percent(successfulPlayerServes, playerServes.size()));
+            breakdown.setReturnSuccessRate(percent(successfulPlayerReturns, playerReturns.size()));
+            playerBreakdowns.add(breakdown);
+        }
+        statistics.setPlayerBreakdown(List.copyOf(playerBreakdowns));
+
+        List<MatchDocument.MomentumSample> momentumSamples = new ArrayList<>();
+        ScoreState runningScore = new ScoreState(0, 0);
+        for (Event event : events) {
+            if (event.getType() != EventType.SCORE) {
+                continue;
+            }
+            ScoreState scoreAfter = event.getMetadata() == null ? null : event.getMetadata().getScoreAfter();
+            if (scoreAfter == null) {
+                runningScore = incrementScore(runningScore, event.getPlayer());
+                scoreAfter = new ScoreState(runningScore.getPlayer1(), runningScore.getPlayer2());
+            } else {
+                runningScore = scoreAfter;
+                scoreAfter = new ScoreState(scoreAfter.getPlayer1(), scoreAfter.getPlayer2());
+            }
+            MatchDocument.MomentumSample sample = new MatchDocument.MomentumSample();
+            sample.setTimestampMs(event.getTimestampMs());
+            sample.setScoringPlayer(event.getPlayer());
+            sample.setScoreAfter(scoreAfter);
+            sample.setLead(scoreAfter.getPlayer1() - scoreAfter.getPlayer2());
+            momentumSamples.add(sample);
+        }
+    MatchDocument.MomentumTimeline timeline = statistics.getMomentumTimeline();
+        if (timeline == null) {
+            timeline = new MatchDocument.MomentumTimeline();
+            statistics.setMomentumTimeline(timeline);
+        }
+        timeline.setSamples(List.copyOf(momentumSamples));
+    }
+
     private List<Shot> synthesizeShotsFromEvents(List<Event> events, double fps) {
         List<Shot> shots = new ArrayList<>();
         int index = 0;
@@ -231,6 +443,56 @@ public class MatchProcessingService {
             index++;
         }
         return shots;
+    }
+
+    private double percent(int part, int total) {
+        if (total == 0) {
+            return 0.0;
+        }
+        return roundToOne((part / (double) total) * 100.0);
+    }
+
+    private double averageOfShots(List<Shot> shots, ToDoubleFunction<Shot> extractor) {
+        if (shots == null || shots.isEmpty()) {
+            return 0.0;
+        }
+        return shots.stream().mapToDouble(extractor).average().orElse(0.0);
+    }
+
+    private double maxOfShots(List<Shot> shots, ToDoubleFunction<Shot> extractor) {
+        if (shots == null || shots.isEmpty()) {
+            return 0.0;
+        }
+        return shots.stream().mapToDouble(extractor).max().orElse(0.0);
+    }
+
+    private double roundToOne(double value) {
+        return Math.round(value * 10.0) / 10.0;
+    }
+
+    private Long extractDurationMs(Event event) {
+        if (event == null) {
+            return null;
+        }
+        List<Long> timeline = event.getTimestampSeries();
+        if (timeline != null && timeline.size() >= 2) {
+            long start = timeline.get(0);
+            long end = timeline.get(timeline.size() - 1);
+            if (end > start) {
+                return end - start;
+            }
+        }
+        EventMetadata metadata = event.getMetadata();
+        if (metadata != null && metadata.getEventWindow() != null) {
+            EventWindow window = metadata.getEventWindow();
+            int pre = window.getPreMs() == null ? 0 : window.getPreMs();
+            int post = window.getPostMs() == null ? 0 : window.getPostMs();
+            int total = pre + post;
+            if (total > 0) {
+                return (long) total;
+            }
+        }
+        return null;
     }
     private double totalSpeed(List<Shot> shots) {
         return shots.stream().mapToDouble(Shot::getSpeed).sum();
@@ -427,11 +689,15 @@ public class MatchProcessingService {
     private String resolveEventTitle(EventType type) {
         return switch (type) {
             case SCORE -> "Point Scored";
-            case RALLY_HIGHLIGHT -> "Rally Highlight";
+            case RALLY_HIGHLIGHT, RALLY -> "Rally Highlight";
             case FASTEST_SHOT -> "Fastest Shot";
-            case SERVE_ACE -> "Serve Ace";
+            case SERVE_ACE, SERVE -> "Serve Ace";
+            case RETURN -> "Return Winner";
+            case POINT -> "Point Summary";
+            case HIGHLIGHT -> "Highlight";
             case MISS -> "Missed Return";
             case PLAY_OF_THE_GAME -> "Play of the Game";
+            case OTHER -> "Match Event";
         };
     }
 
@@ -439,11 +705,15 @@ public class MatchProcessingService {
         if (context instanceof Double motionScore) {
             return switch (type) {
                 case SCORE -> "Point concluded after intense exchange";
-                case RALLY_HIGHLIGHT -> "Extended rally with high tempo";
+                case RALLY_HIGHLIGHT, RALLY -> "Extended rally with high tempo";
                 case FASTEST_SHOT -> "High-speed shot registered at motion score " + Math.round(motionScore);
-                case SERVE_ACE -> "Serve led directly to a point";
+                case SERVE_ACE, SERVE -> "Serve led directly to a point";
+                case RETURN -> "Aggressive return pressured the server";
+                case POINT -> "Point-winning sequence";
+                case HIGHLIGHT -> "Noteworthy rally";
                 case MISS -> "Return attempt was unsuccessful";
                 case PLAY_OF_THE_GAME -> "Most impactful rally detected";
+                case OTHER -> "Key rally segment";
             };
         }
         if (context instanceof ModelEvent modelEvent) {
@@ -470,6 +740,10 @@ public class MatchProcessingService {
                 case "backhand" -> ShotType.BACKHAND;
                 case "smash" -> ShotType.SMASH;
                 case "defensive" -> ShotType.DEFENSIVE;
+                case "rally" -> ShotType.RALLY;
+                case "drive" -> ShotType.DRIVE;
+                case "topspin", "top-spin" -> ShotType.TOPSPIN;
+                case "lob" -> ShotType.LOB;
                 default -> ShotType.FOREHAND;
             };
         }
