@@ -578,82 +578,69 @@ private fun MatchDetailBottomNav(
     onNavigateToHighlights: () -> Unit,
     onNavigateToProfile: () -> Unit
 ) {
-    Surface(
-        color = MaterialTheme.colorScheme.background.copy(alpha = 0.9f),
+    NavigationBar(
+        containerColor = MaterialTheme.colorScheme.background.copy(alpha = 0.8f),
         modifier = Modifier
-            .fillMaxWidth()
-            .border(
-                width = 1.dp,
-                color = Color(0x1F9CA3AF),
-                shape = RoundedCornerShape(0.dp)
+            .border(1.dp, Color(0x1F9CA3AF), RoundedCornerShape(0.dp))
+            .windowInsetsPadding( // keeps it above the gesture area
+                WindowInsets.safeDrawing.only(WindowInsetsSides.Bottom)
             )
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 8.dp),
-            horizontalArrangement = Arrangement.SpaceEvenly
-        ) {
-            BottomNavItem(
-                icon = Icons.Default.Videocam,
-                label = "Upload",
-                selected = selectedTab == 0,
-                onClick = onNavigateToUpload
+        NavigationBarItem(
+            icon = { Icon(Icons.Default.Videocam, null) },
+            label = { Text("Upload", style = MaterialTheme.typography.labelSmall.copy(fontSize = 12.sp)) },
+            selected = selectedTab == 0,
+            onClick = onNavigateToUpload,
+            colors = NavigationBarItemDefaults.colors(
+                selectedIconColor = MaterialTheme.colorScheme.primary,
+                selectedTextColor = MaterialTheme.colorScheme.primary,
+                unselectedIconColor = Color(0xFF71717A),
+                unselectedTextColor = Color(0xFF71717A),
+                indicatorColor = Color.Transparent
             )
-            
-            Box(
-                modifier = Modifier.weight(1f),
-                contentAlignment = Alignment.Center
-            ) {
-                // Special styling for selected History tab
-                Box(
-                    modifier = Modifier
-                        .size(64.dp)
-                        .offset(y = (-16).dp)
-                        .background(
-                            color = Color(0x4D13A4EC),
-                            shape = CircleShape
-                        ),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.History,
-                            contentDescription = "History",
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(24.dp)
-                        )
-                        Text(
-                            text = "History",
-                            style = MaterialTheme.typography.labelSmall.copy(
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 12.sp
-                            ),
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                    }
-                }
-            }
-            
-            BottomNavItem(
-                icon = Icons.Default.Star,
-                label = "Highlights",
-                selected = selectedTab == 2,
-                onClick = onNavigateToHighlights
+        )
+        NavigationBarItem(
+            icon = { Icon(Icons.Default.History, null) },
+            label = { Text("History", style = MaterialTheme.typography.labelSmall.copy(fontSize = 12.sp)) },
+            selected = selectedTab == 1,
+            onClick = onNavigateToHistory,
+            colors = NavigationBarItemDefaults.colors(
+                selectedIconColor = MaterialTheme.colorScheme.primary,
+                selectedTextColor = MaterialTheme.colorScheme.primary,
+                unselectedIconColor = Color(0xFF71717A),
+                unselectedTextColor = Color(0xFF71717A),
+                indicatorColor = Color.Transparent
             )
-            
-            BottomNavItem(
-                icon = Icons.Default.Person,
-                label = "Profile",
-                selected = selectedTab == 3,
-                onClick = onNavigateToProfile
+        )
+        NavigationBarItem(
+            icon = { Icon(Icons.Default.Star, null) },
+            label = { Text("Highlights", style = MaterialTheme.typography.labelSmall.copy(fontSize = 12.sp)) },
+            selected = selectedTab == 2,
+            onClick = onNavigateToHighlights,
+            colors = NavigationBarItemDefaults.colors(
+                selectedIconColor = MaterialTheme.colorScheme.primary,
+                selectedTextColor = MaterialTheme.colorScheme.primary,
+                unselectedIconColor = Color(0xFF71717A),
+                unselectedTextColor = Color(0xFF71717A),
+                indicatorColor = Color.Transparent
             )
-        }
+        )
+        NavigationBarItem(
+            icon = { Icon(Icons.Default.Person, null) },
+            label = { Text("Profile", style = MaterialTheme.typography.labelSmall.copy(fontSize = 12.sp)) },
+            selected = selectedTab == 3,
+            onClick = onNavigateToProfile,
+            colors = NavigationBarItemDefaults.colors(
+                selectedIconColor = MaterialTheme.colorScheme.primary,
+                selectedTextColor = MaterialTheme.colorScheme.primary,
+                unselectedIconColor = Color(0xFF71717A),
+                unselectedTextColor = Color(0xFF71717A),
+                indicatorColor = Color.Transparent
+            )
+        )
     }
 }
+
 
 @Composable
 private fun RowScope.BottomNavItem(

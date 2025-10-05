@@ -284,93 +284,97 @@ private fun HighlightsBottomNav(
     onNavigateToHighlights: () -> Unit,
     onNavigateToProfile: () -> Unit
 ) {
-    Surface(
-        color = MaterialTheme.colorScheme.background.copy(alpha = 0.8f),
+    NavigationBar(
+        containerColor = MaterialTheme.colorScheme.background.copy(alpha = 0.8f),
         modifier = Modifier
-            .fillMaxWidth()
-            .border(
-                width = 1.dp,
-                color = Color(0x1A9CA3AF),
-                shape = RoundedCornerShape(0.dp)
+            .border(1.dp, Color(0x4D13A4EC), RoundedCornerShape(0.dp))
+            .windowInsetsPadding(        // keep the bar above the gesture area
+                WindowInsets.safeDrawing.only(WindowInsetsSides.Bottom)
             )
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 8.dp),
-            horizontalArrangement = Arrangement.SpaceEvenly
-        ) {
-            BottomNavItem(
-                icon = Icons.Default.Videocam,
-                label = "Upload",
-                selected = selectedTab == 0,
-                onClick = onNavigateToUpload
+        NavigationBarItem(
+            icon = { Icon(Icons.Default.Videocam, null) },
+            label = { Text("Upload", style = MaterialTheme.typography.labelSmall.copy(fontSize = 12.sp)) },
+            selected = selectedTab == 0,
+            onClick = onNavigateToUpload,
+            colors = NavigationBarItemDefaults.colors(
+                selectedIconColor = MaterialTheme.colorScheme.primary,
+                selectedTextColor = MaterialTheme.colorScheme.primary,
+                unselectedIconColor = Color(0xFF71717A),
+                unselectedTextColor = Color(0xFF71717A),
+                indicatorColor = Color.Transparent
             )
-            
-            BottomNavItem(
-                icon = Icons.Default.History,
-                label = "History",
-                selected = selectedTab == 1,
-                onClick = onNavigateToHistory
+        )
+
+        NavigationBarItem(
+            icon = { Icon(Icons.Default.History, null) },
+            label = { Text("History", style = MaterialTheme.typography.labelSmall.copy(fontSize = 12.sp)) },
+            selected = selectedTab == 1,
+            onClick = onNavigateToHistory,
+            colors = NavigationBarItemDefaults.colors(
+                selectedIconColor = MaterialTheme.colorScheme.primary,
+                selectedTextColor = MaterialTheme.colorScheme.primary,
+                unselectedIconColor = Color(0xFF71717A),
+                unselectedTextColor = Color(0xFF71717A),
+                indicatorColor = Color.Transparent
             )
-            
-            // Special highlighted tab
-            Column(
-                modifier = Modifier.weight(1f),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(40.dp)
-                        .background(
-                            color = Color(0x4D13A4EC),
-                            shape = CircleShape
-                        ),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Star,
-                        contentDescription = "Highlights",
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(24.dp)
-                    )
-                }
-                Text(
-                    text = "Highlights",
-                    style = MaterialTheme.typography.labelSmall.copy(
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 12.sp
-                    ),
-                    color = MaterialTheme.colorScheme.primary
-                )
-            }
-            
-            BottomNavItem(
-                icon = Icons.Default.Person,
-                label = "Profile",
-                selected = selectedTab == 3,
-                onClick = onNavigateToProfile
+        )
+
+        NavigationBarItem(
+            icon = { Icon(Icons.Default.Star, null) },
+            label = { Text("Highlights", style = MaterialTheme.typography.labelSmall.copy(fontSize = 12.sp)) },
+            selected = selectedTab == 2,
+            onClick = onNavigateToHighlights,
+            colors = NavigationBarItemDefaults.colors(
+                selectedIconColor = MaterialTheme.colorScheme.primary,
+                selectedTextColor = MaterialTheme.colorScheme.primary,
+                unselectedIconColor = Color(0xFF71717A),
+                unselectedTextColor = Color(0xFF71717A),
+                indicatorColor = Color.Transparent
             )
-        }
+        )
+
+        NavigationBarItem(
+            icon = { Icon(Icons.Default.Person, null) },
+            label = { Text("Profile", style = MaterialTheme.typography.labelSmall.copy(fontSize = 12.sp)) },
+            selected = selectedTab == 3,
+            onClick = onNavigateToProfile,
+            colors = NavigationBarItemDefaults.colors(
+                selectedIconColor = MaterialTheme.colorScheme.primary,
+                selectedTextColor = MaterialTheme.colorScheme.primary,
+                unselectedIconColor = Color(0xFF71717A),
+                unselectedTextColor = Color(0xFF71717A),
+                indicatorColor = Color.Transparent
+            )
+        )
     }
 }
+
 
 @Composable
 private fun RowScope.BottomNavItem(
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     label: String,
     selected: Boolean,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    highlightWhenSelected: Boolean = false
 ) {
     Column(
         modifier = Modifier
             .weight(1f)
-            .padding(vertical = 4.dp),
+            .height(64.dp)
+            .clickable(onClick = onClick),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(4.dp)
+        verticalArrangement = Arrangement.Center
     ) {
-        IconButton(onClick = onClick) {
+        Box(Modifier.size(48.dp), contentAlignment = Alignment.Center) {
+            if (highlightWhenSelected && selected) {
+                Box(
+                    Modifier
+                        .size(40.dp)
+                        .background(Color(0x4D13A4EC), CircleShape)
+                )
+            }
             Icon(
                 imageVector = icon,
                 contentDescription = label,
@@ -378,6 +382,7 @@ private fun RowScope.BottomNavItem(
                 modifier = Modifier.size(24.dp)
             )
         }
+        Spacer(Modifier.height(2.dp))
         Text(
             text = label,
             style = MaterialTheme.typography.labelSmall.copy(
