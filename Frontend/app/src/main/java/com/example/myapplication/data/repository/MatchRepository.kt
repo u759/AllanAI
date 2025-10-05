@@ -29,9 +29,18 @@ interface MatchRepository {
      *
      * @param videoFile the video file to upload
      * @param filename the original filename
+     * @param player1Name optional name for player 1
+     * @param player2Name optional name for player 2
+     * @param matchTitle optional title for the match
      * @return the created match with UPLOADED status
      */
-    suspend fun uploadMatch(videoFile: File, filename: String): Result<Match>
+    suspend fun uploadMatch(
+        videoFile: File,
+        filename: String,
+        player1Name: String? = null,
+        player2Name: String? = null,
+        matchTitle: String? = null
+    ): Result<Match>
 
     /**
      * Retrieves all matches.
