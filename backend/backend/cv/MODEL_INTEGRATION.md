@@ -205,8 +205,8 @@ The service will:
 The backend normalizes model output and stores it in MongoDB using the `MatchDocument` structure described in `AIGuidelines/BackendArchitecture.md`. Keep the following expectations in mind when emitting JSON:
 
 - **Timeline fidelity** – Provide `timestampMs` *and* the optional `timestampSeries`/`frameSeries` arrays for events and shots. The service deduplicates and sorts these, preserving additional context frames around highlights even when fallback windows are used.
-- **Detection metadata** – Include a `detections` array with bounding boxes (frame number, x/y/width/height, confidence) whenever the model tracks the ball in that interval. Missing detections trigger heuristic placeholders.
-- **Processing summary** – Accurate confidence values and explicit timestamps allow the backend to set `processingSummary.primarySource` to `MODEL` and flag `heuristicFallbackUsed` only when necessary. Heuristic paths add notes automatically, but richer model output keeps this summary authoritative.
+- **Detection metadata** – Include a `detections` array with bounding boxes (frame number, x/y/width/height, confidence) whenever the model tracks the ball in that interval. Missing detections trigger synthetic placeholders.
+- **Processing summary** – Accurate confidence values and explicit timestamps allow the backend to set `processingSummary.primarySource` to `MODEL` with supporting notes. Missing or incomplete outputs now cause the processing run to fail rather than falling back to heuristics, so model payloads must be complete.
 - **Highlight references** – Highlights reference events via `HighlightRef` objects (event ID + timestamps) that the backend derives from the processed event list. Accurate timestamps and ordering ensure highlight playlists and cross-links stay consistent.
 
 ### 4. Expected JSON Output Format
@@ -314,24 +314,9 @@ curl http://localhost:8080/api/matches/{id}/status
 curl http://localhost:8080/api/matches/{id}/events
 ```
 
-### 6. Fallback Behavior
+### 6. Failure Handling
 
-If the model fails or is unavailable, the backend automatically falls back to OpenCV heuristic processing. The resulting document records this in `processingSummary.heuristicFallbackUsed` and appends `HEURISTIC` to the `sources` list so downstream systems can flag the run:
-
-```java
-// In MatchProcessingService.processVideo()
-Optional<ModelInferenceResult> inference = modelEventDetectionService.detect(match.getId(), videoPath);
-
-if (inference.isPresent() && !inference.get().getEvents().isEmpty()) {
-    // Use model results
-    applyModelResults(match, inference.get(), metadata);
-} else {
-    // Fallback to heuristic OpenCV processing
-    applyHeuristicProcessing(match, videoPath, metadata);
-}
-```
-
-Even in fallback mode the service synthesizes `timestampSeries`, `frameSeries`, and minimal `detections` so the schema stays consistent for highlights and playback.
+If the model command fails, yields no events, or produces an invalid result file, the backend marks the match as `FAILED` and surfaces the error message. There is no longer a heuristic fallback pipeline; ensure the configured command always generates a valid inference JSON or supply the file before invoking processing.
 
 ## Model Capabilities & Limitations
 

@@ -11,7 +11,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = "allanai.model")
 public class ModelProperties {
 
-    private boolean enabled = false;
+    private boolean enabled = true;
     private Path workingDirectory = Paths.get("..");
     private List<String> command = new ArrayList<>();
     private Path weightsPath = Paths.get("runs/train/weights/best.pt");

@@ -642,7 +642,6 @@ public class MatchDocument {
 
     public static class ProcessingSummary {
         private String primarySource;
-        private boolean heuristicFallbackUsed;
         private List<String> sources = new ArrayList<>();
         private List<String> notes = new ArrayList<>();
 
@@ -652,14 +651,6 @@ public class MatchDocument {
 
         public void setPrimarySource(String primarySource) {
             this.primarySource = primarySource;
-        }
-
-        public boolean isHeuristicFallbackUsed() {
-            return heuristicFallbackUsed;
-        }
-
-        public void setHeuristicFallbackUsed(boolean heuristicFallbackUsed) {
-            this.heuristicFallbackUsed = heuristicFallbackUsed;
         }
 
         public List<String> getSources() {

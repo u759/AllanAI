@@ -12,13 +12,13 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 @Service
@@ -34,10 +34,9 @@ public class ModelEventDetectionService {
         this.objectMapper = objectMapper;
     }
 
-    public Optional<ModelInferenceResult> detect(String matchId, Path videoPath) {
+    public ModelInferenceResult detect(String matchId, Path videoPath) {
         if (!properties.isEnabled()) {
-            LOGGER.debug("Research model integration disabled; falling back to heuristic processing");
-            return Optional.empty();
+            throw new IllegalStateException("Research model integration is disabled; enable it to process matches");
         }
 
         try {
@@ -49,17 +48,15 @@ public class ModelEventDetectionService {
 
             Path resultFile = outputDirectory.resolve(resolvePlaceholders(properties.getResultFileName(), placeholders));
             if (!Files.exists(resultFile)) {
-                LOGGER.warn("Model command completed but result file {} is missing", resultFile);
-                return Optional.empty();
+                throw new IllegalStateException("Model command completed but result file is missing: " + resultFile);
             }
 
             ModelInferenceResult rawResult = objectMapper.readValue(resultFile.toFile(), ModelInferenceResult.class);
             ModelInferenceResult normalized = rawResult.normalize(properties);
             LOGGER.info("Loaded {} events and {} shots from research model output for match {}", normalized.getEvents().size(), normalized.getShots().size(), matchId);
-            return Optional.of(normalized);
+            return normalized;
         } catch (IOException ex) {
-            LOGGER.error("Failed to execute research model pipeline", ex);
-            return Optional.empty();
+            throw new IllegalStateException("Failed to execute research model pipeline", ex);
         }
     }
 
@@ -83,6 +80,29 @@ public class ModelEventDetectionService {
         List<String> resolvedCommand = new ArrayList<>();
         for (String token : commandTemplate) {
             resolvedCommand.add(resolvePlaceholders(token, placeholders));
+        }
+
+        // Validate working directory exists before attempting to start the process
+        Path workingDir = properties.getWorkingDirectory();
+        if (workingDir == null) {
+            throw new IOException("Model working directory is not configured");
+        }
+        if (!Files.exists(workingDir) || !Files.isDirectory(workingDir)) {
+            throw new IOException("Configured working directory does not exist: " + workingDir.toAbsolutePath());
+        }
+
+        // Validate that referenced script files exist (e.g. Python script)
+        for (String token : resolvedCommand) {
+            String lower = token.toLowerCase(Locale.ROOT);
+            if (lower.endsWith(".py") || lower.endsWith(".sh") || lower.endsWith(".exe") || lower.endsWith(".bat")) {
+                Path scriptPath = Paths.get(token);
+                if (!scriptPath.isAbsolute()) {
+                    scriptPath = workingDir.resolve(token);
+                }
+                if (!Files.exists(scriptPath)) {
+                    throw new IOException("Model command refers to missing file: " + scriptPath.toAbsolutePath());
+                }
+            }
         }
 
         ProcessBuilder processBuilder = new ProcessBuilder(resolvedCommand);

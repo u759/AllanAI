@@ -419,8 +419,8 @@ DELETE /api/matches/{id}            # Delete match
           "player1": Number,
           "player2": Number
         },
-        "confidence": Number,           // Model confidence score 0-1
-        "source": String,               // MODEL | HEURISTIC
+  "confidence": Number,           // Model confidence score 0-1
+  "source": String,               // MODEL | MODEL_SYNTHESIZED_SHOTS
         "detections": [                 // Ball bounding boxes detected for this event
           {
             "frameNumber": Number,
@@ -463,8 +463,7 @@ DELETE /api/matches/{id}            # Delete match
     ]
   },
   "processingSummary": {              // Tracks source of analysis
-    "primarySource": String,          // MODEL or HEURISTIC
-    "heuristicFallbackUsed": Boolean,
+    "primarySource": String,          // MODEL
     "sources": [String],              // List of all sources used
     "notes": [String]                 // Optional processing notes
   }
@@ -475,7 +474,7 @@ DELETE /api/matches/{id}            # Delete match
 
 ### Event Detection Algorithm
 
-The OpenCV processing engine automatically detects and timestamps key events during match analysis:
+The research inference pipeline (YOLO-based detector plus post-processing rules) automatically detects and timestamps key events during match analysis:
 
 #### Event Types & Detection Logic
 

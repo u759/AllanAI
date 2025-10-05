@@ -32,8 +32,7 @@ The AllanAI backe    public static class Event {
     }
 
     public static class ProcessingSummary {
-        private String primarySource;           // MODEL or HEURISTIC
-        private Boolean heuristicFallbackUsed;
+        private String primarySource;           // MODEL
         private List<String> sources = new ArrayList<>();
         private List<String> notes = new ArrayList<>();
     }
@@ -59,7 +58,7 @@ The AllanAI backe    public static class Event {
         private List<List<Double>> ballTrajectory;
         private ScoreState scoreAfter;
         private Double confidence;
-        private String source;                     // MODEL | HEURISTIC
+        private String source;                     // MODEL | MODEL_SYNTHESIZED_SHOTS
         private List<Detection> detections = new ArrayList<>();  // Ball bounding boxes
     }ring Boot and provides RESTful APIs for video upload, processing orchestration, and statistics retrieval. It integrates with OpenCV for computer vision analysis of table tennis gameplay.
 
@@ -70,7 +69,7 @@ The AllanAI backe    public static class Event {
     - Every detected event stores both `timestampMs` (wall-clock) and `metadata.frameNumber` for precise frame-to-time mapping.
     - `metadata.eventWindow` preserves the −4/+12 frame slices used during training to provide consistent highlight previews.
     - MongoDB indexes on `{ "events.timestampMs": 1, "status": 1 }` support Compass-friendly exploration of timestamped data.
-- **Model lifecycle**: Training scripts (external repository) export YOLO/TTNet-like weights; the backend consumes model outputs as JSON event streams or falls back to heuristic detection when model confidence is low.
+- **Model lifecycle**: Training scripts (external repository) export YOLO/TTNet-like weights; the backend requires model outputs as JSON event streams and surfaces processing errors if inference cannot be produced.
 
 ## Architecture Pattern: Layered Architecture
 
@@ -229,7 +228,7 @@ spring.servlet.multipart.max-file-size=512MB
 spring.servlet.multipart.max-request-size=512MB
 ```
 
-**ProcessingProperties.java** binds the `processing.*` namespace and exposes values such as maximum frame samples (used to cap heuristic processing) and default pre-/post-event windows.
+**ProcessingProperties.java** binds the `processing.*` namespace and exposes values such as maximum frame samples (used for video metadata fallbacks) and default pre-/post-event windows.
 
 │   │   ├── BackendApplication.java
 │   │   ├── config/

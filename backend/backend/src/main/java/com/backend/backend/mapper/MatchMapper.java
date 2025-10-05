@@ -169,11 +169,11 @@ public final class MatchMapper {
 
     private static ProcessingSummaryResponse toProcessingSummary(ProcessingSummary summary) {
         if (summary == null) {
-            return new ProcessingSummaryResponse("UNKNOWN", false, List.of(), List.of());
+            return new ProcessingSummaryResponse("UNKNOWN", List.of(), List.of());
         }
         List<String> sources = summary.getSources() == null ? List.of() : List.copyOf(summary.getSources());
         List<String> notes = summary.getNotes() == null ? List.of() : List.copyOf(summary.getNotes());
-        return new ProcessingSummaryResponse(summary.getPrimarySource(), summary.isHeuristicFallbackUsed(), sources, notes);
+        return new ProcessingSummaryResponse(summary.getPrimarySource(), sources, notes);
     }
 
     private static List<DetectionResponse> toDetectionResponses(List<Detection> detections) {

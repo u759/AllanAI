@@ -1,0 +1,9 @@
+# Core ML/runtime packages
+torch
+torchvision
+torchaudio
+
+# Model helper packages
+ultralytics
+opencv-python
+numpy
