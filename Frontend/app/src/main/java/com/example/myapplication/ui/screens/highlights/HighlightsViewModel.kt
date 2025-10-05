@@ -1,13 +1,17 @@
 package com.example.myapplication.ui.screens.highlights
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.myapplication.R
 import com.example.myapplication.data.model.Event
 import com.example.myapplication.data.model.EventType
 import com.example.myapplication.data.model.Match
 import com.example.myapplication.data.model.MatchStatus
 import com.example.myapplication.data.repository.MatchRepository
+import com.example.myapplication.util.HighlightThumbnailGenerator
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -31,7 +35,8 @@ import javax.inject.Inject
  */
 @HiltViewModel
 class HighlightsViewModel @Inject constructor(
-    private val matchRepository: MatchRepository
+    private val matchRepository: MatchRepository,
+    @ApplicationContext private val context: Context
 ) : ViewModel() {
 
     // UI State
@@ -107,7 +112,7 @@ class HighlightsViewModel @Inject constructor(
                     id = event.id,
                     matchId = match.id,
                     title = event.title,
-                    duration = formatDuration(event.timestampMs),
+                    duration = formatClipDuration(event),  // Calculate actual clip duration
                     thumbnailUrl = getThumbnailUrl(match, event),
                     eventType = event.type
                 )
@@ -142,31 +147,60 @@ class HighlightsViewModel @Inject constructor(
         val seconds = totalSeconds % 60
         return String.format("%d:%02d", minutes, seconds)
     }
+    
+    /**
+     * Calculate and format the actual clip duration (preMs + postMs).
+     */
+    private fun formatClipDuration(event: Event): String {
+        // Always use 3 seconds before and after (same as HighlightClip)
+        val preMs = 3000L
+        val postMs = 3000L
+        
+        // Calculate actual clip boundaries
+        val startMs = maxOf(0, event.timestampMs - preMs)
+        val endMs = event.timestampMs + postMs
+        val durationMs = endMs - startMs
+        
+        // Format to seconds
+        val totalSeconds = durationMs / 1000
+        return "${totalSeconds}s"
+    }
 
     /**
-     * Get thumbnail URL for a highlight event.
-     * In production, this would fetch actual frame from the video.
-     * For now, using placeholder images based on event type.
+     * Get thumbnail for a highlight event by extracting the first frame.
+     * 
+     * Generates a thumbnail from the video at the event's timestamp.
+     * Thumbnails are cached to avoid regeneration on subsequent loads.
      */
     private fun getThumbnailUrl(match: Match, event: Event): String {
-        // Different thumbnail sets based on event type
-        return when (event.type) {
+        // Always use 3 seconds before - ignore JSON eventWindow
+        val preMs = 3000L  // 3 seconds before for context
+        val startMs = maxOf(0, event.timestampMs - preMs)
+        
+        // Generate thumbnail from the first frame of the highlight
+        val thumbnailPath = HighlightThumbnailGenerator.generateThumbnail(
+            context = context,
+            videoResourceId = R.raw.test_2,
+            timestampMs = startMs,  // Use the start timestamp (first frame of highlight)
+            highlightId = event.id
+        )
+        
+        // Return file path if successful, otherwise fallback to placeholder
+        return thumbnailPath ?: getPlaceholderThumbnail(event.type)
+    }
+    
+    /**
+     * Fallback placeholder thumbnail if frame extraction fails.
+     */
+    private fun getPlaceholderThumbnail(eventType: EventType): String {
+        return when (eventType) {
             EventType.PLAY_OF_THE_GAME, EventType.RALLY_HIGHLIGHT -> {
-                val thumbnails = listOf(
-                    "https://lh3.googleusercontent.com/aida-public/AB6AXuA58uYUU3Kl5b6NormCVtZruihKIOljtFsMTGHHO_o6Fhmu_LK-1qJWvMkem0FA8m36Unh52J8FCYoX4zh74w7mwqzsvTTDDL7gPrFyxdMYxO93p73sviLQlbLw5fyFnwupIb6N9WOnuiVeepTfzG_AG2buTjscEXzm-L1Jhz4_1EmhKjn49i8tddrrnmph-OvE0bTTulZ6Mgh1t-1mgM3xJc88bmP4EM3aSlv6FhWgQG2McIVDGAlALOrXGggTcKolx7CPxrYqN-Lu",
-                    "https://lh3.googleusercontent.com/aida-public/AB6AXuAmDo-Wzk6mZZFrfOvkzJubkz1n-g9yuDl4bSzYM_5AL0viKTvHFs5fywIbTxitIa62PwrODu4W27dX4X5g3UubeJnFrTwLVimvQLU9hL2j2qtxHVsH_E98RBC0SMkCJmyThlJ2i1ROSdPpRRdmCx1kPzYL0IF40VFzKDjiu-1OzOBbDvrSekWHHm5FNaiYLH9DtUOXkJbYp6p1x9a4AfOgmRwdExKEsilhS12l_wTEKpCtd0MBUBvXMpBHKBmgWpiYdGs3gei9VIxZ"
-                )
-                thumbnails[event.id.hashCode().mod(thumbnails.size).let { if (it < 0) it + thumbnails.size else it }]
+                "https://lh3.googleusercontent.com/aida-public/AB6AXuA58uYUU3Kl5b6NormCVtZruihKIOljtFsMTGHHO_o6Fhmu_LK-1qJWvMkem0FA8m36Unh52J8FCYoX4zh74w7mwqzsvTTDDL7gPrFyxdMYxO93p73sviLQlbLw5fyFnwupIb6N9WOnuiVeepTfzG_AG2buTjscEXzm-L1Jhz4_1EmhKjn49i8tddrrnmph-OvE0bTTulZ6Mgh1t-1mgM3xJc88bmP4EM3aSlv6FhWgQG2McIVDGAlALOrXGggTcKolx7CPxrYqN-Lu"
             }
             EventType.FASTEST_SHOT, EventType.SERVE_ACE -> {
-                val thumbnails = listOf(
-                    "https://lh3.googleusercontent.com/aida-public/AB6AXuCnc8ZOIEm4toCUsiJsPvpjHSRdoMdHI5OvBxyUoS5c4Z_YVoqk52tJHgxswQwzuNEubGyB_ZQJttkkqrWGnq_gHx8s36SDMy_2nOTz3-1JK2_7ptbg_B00xdFO8Sew0fUZN4vozQuQBviJYGBOuK3dfw42Zg1rWUl9-eIuPWDCi6U_dnM1Gs82LNrJXGu3FuYe_u9OmY0Jw0MofVdI498j3Tsw70K4PerH6o7Vc5hqpLmsQvTiCUHQbqEmxQQ8Cz-8x3sYmvgKq_0U",
-                    "https://lh3.googleusercontent.com/aida-public/AB6AXuCMLtWWa8w8hSnqAhv_nGg137jSlYnZVrOVSJR2B3xNgQEwYPmnQ6nMAJhLXmVj1nRkrhcjN4CXmFjzkqlxgDH0CXTlqUxA32yoSKz8wyIhh7tGqjL2WiAfoOJlHd7VlvhnBLpUap9wXTy9AhqzPmz9CE5oU8anCxuYqaaJDCD41HVJkls_2-jUkxKBK_d5Kipy-G-6__9fbafYqVauKIDCaZt5Bw6icpiL9tPziQk2Uvtlz36EMqwsvJaSdmtCVZyia265uFx7zoiv"
-                )
-                thumbnails[event.id.hashCode().mod(thumbnails.size).let { if (it < 0) it + thumbnails.size else it }]
+                "https://lh3.googleusercontent.com/aida-public/AB6AXuCnc8ZOIEm4toCUsiJsPvpjHSRdoMdHI5OvBxyUoS5c4Z_YVoqk52tJHgxswQwzuNEubGyB_ZQJttkkqrWGnq_gHx8s36SDMy_2nOTz3-1JK2_7ptbg_B00xdFO8Sew0fUZN4vozQuQBviJYGBOuK3dfw42Zg1rWUl9-eIuPWDCi6U_dnM1Gs82LNrJXGu3FuYe_u9OmY0Jw0MofVdI498j3Tsw70K4PerH6o7Vc5hqpLmsQvTiCUHQbqEmxQQ8Cz-8x3sYmvgKq_0U"
             }
             else -> {
-                // Default thumbnail
                 "https://lh3.googleusercontent.com/aida-public/AB6AXuCEN5R1Phl90yI9Mn33AQNkuFoXCS1W2lJZ36YfuQxf2worp_SsjWkJFZEBLpr4RopEyXVkYUK0LLQlCOaU9xk2ySdoa8aFNPu99inVhBG7SiHAKDWVUuPRrHgv1ST3-kIdd8ayCoIuSEQQ4tHSWqaAAPMLprC45Jp30L_JAJf1PumH9D5wVpn5biB38Wg_gcOh7S31X9J1Wu9uopydS6p7tf1MTAEGBeG8bPccRGicRapnD6eyxU1J-zsNtXN0G-faIOOgIk88YdzA"
             }
         }
