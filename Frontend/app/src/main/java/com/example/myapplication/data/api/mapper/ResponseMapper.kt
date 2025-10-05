@@ -52,6 +52,7 @@ import java.time.Instant
 
 /**
  * Convert MatchSummaryResponse to Match domain model
+ * Maps all available fields including optional statistics, shots, events, and highlights
  */
 fun MatchSummaryResponse.toMatch(): Match {
     return Match(
@@ -61,10 +62,16 @@ fun MatchSummaryResponse.toMatch(): Match {
         processedAt = this.processedAt?.let { parseInstant(it) },
         status = parseMatchStatus(this.status),
         durationSeconds = this.durationSeconds,
+        videoPath = this.videoPath,
         originalFilename = this.originalFilename,
         player1Name = this.player1Name,
         player2Name = this.player2Name,
-        matchTitle = this.matchTitle
+        matchTitle = this.matchTitle,
+        thumbnailPath = this.thumbnailPath,
+        statistics = this.statistics?.toMatchStatistics(),
+        shots = this.shots?.map { it.toShot() } ?: emptyList(),
+        events = this.events?.map { it.toEvent() } ?: emptyList(),
+        highlights = this.highlights?.toHighlights()
     )
 }
 
