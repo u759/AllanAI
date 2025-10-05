@@ -372,7 +372,7 @@ private fun PerformanceMetricsSection(
             StatsCard(
                 title = "Match Info",
                 value = "${match.shots.size} shots detected",
-                subtitle = "${match.events.size} events • ${match.highlights?.curatedHighlights?.size ?: 0} highlights"
+                subtitle = "${match.events.size} events • ${(match.highlights?.topRallies?.size ?: 0) + (match.highlights?.fastestShots?.size ?: 0) + (match.highlights?.bestServes?.size ?: 0)} highlights"
             )
         } else {
             // Basic Match Stats (Always show)
@@ -381,7 +381,6 @@ private fun PerformanceMetricsSection(
                 value = "${stats.player1Score} - ${stats.player2Score}",
                 subtitle = "Final Score"
             )
-        }
         }
         
         // Live Score (if playing)
@@ -402,10 +401,8 @@ private fun PerformanceMetricsSection(
             )
         }
         
-        // Only show detailed stats if statistics are available
-        if (stats != null) {
         // Rally Metrics (from model stats)
-        stats.rallyMetrics?.let { rally ->
+        stats?.rallyMetrics?.let { rally ->
             StatsCard(
                 title = "Rally Statistics",
                 value = "${rally.totalRallies ?: 0} rallies",
@@ -515,7 +512,6 @@ private fun PerformanceMetricsSection(
                 }
             }
         }
-        } // end of if (stats != null)
         
         // Live Stats (Real-time up to current position)
         liveStats?.let { live ->
