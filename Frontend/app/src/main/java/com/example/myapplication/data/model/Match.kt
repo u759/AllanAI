@@ -10,6 +10,7 @@ import java.time.Instant
  */
 data class Match(
     val id: String,
+    val userId: String? = null,
     val createdAt: Instant,
     val processedAt: Instant? = null,
     val status: MatchStatus,
