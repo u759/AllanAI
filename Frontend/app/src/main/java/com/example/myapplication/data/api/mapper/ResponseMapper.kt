@@ -40,11 +40,15 @@ import java.time.Instant
 fun MatchSummaryResponse.toMatch(): Match {
     return Match(
         id = this.id,
+        userId = this.userId,
         createdAt = parseInstant(this.createdAt),
         processedAt = this.processedAt?.let { parseInstant(it) },
         status = parseMatchStatus(this.status),
         durationSeconds = this.durationSeconds,
-        originalFilename = this.originalFilename
+        originalFilename = this.originalFilename,
+        player1Name = this.player1Name,
+        player2Name = this.player2Name,
+        matchTitle = this.matchTitle
     )
 }
 
@@ -54,11 +58,15 @@ fun MatchSummaryResponse.toMatch(): Match {
 fun MatchDetailsResponse.toMatch(): Match {
     return Match(
         id = this.id,
+        userId = this.userId,
         createdAt = parseInstant(this.createdAt),
         processedAt = this.processedAt?.let { parseInstant(it) },
         status = parseMatchStatus(this.status),
         durationSeconds = this.durationSeconds,
         originalFilename = this.originalFilename,
+        player1Name = this.player1Name,
+        player2Name = this.player2Name,
+        matchTitle = this.matchTitle,
         statistics = this.statistics?.toMatchStatistics(),
         shots = this.shots.map { it.toShot() },
         events = this.events.map { it.toEvent() },

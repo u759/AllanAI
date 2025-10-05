@@ -5,9 +5,13 @@ package com.example.myapplication.data.api.dto
  */
 data class MatchSummaryResponse(
     val id: String,
+    val userId: String?,
     val createdAt: String,
     val processedAt: String?,
     val status: String,
     val durationSeconds: Int?,
-    val originalFilename: String?
+    val originalFilename: String?,
+    val player1Name: String?,
+    val player2Name: String?,
+    val matchTitle: String?
 )
