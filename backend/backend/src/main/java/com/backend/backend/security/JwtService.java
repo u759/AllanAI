@@ -27,7 +27,7 @@ public class JwtService {
 
     public JwtService(JwtProperties properties) {
         if (properties == null || !StringUtils.hasText(properties.getSecret())) {
-            throw new IllegalStateException("JWT secret must be configured");
+            throw new IllegalStateException("JWT secret must be configured: set the ALLANAI_SECURITY_JWT_SECRET environment variable");
         }
         this.properties = properties;
         byte[] keyBytes = properties.getSecret().getBytes(StandardCharsets.UTF_8);
