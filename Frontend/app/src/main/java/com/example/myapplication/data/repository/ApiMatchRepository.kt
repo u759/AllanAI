@@ -2,6 +2,7 @@ package com.example.myapplication.data.repository
 
 import android.os.Build
 import androidx.annotation.RequiresApi
+import com.example.myapplication.BuildConfig
 import com.example.myapplication.data.api.AllanAIApiService
 import com.example.myapplication.data.api.mapper.toEvent
 import com.example.myapplication.data.api.mapper.toHighlights
@@ -220,7 +221,7 @@ class ApiMatchRepository @Inject constructor(
         return try {
             // Construct video URL from Retrofit's base URL
             val baseUrl = apiService.toString() // Get base URL from Retrofit
-            val videoUrl = "http://192.168.1.147:8080/api/matches/$matchId/video"
+            val videoUrl = "${BuildConfig.BASE_URL}api/matches/$matchId/video"
             Result.success(videoUrl)
         } catch (e: Exception) {
             Result.failure(e)

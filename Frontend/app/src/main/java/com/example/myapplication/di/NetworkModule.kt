@@ -1,5 +1,6 @@
 package com.example.myapplication.di
 
+import com.example.myapplication.BuildConfig
 import com.example.myapplication.data.api.AllanAIApiService
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
@@ -33,10 +34,10 @@ object NetworkModule {
     /**
      * Base URL for the AllanAI backend API.
      *
-     * - For Android Emulator: Use 10.0.2.2 (special alias for host machine's localhost)
-     * - For Physical Device: Replace with actual IP address (e.g., "http://192.168.1.100:8080/")
+     * Set `allanai.baseUrl` in Frontend/local.properties. Defaults to http://10.0.2.2:8080/
+     * (the Android emulator's alias for the host machine's localhost).
      */
-    private const val BASE_URL = "http://192.168.1.147:8080/"
+    private const val BASE_URL = BuildConfig.BASE_URL
 
     /**
      * Provides Moshi instance for JSON serialization/deserialization.
