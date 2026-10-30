@@ -1,1 +1,32 @@
+# Match videos
 **/*.mp4
+
+# Runtime data written by the backend (uploaded videos, model output, local DB)
+storage/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE and editor settings
+.idea/
+.vscode/
+*.iml
+
+# AI assistant / agent settings
+.claude/
+.github/chatmodes/
+
+# Build outputs and caches
+build/
+target/
+.gradle/
+.kotlin/
+__pycache__/
+*.py[cod]
+
+# Local configuration and secrets
+local.properties
+.env
+.env.*
+*.local.json
